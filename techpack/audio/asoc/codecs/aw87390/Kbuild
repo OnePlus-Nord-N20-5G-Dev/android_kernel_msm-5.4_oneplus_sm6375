@@ -113,4 +113,3 @@ obj-$(CONFIG_SND_SOC_AW87XXX) += aw87xxx_dlkm.o
 aw87xxx_dlkm-y := $(SND_SOC_AW87XXX_OBJS)
 
 # inject some build related information
-DEFINES += -DBUILD_TIMESTAMP=\"$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')\"
