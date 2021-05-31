@@ -33,7 +33,7 @@ source "drivers/soc/oplus/device_info/Kconfig"
 #endif /*OPLUS_FEATURE_TP_BASIC*/
 
 #ifdef CONFIG_OPLUS_FEATURE_SENSOR_SMEM
-source "drivers/soc/oplus/sensor/Kconfig"
+#source "drivers/soc/oplus/sensor/Kconfig"
 #endif /* OPLUS_FEATURE_SENSOR_SMEM */
 
 #ifdef CONFIG_OPLUS_FEATURE_THERMAL_HORAE
