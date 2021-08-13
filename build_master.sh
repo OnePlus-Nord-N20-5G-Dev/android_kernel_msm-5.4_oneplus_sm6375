@@ -27,7 +27,7 @@ ramdisk_compression=gzip
 	cp -rp ~/android/anykernel/* kernelzip/
 	cd kernelzip/
 	7z a -mx9 arter97-kernel-$VERSION-tmp.zip *
-	7z a -mx0 arter97-kernel-$VERSION-tmp.zip ../arch/arm64/boot/Image
+	7z a -mx0 arter97-kernel-$VERSION-tmp.zip ../arch/arm64/boot/Image.gz
 	zipalign -v 4 arter97-kernel-$VERSION-tmp.zip ../arter97-kernel-$VERSION.zip
 	rm arter97-kernel-$VERSION-tmp.zip
 	cd ..
