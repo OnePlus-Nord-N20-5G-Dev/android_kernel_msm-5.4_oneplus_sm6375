@@ -405,6 +405,17 @@ bool icnss_is_fw_down(void)
 }
 EXPORT_SYMBOL(icnss_is_fw_down);
 
+unsigned long icnss_get_device_config(void)
+{
+	struct icnss_priv *priv = icnss_get_plat_priv();
+
+	if (!priv)
+		return 0;
+
+	return priv->device_config;
+}
+EXPORT_SYMBOL(icnss_get_device_config);
+
 bool icnss_is_rejuvenate(void)
 {
 	if (!penv)
@@ -3909,6 +3920,14 @@ static void icnss_init_control_params(struct icnss_priv *priv)
 	}
 }
 
+static void icnss_read_device_configs(struct icnss_priv *priv)
+{
+	if (of_property_read_bool(priv->pdev->dev.of_node,
+				  "wlan-ipa-disabled")) {
+		set_bit(ICNSS_IPA_DISABLED, &priv->device_config);
+	}
+}
+
 static inline void  icnss_get_smp2p_info(struct icnss_priv *priv)
 {
 
@@ -4050,6 +4069,7 @@ static int icnss_probe(struct platform_device *pdev)
 	//Add for: check fw status for switch issue
 	icnss_create_fw_state_kobj();
 	#endif /* OPLUS_FEATURE_SWITCH_CHECK */
+	icnss_read_device_configs(priv);
 
 	ret = icnss_resource_parse(priv);
 	if (ret)

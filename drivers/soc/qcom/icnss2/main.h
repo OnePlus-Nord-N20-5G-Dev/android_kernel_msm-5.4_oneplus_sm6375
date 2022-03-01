@@ -470,6 +470,7 @@ struct icnss_priv {
 	unsigned long loadBdfState;
 	unsigned long loadRegdbState;
 #endif /* OPLUS_FEATURE_SWITCH_CHECK */
+	unsigned long device_config;
 };
 
 #ifdef CONFIG_OPLUS_FEATURE_SWITCH_CHECK
