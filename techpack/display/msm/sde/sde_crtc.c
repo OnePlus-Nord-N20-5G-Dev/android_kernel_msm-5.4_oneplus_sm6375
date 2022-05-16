@@ -1610,8 +1610,8 @@ static void _sde_crtc_blend_setup_mixer(struct drm_crtc *crtc,
 				SDE_ATRACE_END("_sde_crtc_setup_dim_layer_cfg");
 			}
 			}
-		}
 #endif
+		}
 	}
 
 end:
