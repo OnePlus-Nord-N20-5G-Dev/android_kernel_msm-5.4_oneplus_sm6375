@@ -113,7 +113,7 @@
 			};
 		};
 
-    //#ifdef OPLUS_FEATURE_TP_BASIC
+    //#ifdef CONFIG_OPLUS_FEATURE_TP_BASIC
 	oplus_sim_detect {
 		compatible = "oplus, sim_detect";
 		Hw,sim_det = <&tlmm 82 0>;
@@ -127,7 +127,7 @@
 		#include "qg-batterydata-atl436186020H_3780mAh.dtsi"
 	};
 
-    //#ifdef OPLUS_FEATURE_FINGERPRINT
+    //#ifdef CONFIG_OPLUS_FEATURE_FINGERPRINT
     oplus_fp_common {
 		compatible = "oplus,fp_common";
 		oplus,fp_gpio_num = <1>;
@@ -157,7 +157,7 @@
            pinctrl-0 = <&gpio_fpc_irq_default>;
       };
 
-	//#ifdef OPLUS_FEATURE_SECURITY_COMMON
+	//#ifdef CONFIG_OPLUS_FEATURE_SECURITY_COMMON
 	oplus_secure_common {
 		compatible = "oplus,secure_common";
 		oplus,sec_reg_num = <0x1B405D8>;
@@ -402,7 +402,7 @@
 	status = "ok";
 };
 
-/*#ifndef OPLUS_FEATURE_CAMERA_COMMON*/
+/*#ifndef CONFIG_OPLUS_FEATURE_CAMERA_COMMON*/
 //#include "camera/holi-camera-sensor-mtp.dtsi"
 /*#endif OPLUS_FEATURE_CAMERA_COMMON*/
 

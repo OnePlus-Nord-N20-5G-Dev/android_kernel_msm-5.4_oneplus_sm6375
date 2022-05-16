@@ -2,7 +2,7 @@
 /* DTBO: Platform common generic overlay */
 
 &soc {
-/*#ifdef OPLUS_FEATURE_TP_BASIC*/
+/*#ifdef CONFIG_OPLUS_FEATURE_TP_BASIC*/
 	gpio_keys {
 
 		pinctrl-0 = <&key_vol_down_default>;
@@ -19,7 +19,7 @@
 	};
 /*#endif OPLUS_FEATURE_TP_BASIC*/
 
-/*#ifdef OPLUS_FEATURE_TP_BASIC*/
+/*#ifdef CONFIG_OPLUS_FEATURE_TP_BASIC*/
 	devinfo {
 		compatible = "oplus-devinfo";
 
@@ -57,7 +57,7 @@
 	};
 /*#endif OPLUS_FEATURE_TP_BASIC*/
 
-/*#ifdef OPLUS_FEATURE_TP_BASIC*/
+/*#ifdef CONFIG_OPLUS_FEATURE_TP_BASIC*/
 	pinctrl@400000 {
 		qupv3_se0_spi_pins {
 
@@ -144,7 +144,7 @@
 &spmi_bus {
 	qcom,pm6350@0 {
 		qcom,power-on@800 {
-/*#ifdef OPLUS_FEATURE_TP_BASIC*/
+/*#ifdef CONFIG_OPLUS_FEATURE_TP_BASIC*/
 			qcom,pon_2 {
 					qcom,pon-type = <PON_POWER_ON_TYPE_RESIN>;
 					qcom,pull-up;
@@ -156,7 +156,7 @@
 };
 
 &pm7250b_gpios {
-/*#ifdef OPLUS_FEATURE_TP_BASIC*/
+/*#ifdef CONFIG_OPLUS_FEATURE_TP_BASIC*/
 	pm7250b_gpio11 {
 		pm7250b_gpio11_default: pm7250b_gpio11_default {
 			pins = "gpio11";
@@ -167,7 +167,7 @@
 };
 
 &pm7250b_vadc {
-/*#ifdef OPLUS_FEATURE_TP_BASIC*/
+/*#ifdef CONFIG_OPLUS_FEATURE_TP_BASIC*/
 	pinctrl-names = "default";
 	pinctrl-0 = <&pm7250b_gpio11_default>;
 

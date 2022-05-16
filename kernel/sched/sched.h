@@ -124,7 +124,7 @@ struct walt_task_group {
 	bool colocate;
 	/* Controls whether further updates are allowed to the colocate flag */
 	bool colocate_update_disabled;
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
     unsigned int window_policy;
 #endif
 };

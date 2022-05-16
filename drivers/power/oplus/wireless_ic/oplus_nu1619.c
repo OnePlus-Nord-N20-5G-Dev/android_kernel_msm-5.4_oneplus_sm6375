@@ -114,7 +114,7 @@ bool __attribute__((weak)) is_ext_chg_ops(void)
 	return false;
 }
 
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 void __attribute__((weak)) switch_wireless_charger_state(int wireless_state) {return;}
 #endif
 
@@ -6301,7 +6301,7 @@ static void nu1619_idt_connect_int_func(struct work_struct *work)
 			schedule_delayed_work(&chip->nu1619_task_work, round_jiffies_relative(msecs_to_jiffies(100)));
 
 			oplus_chg_restart_update_work();
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 			switch_wireless_charger_state(1);
 #endif
 			pm_relax(chip->dev);
@@ -6396,7 +6396,7 @@ static void nu1619_idt_connect_int_func(struct work_struct *work)
 			test_is_charging = false;
 #endif
 			oplus_chg_restart_update_work();
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 			switch_wireless_charger_state(0);
 #endif
 		}
@@ -9916,7 +9916,7 @@ static int init_wireless_charge_proc(struct oplus_nu1619_ic *chip)
 }
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0))
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 #ifndef CONFIG_OPLUS_CHARGER_MTK
 static void oplus_chg_wls_status_keep_clean_work(struct work_struct *work)
 {

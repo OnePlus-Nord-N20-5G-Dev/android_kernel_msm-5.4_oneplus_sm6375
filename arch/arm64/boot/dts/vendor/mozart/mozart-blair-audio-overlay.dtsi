@@ -128,7 +128,7 @@
                 status = "disabled";
         };
 
-    //#ifdef OPLUS_FEATURE_TP_BASIC
+    //#ifdef CONFIG_OPLUS_FEATURE_TP_BASIC
 	oplus_sim_detect {
 		compatible = "oplus, sim_detect";
 		Hw,sim_det = <&tlmm 82 0>;

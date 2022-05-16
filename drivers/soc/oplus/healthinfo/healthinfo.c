@@ -12,7 +12,7 @@
 #include <linux/healthinfo/memory_monitor.h>
 #endif
 
-#ifdef OPLUS_FEATURE_SDCARD_INFO
+#ifdef CONFIG_OPLUS_FEATURE_SDCARD_INFO
 #include "../../../drivers/mmc/host/sdInfo/sdinfo.h"
 #endif
 
@@ -30,7 +30,7 @@
 #define BUFFER_SIZE_M 512
 #define BUFFER_SIZE_L 1024
 
-#ifdef OPLUS_FEATURE_SCHED_ASSIST
+#ifdef CONFIG_OPLUS_FEATURE_SCHED_ASSIST
 extern bool test_task_ux(struct task_struct *task);
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0))
 /*
@@ -199,7 +199,7 @@ void ohm_schedstats_record(int sched_type, struct task_struct *task,
 				ohm_action_trig(sched_type);
 		}
 	}
-#ifdef OPLUS_FEATURE_SCHED_ASSIST
+#ifdef CONFIG_OPLUS_FEATURE_SCHED_ASSIST
 	if (test_task_ux(task)) {
 		ohm_sched_stat_record_common(sched_stat, &sched_stat->ux,
 					     delta_ms);
@@ -956,7 +956,7 @@ static const struct file_operations proc_fsync_thresh_fops = {
 };
 
 /******  End  ******/
-#ifdef OPLUS_FEATURE_SDCARD_INFO
+#ifdef CONFIG_OPLUS_FEATURE_SDCARD_INFO
 static ssize_t sdinfo_read(struct file *filp, char __user *buff, size_t count,
 			   loff_t *off)
 {
@@ -1103,7 +1103,7 @@ static int __init healthinfo_init(void)
 	}
 #endif
 
-#ifdef OPLUS_FEATURE_SDCARD_INFO
+#ifdef CONFIG_OPLUS_FEATURE_SDCARD_INFO
 	pentry = proc_create("sd_info", S_IRUGO, healthinfo, &proc_sdinfo_fops);
 	if (!pentry) {
 		ohm_err("create sd_info proc failed.\n");

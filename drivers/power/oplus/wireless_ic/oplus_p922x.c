@@ -90,7 +90,7 @@ unsigned int __attribute__((weak)) get_PCB_Version(void)
 }
 #endif
 
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 void __attribute__((weak)) switch_wireless_charger_state(int wireless_state) {return;}
 #endif
 
@@ -4048,7 +4048,7 @@ static void p922x_idt_connect_int_func(struct work_struct *work)
 			schedule_delayed_work(&chip->p922x_task_work, round_jiffies_relative(msecs_to_jiffies(100)));
 
 			oplus_chg_restart_update_work();
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 			switch_wireless_charger_state(1);
 #endif
 		}
@@ -4101,7 +4101,7 @@ static void p922x_idt_connect_int_func(struct work_struct *work)
 			test_is_charging = false;
 #endif
 			oplus_chg_restart_update_work();
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 			switch_wireless_charger_state(0);
 #endif
 		}

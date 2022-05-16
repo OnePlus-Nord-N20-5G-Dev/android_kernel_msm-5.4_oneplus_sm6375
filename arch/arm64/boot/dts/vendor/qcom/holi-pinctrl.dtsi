@@ -360,7 +360,7 @@
 				};
 			};
 		};
-	//#ifdef OPLUS_FEATURE_FINGERPRINT
+	//#ifdef CONFIG_OPLUS_FEATURE_FINGERPRINT
 	oplus_fp_common{
 		gpio_id2_default: gpio_id2_default {
 			mux {

@@ -2506,7 +2506,7 @@ int sde_rm_reserve(
 				(rsvp_cur) ? rsvp_cur->seq : -1,
 				rsvp_nxt->seq, enc->base.id);
 			#ifdef OPLUS_BUG_STABILITY
-			#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+			#ifdef OPLUS_FEATURE_MM_FEEDBACK
 			SDE_MM_ERROR("[sde error] poll timeout cur %d nxt %d enc %d\n",
 				(rsvp_cur) ? rsvp_cur->seq : -1, rsvp_nxt->seq, enc->base.id);
 			#endif /*CONFIG_OPLUS_FEATURE_MM_FEEDBACK*/

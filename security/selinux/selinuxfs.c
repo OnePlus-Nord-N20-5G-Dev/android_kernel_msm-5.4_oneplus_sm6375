@@ -41,7 +41,7 @@
 #include "objsec.h"
 #include "conditional.h"
 
-#ifdef OPLUS_FEATURE_SELINUX_CONTROL_LOG
+#ifdef CONFIG_OPLUS_FEATURE_SELINUX_CONTROL_LOG
 #include <soc/oplus/system/proc.h>
 #endif /* OPLUS_FEATURE_SELINUX_CONTROL_LOG */
 
@@ -2141,7 +2141,7 @@ static int __init init_sel_fs(void)
 		selinux_null.dentry = NULL;
 	}
 
-#ifdef OPLUS_FEATURE_SELINUX_CONTROL_LOG
+#ifdef CONFIG_OPLUS_FEATURE_SELINUX_CONTROL_LOG
 	init_denied_proc();
 #endif /* OPLUS_FEATURE_SELINUX_CONTROL_LOG */
 

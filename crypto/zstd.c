@@ -15,7 +15,7 @@
 #include <crypto/internal/scompress.h>
 
 
-#ifdef OPLUS_FEATURE_PERFORMANCE
+#ifdef CONFIG_OPLUS_FEATURE_PERFORMANCE
 #define ZSTD_DEF_LEVEL	1
 #else
 #define ZSTD_DEF_LEVEL  3
@@ -30,7 +30,7 @@ struct zstd_ctx {
 
 static ZSTD_parameters zstd_params(void)
 {
-#ifdef OPLUS_FEATURE_PERFORMANCE
+#ifdef CONFIG_OPLUS_FEATURE_PERFORMANCE
 	return ZSTD_getParams(ZSTD_DEF_LEVEL, PAGE_SIZE, 0);
 #else
 	return ZSTD_getParams(ZSTD_DEF_LEVEL, 0, 0);

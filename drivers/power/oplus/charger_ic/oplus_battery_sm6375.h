@@ -57,7 +57,7 @@ enum print_reason {
 #define PL_FCC_LOW_VOTER		"PL_FCC_LOW_VOTER"
 #define WBC_VOTER			"WBC_VOTER"
 #define HW_LIMIT_VOTER			"HW_LIMIT_VOTER"
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 #define CCDETECT_VOTER			"CCDETECT_VOTER"
 #define DIVIDER_SET_VOTER		"DIVIDER_SET_VOTER"
 #define PD_DIS_VOTER			"PD_DIS_VOTER"
@@ -89,7 +89,7 @@ enum print_reason {
 #define TYPEC_SWAP_VOTER		"TYPEC_SWAP_VOTER"
 
 #define BOOST_BACK_STORM_COUNT	3
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 #define WEAK_CHG_STORM_COUNT	3
 #else
 #define WEAK_CHG_STORM_COUNT	8
@@ -101,7 +101,7 @@ enum print_reason {
 #define ITERM_LIMITS_PM8150B_MA		10000
 #define ADC_CHG_ITERM_MASK		32767
 
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 #define USB_TEMP_HIGH			0x01//bit0
 #define USB_WATER_DETECT		0x02//bit1
 #define USB_RESERVE2			0x04//bit2
@@ -113,7 +113,7 @@ enum print_reason {
 #define SDP_100_MA			100000
 #define SDP_CURRENT_UA			500000
 #define CDP_CURRENT_UA			1500000
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 #define DCP_CURRENT_UA                  2000000
 #else
 #define DCP_CURRENT_UA			1500000
@@ -393,7 +393,7 @@ struct smb_iio {
 	struct iio_channel	*die_temp_chan;
 	struct iio_channel	*skin_temp_chan;
 	struct iio_channel	*smb_temp_chan;
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 	struct iio_channel	*chgid_v_chan;
 	struct iio_channel	*usbtemp_l_v_chan;
 	struct iio_channel	*usbtemp_r_v_chan;
@@ -446,7 +446,7 @@ struct smb_charger {
 	struct power_supply		*dc_psy;
 	struct power_supply		*usb_port_psy;
 	struct power_supply		*wls_psy;
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 	struct power_supply		*ac_psy;
 #endif
 
@@ -528,7 +528,7 @@ struct smb_charger {
 	int			cp_reason;
 	int			cp_topo;
 
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 	struct delayed_work	chg_monitor_work;
 	struct delayed_work	typec_disable_cmd_work;
 #endif
@@ -639,7 +639,7 @@ struct smb_charger {
 	int                     qc2_max_pulses;
 	enum qc2_non_comp_voltage qc2_unsupported_voltage;
 	bool			dbc_usbov;
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 	bool			fake_usb_insertion;
 	bool			fake_typec_insertion;
 #endif
@@ -669,7 +669,7 @@ struct smb_charger {
 	int			dcin_uv_count;
 	ktime_t			dcin_uv_last_time;
 	int			last_wls_vout;
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 	int			pre_current_ma;
 	bool			is_dpdm_on_usb;
 	struct delayed_work	divider_set_work;
@@ -701,7 +701,7 @@ struct smb_charger {
 #endif
 };
 
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 enum skip_reason {
 	REASON_OTG_ENABLED	= BIT(0),
 	REASON_FLASH_ENABLED	= BIT(1)
@@ -883,7 +883,7 @@ static const struct smb5_iio_prop_channels oplus_discrete_chans_pmic[] = {
 	SMB5_CHAN_ACTIVITY("battery_force_recharge", FORCE_RECHARGE)
 	SMB5_CHAN_ACTIVITY("battery_fcc_stepper_enable", FCC_STEPPER_ENABLE)
 	SMB5_CHAN_INDEX("usb_typec_accessory_mode", TYPEC_ACCESSORY_MODE)
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 	SMB5_CHAN_INDEX("usb_pd_sdp", PD_SDP)
 #endif
 };

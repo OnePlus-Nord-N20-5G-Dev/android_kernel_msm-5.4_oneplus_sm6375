@@ -77,7 +77,7 @@
 #include "internal.h"
 #include "shuffle.h"
 
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 #if (defined CONFIG_OPLUS_MEM_MONITOR) && (defined CONFIG_OPLUS_HEALTHINFO)
 #include <linux/healthinfo/memory_monitor.h>
 #endif
@@ -4494,7 +4494,7 @@ retry:
 	 */
 	if (!page && !drained) {
 		unreserve_highatomic_pageblock(ac, false);
-#ifdef OPLUS_FEATURE_PERFORMANCE
+#ifdef CONFIG_OPLUS_FEATURE_PERFORMANCE
 #else
 		drain_all_pages(NULL);
 #endif
@@ -4754,7 +4754,7 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
 	int no_progress_loops;
 	unsigned int cpuset_mems_cookie;
 	int reserve_flags;
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 #if (defined CONFIG_OPLUS_MEM_MONITOR) && (defined CONFIG_OPLUS_HEALTHINFO)
 	unsigned long alloc_start = jiffies;
 #endif
@@ -5018,7 +5018,7 @@ fail:
 	warn_alloc(gfp_mask, ac->nodemask,
 			"page allocation failure: order:%u", order);
 got_pg:
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 #if (defined CONFIG_OPLUS_MEM_MONITOR) && (defined CONFIG_OPLUS_HEALTHINFO)
 	memory_alloc_monitor(gfp_mask, order, jiffies_to_msecs(jiffies - alloc_start));
 #endif

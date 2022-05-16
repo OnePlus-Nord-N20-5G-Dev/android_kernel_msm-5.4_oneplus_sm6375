@@ -20,7 +20,7 @@
 
 #define VALID_FLAGS (SYNC_FILE_RANGE_WAIT_BEFORE|SYNC_FILE_RANGE_WRITE| \
 			SYNC_FILE_RANGE_WAIT_AFTER)
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 // Add for get cpu load
 #ifdef CONFIG_OPLUS_HEALTHINFO
 #include <soc/oplus/healthinfo.h>
@@ -221,7 +221,7 @@ static int do_fsync(unsigned int fd, int datasync)
 {
 	struct fd f = fdget(fd);
 	int ret = -EBADF;
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 // Add for record  fsync  time
 #ifdef CONFIG_OPLUS_HEALTHINFO
     unsigned long fsync_time = jiffies;
@@ -232,7 +232,7 @@ static int do_fsync(unsigned int fd, int datasync)
 		fdput(f);
 		inc_syscfs(current);
 	}
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 // Add for record  fsync  time
 #ifdef CONFIG_OPLUS_HEALTHINFO
 	ohm_schedstats_record(OHM_SCHED_FSYNC, current, jiffies_to_msecs(jiffies - fsync_time));

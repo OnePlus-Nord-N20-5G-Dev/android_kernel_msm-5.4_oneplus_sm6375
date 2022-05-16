@@ -111,7 +111,7 @@ extern bool is_special_entry(struct dentry *dentry, const char* special_proc);
 #ifdef CONFIG_OPLUS_HEALTHINFO
 #include <linux/healthinfo/ion.h>
 #endif /* CONFIG_OPLUS_HEALTHINFO */
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 #ifdef CONFIG_OPLUS_HEALTHINFO
 extern unsigned long gpu_total(void);
 #endif

@@ -87,7 +87,7 @@ static int ion_wait_l_ms = 100;
 static int ion_wait_log_ms = 1000;
 static int ion_wait_trig_ms = 10000;
 
-#ifdef OPLUS_FEATURE_SCHED_ASSIST
+#ifdef CONFIG_OPLUS_FEATURE_SCHED_ASSIST
 extern bool test_task_ux(struct task_struct *task);
 #endif
 void memory_alloc_monitor(gfp_t gfp_mask, unsigned int order, u64 wait_ms)
@@ -96,7 +96,7 @@ void memory_alloc_monitor(gfp_t gfp_mask, unsigned int order, u64 wait_ms)
 	int ux = 0;
         if (unlikely(!ohm_memmon_ctrl))
 		return;
-#ifdef OPLUS_FEATURE_SCHED_ASSIST
+#ifdef CONFIG_OPLUS_FEATURE_SCHED_ASSIST
 	ux = test_task_ux(current);
 #endif
 	fg = current_is_fg();
@@ -147,7 +147,7 @@ void ionwait_monitor(u64 wait_ms)
 	int ux = 0;
 	if (unlikely(!ohm_ionmon_ctrl))
 		return;
-#ifdef OPLUS_FEATURE_SCHED_ASSIST
+#ifdef CONFIG_OPLUS_FEATURE_SCHED_ASSIST
 	ux = test_task_ux(current);
 #endif
 	fg = current_is_fg();

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
 config QTI_TZ_LOG
         tristate "QTI Trust Zone (TZ) Log Driver"
-        #ifdef OPLUS_FEATURE_SECURITY_COMMON
+        #ifdef CONFIG_OPLUS_FEATURE_SECURITY_COMMON
         #depends on DEBUG_FS
         #endif
         help

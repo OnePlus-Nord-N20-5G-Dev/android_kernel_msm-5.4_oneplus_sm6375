@@ -6487,7 +6487,7 @@ ssize_t slabinfo_write(struct file *file, const char __user *buffer,
 #endif /* CONFIG_SLUB_DEBUG */
 
 #ifdef CONFIG_KMALLOC_DEBUG
-#ifdef OPLUS_FEATURE_MEMLEAK_DETECT
+#ifdef CONFIG_OPLUS_FEATURE_MEMLEAK_DETECT
 /* calc the stack hash */
 #include "malloc_track/slub_track.c"
 #else

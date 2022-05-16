@@ -30,7 +30,7 @@
 #include "avc.h"
 #include "avc_ss.h"
 #include "classmap.h"
-#ifdef OPLUS_FEATURE_SELINUX_CONTROL_LOG
+#ifdef CONFIG_OPLUS_FEATURE_SELINUX_CONTROL_LOG
 #include <soc/oplus/system/proc.h>
 #endif /* OPLUS_FEATURE_SELINUX_CONTROL_LOG */
 
@@ -765,7 +765,7 @@ noinline int slow_avc_audit(struct selinux_state *state,
 	struct common_audit_data stack_data;
 	struct selinux_audit_data sad;
 
-#ifdef OPLUS_FEATURE_SELINUX_CONTROL_LOG
+#ifdef CONFIG_OPLUS_FEATURE_SELINUX_CONTROL_LOG
 	if (!is_avc_audit_enable())
 		return 0;
 #endif /* OPLUS_FEATURE_SELINUX_CONTROL_LOG */

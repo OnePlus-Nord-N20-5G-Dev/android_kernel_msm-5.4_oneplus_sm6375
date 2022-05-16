@@ -259,7 +259,7 @@
 		compatible = "android,firmware";
 		vbmeta {
             compatible = "android,vbmeta";
-            //#ifdef OPLUS_FEATURE_BOOT_SECURITY
+            //#ifdef CONFIG_OPLUS_FEATURE_BOOT_SECURITY
             parts = "vbmeta,boot,system,vendor,dtbo,vendor_boot";
             //#else
             //parts = "vbmeta,boot,system,vendor,dtbo";

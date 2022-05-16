@@ -1153,7 +1153,7 @@ static void sde_kms_prepare_commit(struct msm_kms *kms,
 	if (rc < 0) {
 		SDE_ERROR("failed to enable power resources %d\n", rc);
 		#ifdef OPLUS_BUG_STABILITY
-		#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+		#ifdef OPLUS_FEATURE_MM_FEEDBACK
 		SDE_MM_ERROR("DisplayDriverID@@415$$failed to enable power resources %d\n", rc);
 		#endif /*CONFIG_OPLUS_FEATURE_MM_FEEDBACK*/
 		#endif /* OPLUS_BUG_STABILITY */

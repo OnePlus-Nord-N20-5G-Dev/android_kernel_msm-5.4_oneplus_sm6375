@@ -27,7 +27,7 @@
  */
 #include <linux/notifier.h>
 #include <linux/msm_drm_notify.h>
-#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+#ifdef OPLUS_FEATURE_MM_FEEDBACK
 #include <soc/oplus/system/oplus_mm_kevent_fb.h>
 #endif //CONFIG_OPLUS_FEATURE_MM_FEEDBACK
 #include <soc/oplus/device_info.h>

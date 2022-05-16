@@ -23,7 +23,7 @@
 #include "sde_dbg.h"
 
 #ifdef OPLUS_BUG_STABILITY
-#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+#ifdef OPLUS_FEATURE_MM_FEEDBACK
 #include <soc/oplus/system/oplus_mm_kevent_fb.h>
 #endif //CONFIG_OPLUS_FEATURE_MM_FEEDBACK
 #endif /* OPLUS_BUG_STABILITY */
@@ -48,7 +48,7 @@
 		c ? c->name : "inv", ##__VA_ARGS__)
 
 #ifdef OPLUS_BUG_STABILITY
-#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+#ifdef OPLUS_FEATURE_MM_FEEDBACK
 #define DSI_CTRL_MM_ERR(c, fmt, ...) \
 	do { \
 		DRM_DEV_ERROR(NULL, "[msm-dsi-error]: %s: "\
@@ -420,7 +420,7 @@ static void dsi_ctrl_dma_cmd_wait_for_done(struct work_struct *work)
 					"dma_tx done but irq not triggered\n");
 
 #ifdef OPLUS_BUG_STABILITY
-#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+#ifdef OPLUS_FEATURE_MM_FEEDBACK
 			if (dsi_ctrl->irq_info.irq_num != -1) {
 				struct irq_desc *desc = irq_to_desc(dsi_ctrl->irq_info.irq_num);
 				unsigned long flags;
@@ -1091,7 +1091,7 @@ static int dsi_ctrl_enable_supplies(struct dsi_ctrl *dsi_ctrl, bool enable)
 			DSI_CTRL_ERR(dsi_ctrl,
 				"Power resource enable failed, rc=%d\n", rc);
 			#ifdef OPLUS_BUG_STABILITY
-			#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+			#ifdef OPLUS_FEATURE_MM_FEEDBACK
 			DSI_CTRL_MM_ERR(dsi_ctrl, "DisplayDriverID@@406$$Power resource enable failed, rc=%d\n", rc);
 			#endif
 			#endif
@@ -1104,7 +1104,7 @@ static int dsi_ctrl_enable_supplies(struct dsi_ctrl *dsi_ctrl, bool enable)
 			if (rc) {
 				DSI_CTRL_ERR(dsi_ctrl, "failed to enable host power regs\n");
 				#ifdef OPLUS_BUG_STABILITY
-				#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+				#ifdef OPLUS_FEATURE_MM_FEEDBACK
 				DSI_CTRL_MM_ERR(dsi_ctrl, "DisplayDriverID@@406$$failed to enable host power regs\n");
 				#endif
 				#endif
@@ -3509,7 +3509,7 @@ int dsi_ctrl_cmd_transfer(struct dsi_ctrl *dsi_ctrl,
 			DSI_CTRL_ERR(dsi_ctrl, "read message failed read length, rc=%d\n",
 					rc);
 			#ifdef OPLUS_BUG_STABILITY
-			#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+			#ifdef OPLUS_FEATURE_MM_FEEDBACK
 			DSI_CTRL_MM_ERR(dsi_ctrl, "read message failed read length, rc=%d\n",rc);
 			#endif
 			#endif
@@ -3520,7 +3520,7 @@ int dsi_ctrl_cmd_transfer(struct dsi_ctrl *dsi_ctrl,
 			DSI_CTRL_ERR(dsi_ctrl, "command msg transfer failed, rc = %d\n",
 					rc);
 			#ifdef OPLUS_BUG_STABILITY
-			#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+			#ifdef OPLUS_FEATURE_MM_FEEDBACK
 			DSI_CTRL_MM_ERR(dsi_ctrl, "command msg transfer failed, rc = %d\n",rc);
 			#endif
 			#endif

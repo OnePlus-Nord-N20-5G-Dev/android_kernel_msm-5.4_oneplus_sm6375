@@ -3618,7 +3618,7 @@ static int s_show(struct seq_file *m, void *p)
 	seq_printf(m, "0x%pK-0x%pK %7ld",
 		v->addr, v->addr + v->size, v->size);
 
-#ifdef OPLUS_FEATURE_PERFORMANCE
+#ifdef CONFIG_OPLUS_FEATURE_PERFORMANCE
     if (v->caller && (strcmp(current->comm, "android.bg") != 0))
 #else
     if (v->caller)
@@ -3688,7 +3688,7 @@ module_init(proc_vmalloc_init);
 
 #endif
 #ifdef CONFIG_VMALLOC_DEBUG
-#ifdef OPLUS_FEATURE_MEMLEAK_DETECT
+#ifdef CONFIG_OPLUS_FEATURE_MEMLEAK_DETECT
 #include "malloc_track/vmalloc_track.c"
 #else
 int __init __weak create_vmalloc_debug(struct proc_dir_entry *parent)

@@ -829,7 +829,7 @@ static int qusb_phy_notify_disconnect(struct usb_phy *phy,
 
 	qphy->cable_connected = false;
 
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 	qphy->tune_val = 0;
 #endif
 

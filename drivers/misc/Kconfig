@@ -525,7 +525,7 @@ config HISI_HIKEY_USB
 	  If you say yes here you get support for usb functionality of HiSilicon Hikey Platform.
 
 
-#ifdef OPLUS_FEATURE_TP_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_TP_BASIC
 config SIM_DETECT
 	tristate "SIM_DETECT system"
 	default n
@@ -533,7 +533,7 @@ config SIM_DETECT
 	  Say Y here to enable sim detect system support
 #endif /* OPLUS_FEATURE_TP_BASIC */
 
-#ifdef OPLUS_FEATURE_RF_CALBLE
+#ifdef CONFIG_OPLUS_FEATURE_RF_CALBLE
 config OPLUS_RF_CABLE_MONITOR
 	bool "OPLUS rf cable monitor system"
 	depends on OF

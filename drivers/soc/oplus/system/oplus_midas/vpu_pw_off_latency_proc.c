@@ -25,7 +25,7 @@
 #include <linux/timex.h>
 #include <linux/rtc.h>
 
-#ifdef OPLUS_FEATURE_MIDAS
+#ifdef CONFIG_OPLUS_FEATURE_MIDAS
 
 #ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM
 int set_all_vpu_power_off_latency(uint64_t pw_off_latency)
@@ -111,7 +111,7 @@ void __exit vpu_pw_off_latency_proc_exit(void)
 #endif
 }
 
-#else /*#ifdef OPLUS_FEATURE_MIDAS*/
+#else /*#ifdef CONFIG_OPLUS_FEATURE_MIDAS*/
 
 int __init vpu_pw_off_latency_proc_init(void)
 {
@@ -122,4 +122,4 @@ void __exit vpu_pw_off_latency_proc_exit(void)
 {
 }
 
-#endif /*#ifdef OPLUS_FEATURE_MIDAS*/
+#endif /*#ifdef CONFIG_OPLUS_FEATURE_MIDAS*/

@@ -158,7 +158,7 @@ config HMEM_REPORTING
 
 source "drivers/base/test/Kconfig"
 
-#ifdef OPLUS_FEATURE_TP_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_TP_BASIC
 source "drivers/base/kernelFwUpdate/Kconfig"
 #endif /*OPLUS_FEATURE_TP_BASIC*/
 

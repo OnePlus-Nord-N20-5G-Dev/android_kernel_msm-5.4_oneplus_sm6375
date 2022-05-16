@@ -921,6 +921,6 @@ config DYNAMIC_TUNNING_SWAPPINESS
 source "mm/process_reclaim/Kconfig"
 source "mm/malloc_track/Kconfig"
 source "mm/task_mem/Kconfig"
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 source "mm/healthinfo/Kconfig"
 #endif /* OPLUS_FEATURE_HEALTHINFO */

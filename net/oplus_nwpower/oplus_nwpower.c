@@ -732,7 +732,7 @@ static void tcp_input_hook_work_callback(struct work_struct *work) {
 	match_tcp_hook(&mdaci_tcp_input_list);
 	app_wakeup_monitor(&app_wakeup_monitor_list, false, true, tcp_input_list.pid, tcp_input_list.uid);
 	app_wakeup_monitor(&mdaci_app_wakeup_monitor_list, false, true, tcp_input_list.pid, tcp_input_list.uid);
-	#ifdef OPLUS_FEATURE_POWERINFO_STANDBY
+	#ifdef CONFIG_OPLUS_FEATURE_POWERINFO_STANDBY
 	//wakeup_reasons_statics(IRQ_NAME_MODEM_IPA, WS_CNT_MODEM);
 	#endif /* OPLUS_FEATURE_POWERINFO_STANDBY */
 	if (tcp_input_list.is_ipv6) {

@@ -142,7 +142,7 @@ struct dev_crash_report_work {
 };
 #endif /*OPLUS_FEATURE_MODEM_MINIDUMP*/
 
-#ifdef OPLUS_FEATURE_ADSP_RECOVERY
+#ifdef CONFIG_OPLUS_FEATURE_ADSP_RECOVERY
 extern void oplus_adsp_set_ssr_state(bool state);
 extern bool oplus_adsp_get_ssr_state(void);
 extern int oplus_adsp_get_restart_level(const char *name);
@@ -154,7 +154,7 @@ extern int subsystem_restart_dev(struct subsys_device *dev);
 extern void subsystem_schedule_crash_uevent_work(struct device *dev, const char *device_name, char *reason);
 #endif /*OPLUS_FEATURE_MODEM_MINIDUMP*/
 
-#ifdef OPLUS_FEATURE_SWITCH_CHECK
+#ifdef CONFIG_OPLUS_FEATURE_SWITCH_CHECK
 //Add for: check fw status for switch issue
 extern void __wlan_subsystem_send_uevent(struct device *dev, char *reason,const char *name);
 extern void wlan_subsystem_send_uevent(struct subsys_device *dev, char *reason,const char *name);
@@ -184,7 +184,7 @@ static inline void complete_shutdown_ack(struct subsys_desc *desc)
 struct subsys_device *find_subsys_device(const char *str);
 #else
 
-#ifdef OPLUS_FEATURE_ADSP_RECOVERY
+#ifdef CONFIG_OPLUS_FEATURE_ADSP_RECOVERY
 static inline void oplus_adsp_set_ssr_state(bool ssr_state) { }
 
 static inline bool oplus_adsp_get_ssr_state(void)

@@ -22,7 +22,7 @@
 };
 
 
-//ifdef OPLUS_FEATURE_NFC_BRINGUP
+//ifdef CONFIG_OPLUS_FEATURE_NFC_BRINGUP
 &qupv3_se7_i2c {
 	status = "ok";
 	#address-cells = <1>;

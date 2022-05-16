@@ -226,7 +226,7 @@ enum zone_stat_item {
 	NR_ZSPAGES,		/* allocated in zsmalloc */
 #endif
 	NR_FREE_CMA_PAGES,
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 #ifdef CONFIG_OPLUS_HEALTHINFO
         NR_IONCACHE_PAGES,
 #endif
@@ -352,7 +352,7 @@ enum zone_watermarks {
 	NR_WMARK
 };
 
-#ifndef OPLUS_FEATURE_PERFORMANCE
+#ifndef CONFIG_OPLUS_FEATURE_PERFORMANCE
 #define min_wmark_pages(z) (z->_watermark[WMARK_MIN] + z->watermark_boost)
 #define low_wmark_pages(z) (z->_watermark[WMARK_LOW] + z->watermark_boost)
 #define high_wmark_pages(z) (z->_watermark[WMARK_HIGH] + z->watermark_boost)

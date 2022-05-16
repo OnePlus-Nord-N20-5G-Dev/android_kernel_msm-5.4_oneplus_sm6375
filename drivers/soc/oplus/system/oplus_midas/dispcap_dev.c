@@ -30,7 +30,7 @@
 #include <linux/jiffies.h>
 #include <linux/oplus_ion.h>
 
-#ifdef OPLUS_FEATURE_MIDAS
+#ifdef CONFIG_OPLUS_FEATURE_MIDAS
 
 #define DISPCAP_CTL_SET_CAPTURE_RECT 97
 #define DISPCAP_CTL_SET_CAPTURE_INTERVAL 98
@@ -472,7 +472,7 @@ void __exit dispcap_dev_exit(void)
 #endif
 }
 
-#else /*#ifdef OPLUS_FEATURE_MIDAS*/
+#else /*#ifdef CONFIG_OPLUS_FEATURE_MIDAS*/
 
 int __init dispcap_dev_init(void)
 {
@@ -484,4 +484,4 @@ void __exit dispcap_dev_exit(void)
 	return;
 }
 
-#endif /*#ifdef OPLUS_FEATURE_MIDAS*/
+#endif /*#ifdef CONFIG_OPLUS_FEATURE_MIDAS*/

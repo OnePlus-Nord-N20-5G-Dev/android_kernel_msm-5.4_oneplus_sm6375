@@ -23,7 +23,7 @@
 #include <linux/gfp.h>
 #include <net/tcp.h>
 
-#ifdef OPLUS_FEATURE_IPV6_OPTIMIZE
+#ifdef CONFIG_OPLUS_FEATURE_IPV6_OPTIMIZE
 extern int ipv6_rto_encounter(kuid_t uid, struct in6_addr v6_saddr);
 extern int ipv4_rto_encounter(kuid_t uid, unsigned int v4_saddr);
 #endif /* OPLUS_FEATURE_IPV6_OPTIMIZE */
@@ -318,7 +318,7 @@ static int tcp_write_timeout(struct sock *sk)
 				  icsk->icsk_rto, (int)expired);
 
 	if (expired) {
-		#ifdef OPLUS_FEATURE_IPV6_OPTIMIZE
+		#ifdef CONFIG_OPLUS_FEATURE_IPV6_OPTIMIZE
 			if (((1 << sk->sk_state) & (TCPF_SYN_SENT | TCPF_ESTABLISHED))
 				&& !((1 << sk->sk_state) & (TCPF_SYN_RECV | TCPF_FIN_WAIT1 | TCPF_FIN_WAIT2 | TCPF_TIME_WAIT))) {
 				if(sk->sk_family == AF_INET6) {

@@ -288,7 +288,7 @@ config OPLUS_FEATURE_WIFI_LIMMITBGSPEED
 	help
 	  Add for limit speed function.
 
-#ifdef OPLUS_FEATURE_WIFI_LIMMITBGSPEED
+#ifdef CONFIG_OPLUS_FEATURE_WIFI_LIMMITBGSPEED
 config IMQ
 	tristate "IMQ (intermediate queueing device) support"
 	depends on NETDEVICES && NETFILTER

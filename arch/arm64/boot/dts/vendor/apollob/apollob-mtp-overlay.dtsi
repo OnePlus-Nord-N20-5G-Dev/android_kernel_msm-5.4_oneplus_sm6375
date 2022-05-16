@@ -1,6 +1,6 @@
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include "holi-oem-common-mtp.dtsi"
-//#ifdef OPLUS_FEATURE_CHG_BASIC
+//#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 #include "oplus-charge.dtsi"
 //#endif
 //#ifdef OPLUS_BUG_STABILITY

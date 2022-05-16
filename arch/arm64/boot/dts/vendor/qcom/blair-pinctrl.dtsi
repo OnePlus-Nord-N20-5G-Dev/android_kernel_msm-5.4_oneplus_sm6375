@@ -8,7 +8,7 @@
 		interrupt-controller;
 		#interrupt-cells = <2>;
 		wakeup-parent = <&wakegic>;
-		//#ifdef OPLUS_FEATURE_CHG_BASIC
+		//#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 		/* NOTE: Please override gpios in project dts */
 		/* blair_reserved_gpios[] = {13, 14, 15, 16, 45, 46, 48, 56, 57, -1}; */
 		gpios = /bits/ 16 <

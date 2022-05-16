@@ -1,7 +1,7 @@
 # List of symbols exported by oplus in-kernel drivers and used by external DLKMs
 # oplus internal whitelist
 [abi_whitelist]
-#ifdef OPLUS_FEATURE_TP_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_TP_BASIC
   tp_judge_ic_match
   tp_util_get_vendor
   preconfig_power_control
@@ -55,7 +55,7 @@
   kevent_send_to_user
 #endif
 
-#ifdef OPLUS_FEATURE_OPROJECT
+#ifdef CONFIG_OPLUS_FEATURE_OPROJECT
   get_project
   get_Modem_Version
   get_eng_version
@@ -91,38 +91,38 @@
   i2c_smbus_read_word_data
   i2c_unregister_device
 
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
   typec_partner_set_identity
   class_for_each_device
   device_set_of_node_from_dev
 #endif /*OPLUS_FEATURE_CHG_BASIC*/
 
-#ifdef OPLUS_FEATURE_FINGERPRINT
+#ifdef CONFIG_OPLUS_FEATURE_FINGERPRINT
   devm_gpio_free
   wakeup_source_remove
   wakeup_source_add
   get_boot_mode
 #endif /* OPLUS_FEATURE_FINGERPRINT */
 
-#ifdef OPLUS_FEATURE_TP_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_TP_BASIC
   register_devinfo
   register_device_proc_for_ufsplus
   register_device_proc
   set_normalized_timespec
 #endif /*OPLUS_FEATURE_TP_BASIC*/
 
-#ifdef OPLUS_FEATURE_QCOM_WATCHDOG
+#ifdef CONFIG_OPLUS_FEATURE_QCOM_WATCHDOG
   oplus_dump_cpu_online_smp_call
   oplus_get_cpu_ping_mask
   oplus_dump_wdog_cpu
   oplus_show_utc_time
 #endif
 
-#ifdef OPLUS_FEATURE_SWITCH_CHECK
+#ifdef CONFIG_OPLUS_FEATURE_SWITCH_CHECK
 #Add for: check fw status for switch issue
   driver_create_file
 #endif /* OPLUS_FEATURE_SWITCH_CHECK */
 
-#ifdef OPLUS_FEATURE_NFC_GKI
+#ifdef CONFIG_OPLUS_FEATURE_NFC_GKI
   prj_name
 #endif

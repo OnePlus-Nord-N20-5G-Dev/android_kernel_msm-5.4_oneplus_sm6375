@@ -6,7 +6,7 @@
 /* DTBO: Platform common generic overlay */
 
 &soc {
-/*#ifdef OPLUS_FEATURE_TP_BASIC*/
+/*#ifdef CONFIG_OPLUS_FEATURE_TP_BASIC*/
 	gpio_keys {
 		compatible = "gpio-keys";
 		label = "gpio-keys";
@@ -26,11 +26,11 @@
 	};
 };
 
-/* #ifdef OPLUS_FEATURE_CAMERA_COMMON */
+/* #ifdef CONFIG_OPLUS_FEATURE_CAMERA_COMMON */
 #include "camera/blair-camera-sensor-mtp.dtsi"
 /* #endif OPLUS_FEATURE_CAMERA_COMMON */
 
-//#ifdef OPLUS_FEATURE_FINGERPRINT
+//#ifdef CONFIG_OPLUS_FEATURE_FINGERPRINT
 &soc{
 	oplus_fp_common {
 		compatible = "oplus,fp_common";
@@ -75,7 +75,7 @@
 };
 //#endif /*OPLUS_FEATURE_FINGERPRINT*
 
-//#ifdef OPLUS_FEATURE_TP_BASIC
+//#ifdef CONFIG_OPLUS_FEATURE_TP_BASIC
 &soc {
 	devinfo {
 		status = "disabled";
@@ -165,7 +165,7 @@
 		};
 	};
 
-	//#ifdef OPLUS_FEATURE_FINGERPRINT
+	//#ifdef CONFIG_OPLUS_FEATURE_FINGERPRINT
 	oplus_fp_common{
 		gpio_id2_default: gpio_id2_default {
 			mux {
@@ -197,7 +197,7 @@
 	};
 	//#endif /*OPLUS_FEATURE_FINGERPRINT*
 
-	//#ifdef OPLUS_FEATURE_TP_BASIC
+	//#ifdef CONFIG_OPLUS_FEATURE_TP_BASIC
         aboard_pin {
 		hw_pins_default:hw_pins_default {
 		};

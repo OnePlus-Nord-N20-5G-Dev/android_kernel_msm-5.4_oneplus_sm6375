@@ -1,4 +1,4 @@
-#ifdef OPLUS_FEATURE_HANS_FREEZE
+#ifdef CONFIG_OPLUS_FEATURE_HANS_FREEZE
 config OPLUS_FEATURE_HANS_GKI
 	tristate "HANS kernel and HANS native communication channel"
 	default n

@@ -1041,7 +1041,7 @@ int icnss_wlfw_bdf_dnld_send_sync(struct icnss_priv *priv, u32 bdf_type)
 	remaining = fw_entry->size;
 
 bypass_bdf:
-#ifdef OPLUS_FEATURE_SWITCH_CHECK
+#ifdef CONFIG_OPLUS_FEATURE_SWITCH_CHECK
 //Add for: check fw status for switch issue
 	if (bdf_type == ICNSS_BDF_REGDB) {
 		set_bit(CNSS_LOAD_REGDB_SUCCESS, &priv->loadRegdbState);
@@ -1124,7 +1124,7 @@ err_send:
 	if (bdf_type != ICNSS_BDF_DUMMY)
 		release_firmware(fw_entry);
 err_req_fw:
-#ifdef OPLUS_FEATURE_SWITCH_CHECK
+#ifdef CONFIG_OPLUS_FEATURE_SWITCH_CHECK
 //Add for: check fw status for switch issue
 	if (bdf_type == ICNSS_BDF_REGDB) {
 		set_bit(CNSS_LOAD_REGDB_FAIL, &priv->loadRegdbState);

@@ -207,7 +207,7 @@ struct subsys_device {
 	struct list_head list;
 };
 
-#ifdef OPLUS_FEATURE_ADSP_RECOVERY
+#ifdef CONFIG_OPLUS_FEATURE_ADSP_RECOVERY
 static bool oplus_adsp_ssr = false;
 
 void oplus_adsp_set_ssr_state(bool state)
@@ -1272,7 +1272,7 @@ void subsystem_schedule_crash_uevent_work(struct device *dev, const char *device
 EXPORT_SYMBOL(subsystem_schedule_crash_uevent_work);
 #endif /*OPLUS_FEATURE_MODEM_MINIDUMP*/
 
-#ifdef OPLUS_FEATURE_SWITCH_CHECK
+#ifdef CONFIG_OPLUS_FEATURE_SWITCH_CHECK
 /* Add for: check fw status for switch issue */
 #define WCNSS_CRASH_REASON_SMEM		422
 #include <linux/soc/qcom/smem.h>
@@ -1337,7 +1337,7 @@ int subsystem_restart_dev(struct subsys_device *dev)
 
 	name = dev->desc->name;
 
-	#ifdef OPLUS_FEATURE_ADSP_RECOVERY
+	#ifdef CONFIG_OPLUS_FEATURE_ADSP_RECOVERY
 	if (name && !strcmp(name, "adsp")) {
 		pr_err("adsp subsystem restart.\n");
 		if (oplus_adsp_get_ssr_state()) {
@@ -1350,7 +1350,7 @@ int subsystem_restart_dev(struct subsys_device *dev)
 	}
 	#endif /* OPLUS_FEATURE_ADSP_RECOVERY */
 
-#ifdef OPLUS_FEATURE_SWITCH_CHECK
+#ifdef CONFIG_OPLUS_FEATURE_SWITCH_CHECK
 	__wlan_subsystem_send_uevent(&(dev->dev), "", dev->desc->name);
 #endif /* OPLUS_FEATURE_SWITCH_CHECK */
 	subsys_send_early_notifications(dev->early_notify);

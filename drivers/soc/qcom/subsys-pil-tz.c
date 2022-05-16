@@ -30,11 +30,11 @@
 #include <linux/soc/qcom/smem.h>
 #include <linux/soc/qcom/smem_state.h>
 
-#ifdef OPLUS_FEATURE_MM_FEEDBACK
+#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
 #include <soc/oplus/system/oplus_mm_kevent_fb.h>
 #endif
 
-#ifdef OPLUS_FEATURE_SENSOR_FEEDBACK
+#ifdef CONFIG_OPLUS_FEATURE_SENSOR_FEEDBACK
 #include <soc/oplus/system/kernel_fb.h>
 #endif
 
@@ -768,7 +768,7 @@ static struct pil_reset_ops pil_ops_trusted = {
 	.deinit_image = pil_deinit_image_trusted,
 };
 
-#ifdef OPLUS_FEATURE_SENSOR_FEEDBACK
+#ifdef CONFIG_OPLUS_FEATURE_SENSOR_FEEDBACK
 extern void set_subsys_crash_cause(char *reason);
 #endif
 
@@ -802,7 +802,7 @@ static void log_failure_reason(const struct pil_tz_data *d)
 			subsystem_schedule_crash_uevent_work(d->dev, name, 0);
 		}
 		#endif /*OPLUS_FEATURE_MODEM_MINIDUMP*/
-		#ifdef OPLUS_FEATURE_SWITCH_CHECK
+		#ifdef CONFIG_OPLUS_FEATURE_SWITCH_CHECK
 		/* Add for: check fw status for switch issue */
 		wlan_subsystem_send_uevent(d->subsys, reason, name);
 		#endif /* OPLUS_FEATURE_SWITCH_CHECK */
@@ -814,7 +814,7 @@ static void log_failure_reason(const struct pil_tz_data *d)
 	function_name = parse_function_builtin_return_address((unsigned long)__builtin_return_address(0));
 	save_dump_reason_to_smem(reason, function_name);
 	#endif /*OPLUS_FEATURE_AGINGTEST*/
-	#ifdef OPLUS_FEATURE_SENSOR_FEEDBACK
+	#ifdef CONFIG_OPLUS_FEATURE_SENSOR_FEEDBACK
 	set_subsys_crash_cause(reason);
 	if((strncmp(name, "slpi", strlen("slpi")) == 0)
 		|| (strncmp(name, "cdsp", strlen("cdsp")) == 0)
@@ -825,13 +825,13 @@ static void log_failure_reason(const struct pil_tz_data *d)
 	}
 	#endif
 	pr_err("%s subsystem failure reason: %s.\n", name, reason);
-	#ifdef OPLUS_FEATURE_SWITCH_CHECK
+	#ifdef CONFIG_OPLUS_FEATURE_SWITCH_CHECK
 	/* Add for: check fw status for switch issue */
 	wlan_subsystem_send_uevent(d->subsys, reason, name);
 	pr_info("Restart sequence requested  test2");
 	#endif /* OPLUS_FEATURE_SWITCH_CHECK */
 
-	#ifdef OPLUS_FEATURE_MM_FEEDBACK
+	#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
 	if (strncmp(name, "adsp", strlen("adsp")) == 0) {
 		mm_fb_audio_kevent_named(OPLUS_AUDIO_EVENTID_ADSP_CRASH, \
 				MM_FB_KEY_RATELIMIT_5MIN, "FieldData@@%s$$detailData@@audio$$module@@adsp", reason);

@@ -16,13 +16,13 @@
 #include "ion_trace.h"
 #include "ion_private.h"
 
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 #if defined(CONFIG_OPLUS_HEALTHINFO) && defined (CONFIG_OPLUS_MEM_MONITOR)
 #include <linux/healthinfo/memory_monitor.h>
 #endif
 #endif /* OPLUS_FEATURE_HEALTHINFO */
 
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 #ifdef CONFIG_OPLUS_HEALTHINFO
 #include <linux/healthinfo/ion.h>
 #endif
@@ -97,7 +97,7 @@ static struct ion_buffer *ion_buffer_create(struct ion_heap *heap,
 	INIT_LIST_HEAD(&buffer->attachments);
 	mutex_init(&buffer->lock);
 	track_buffer_created(buffer);
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 #ifdef CONFIG_OPLUS_HEALTHINFO
 	if (ion_cnt_enable)
 		atomic_long_add(buffer->size, &ion_total_size);
@@ -181,7 +181,7 @@ struct ion_buffer *ion_buffer_alloc(struct ion_device *dev, size_t len,
 #ifdef CONFIG_OPLUS_ION_BOOSTPOOL
 	unsigned int extra_flags = boost_pool_extra_flags(heap_id_mask);
 #endif /* CONFIG_OPLUS_ION_BOOSTPOOL */
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 #if defined(CONFIG_OPLUS_HEALTHINFO) && defined (CONFIG_OPLUS_MEM_MONITOR)
 	unsigned long ionwait_start = jiffies;
 #endif
@@ -228,7 +228,7 @@ struct ion_buffer *ion_buffer_alloc(struct ion_device *dev, size_t len,
 
 	if (IS_ERR(buffer))
 		return ERR_CAST(buffer);
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 #if defined(CONFIG_OPLUS_HEALTHINFO) && defined (CONFIG_OPLUS_MEM_MONITOR)
 	ionwait_monitor(jiffies_to_msecs(jiffies - ionwait_start));
 #endif
@@ -299,7 +299,7 @@ int ion_buffer_destroy(struct ion_device *dev, struct ion_buffer *buffer)
 		pr_warn("%s: invalid argument\n", __func__);
 		return -EINVAL;
 	}
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 #ifdef CONFIG_OPLUS_HEALTHINFO
 	if (ion_cnt_enable)
 		atomic_long_sub(buffer->size, &ion_total_size);

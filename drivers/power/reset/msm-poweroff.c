@@ -495,7 +495,7 @@ static void msm_restart_prepare(const char *cmd)
 		} else if (!strncmp(cmd, "edl", 3)) {
 			enable_emergency_dload_mode();
 		}
-#ifdef OPLUS_FEATUREB_BOOT
+#ifdef CONFIG_OPLUS_FEATUREB_BOOT
 		else if (!strncmp(cmd, "rf", 2)) {
 			reason = PON_RESTART_REASON_RF;
 		} else if (!strncmp(cmd, "wlan",4)) {

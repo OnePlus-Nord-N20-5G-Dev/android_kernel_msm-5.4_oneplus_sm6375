@@ -38,7 +38,7 @@
 #include <linux/sched_assist/sched_assist_slide.h>
 #endif /* defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST) */
 
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 // Add for get cpu load
 #ifdef CONFIG_OPLUS_HEALTHINFO
 #include <soc/oplus/healthinfo.h>
@@ -959,7 +959,7 @@ update_stats_wait_end(struct cfs_rq *cfs_rq, struct sched_entity *se)
 		update_task_sched_info(p, delta, task_sched_info_runnable, cpu_of(rq_of(cfs_rq)));
 #endif /* defined(OPLUS_FEATURE_TASK_CPUSTATS) && defined(CONFIG_OPLUS_SCHED) */
 
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 // Add for get sched latency stat
 #ifdef CONFIG_OPLUS_HEALTHINFO
 		ohm_schedstats_record(OHM_SCHED_SCHEDLATENCY, p, (delta >> 20));
@@ -1035,14 +1035,14 @@ update_stats_enqueue_sleeper(struct cfs_rq *cfs_rq, struct sched_entity *se)
 				__schedstat_add(se->statistics.iowait_sum, delta);
 				__schedstat_inc(se->statistics.iowait_count);
 				trace_sched_stat_iowait(tsk, delta);
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 #ifdef CONFIG_OPLUS_HEALTHINFO
 // Add for get iowait
 				ohm_schedstats_record(OHM_SCHED_IOWAIT, tsk, (delta >> 20));
 #endif
 #endif /* OPLUS_FEATURE_HEALTHINFO */
 			}
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 #ifdef CONFIG_OPLUS_HEALTHINFO
 			if(!tsk->in_iowait) {
 				 ohm_schedstats_record(OHM_SCHED_DSTATE, tsk, (delta >> 20));

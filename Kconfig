@@ -21,13 +21,11 @@ config OPLUS_SYSTEM_KERNEL_MTK
 source "Kconfig.debug"
 #endif	
 
-#ifdef OPLUS_FEATURE_CHG_BASIC
 config OPLUS_FEATURE_CHG_MISC
 	tristate "OPLUS CHARGER MISC"
 	default n
 	help
 	  Enables support for the oplus charging misc
-#endif
 
 source "scripts/Kconfig.include"
 

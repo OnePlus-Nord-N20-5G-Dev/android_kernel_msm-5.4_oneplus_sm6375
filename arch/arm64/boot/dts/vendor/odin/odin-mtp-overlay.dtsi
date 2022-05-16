@@ -1,6 +1,6 @@
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include "holi-oem-common-mtp.dtsi"
-//#ifdef OPLUS_FEATURE_CHG_BASIC
+//#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 #include "oplus-charge.dtsi"
 //#endif
 //#ifdef OPLUS_BUG_STABILITY
@@ -259,7 +259,7 @@
 };
 #include "camera/odin-camera-overlay.dtsi"
 
-/*#ifdef OPLUS_FEATURE_TP_BASIC*/
+/*#ifdef CONFIG_OPLUS_FEATURE_TP_BASIC*/
 #include "Odin_tp_firmware.dtsi"
 &qupv3_se0_spi {
 	status = "disabled";
@@ -363,7 +363,7 @@
 };
 /*#endif OPLUS_FEATURE_TP_BASIC*/
 
-//#ifdef OPLUS_FEATURE_RF_CALBLE
+//#ifdef CONFIG_OPLUS_FEATURE_RF_CALBLE
 &tlmm {
 	rf_cable0_active: rf_cable0_active {
 		mux {

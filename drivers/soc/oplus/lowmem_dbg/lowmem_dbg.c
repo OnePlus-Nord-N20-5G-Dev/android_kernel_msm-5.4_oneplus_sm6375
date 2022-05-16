@@ -273,18 +273,18 @@ static long get_mem_usage_pages(enum mem_type type)
 		ret = vmalloc_nr_pages();
 		break;
 	case MEM_ION:
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 		ret = (ion_total() >> PAGE_SHIFT) +
 			global_zone_page_state(NR_IONCACHE_PAGES);
 		break;
 #endif
 	case MEM_ION_USED:
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 		ret = ion_total() >> PAGE_SHIFT;
 #endif
 		break;
 	case MEM_ION_CACHE:
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 		ret = global_zone_page_state(NR_IONCACHE_PAGES);
 #endif
 		break;
@@ -489,7 +489,7 @@ static int dump_ion(bool verbose)
 	size_t total_orphaned_size = 0;
 	size_t total_size = 0;
 
-#ifdef OPLUS_FEATURE_MTK_ION_SEPARATE_LOCK
+#ifdef CONFIG_OPLUS_FEATURE_MTK_ION_SEPARATE_LOCK
 	if (!down_read_trylock(&dev->client_lock)) {
 #else /* OPLUS_FEATURE_MTK_ION_SEPARATE_LOCK */
 	if (!down_read_trylock(&dev->lock)) {
@@ -545,7 +545,7 @@ static int dump_ion(bool verbose)
 	pr_info("orphaned: %zu total: %zu\n",
 		total_orphaned_size, total_size);
 
-#ifdef OPLUS_FEATURE_MTK_ION_SEPARATE_LOCK
+#ifdef CONFIG_OPLUS_FEATURE_MTK_ION_SEPARATE_LOCK
 	up_read(&dev->client_lock);
 #else /* OPLUS_FEATURE_MTK_ION_SEPARATE_LOCK */
 	up_read(&dev->lock);

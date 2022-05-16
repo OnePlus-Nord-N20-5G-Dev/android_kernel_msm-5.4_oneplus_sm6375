@@ -25,7 +25,7 @@
 #include <linux/slab.h>
 #include <soc/qcom/boot_stats.h>
 
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 #include <soc/oplus/system/boot_mode.h>
 #endif /* OPLUS_FEATURE_CHG_BASIC */
 
@@ -1021,7 +1021,7 @@ geni_i2c_gsi_xfer_out:
 	return ret;
 }
 
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 #define MAX_RESET_COUNT			10
 #define FG_DEVICE_ADDR			0x55
 #define DEVICE_TYPE_ZY0602		3
@@ -1373,7 +1373,7 @@ static int geni_i2c_xfer(struct i2c_adapter *adap,
 			i2c_put_dma_safe_msg_buf(dma_buf, &msgs[i], !gi2c->err);
 		}
 		ret = gi2c->err;
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 		if(msgs[i].addr == FG_DEVICE_ADDR) {
 			if (gi2c->err) {
 				/* dev_err(gi2c->dev, "gi2c->adap.nr[%d], err_count[%d], msgs[i].addr[0x%x]\n", gi2c->adap.nr, err_count, msgs[i].addr); */
@@ -1569,7 +1569,7 @@ static int geni_i2c_probe(struct platform_device *pdev)
 		gi2c->is_shared = true;
 		dev_info(&pdev->dev, "Multi-EE usecase\n");
 	}
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 	gi2c->i2c_rsc.geni_gpio_pulldown =
 		pinctrl_lookup_state(gi2c->i2c_rsc.geni_pinctrl,
 					PINCTRL_PULLDOWN);

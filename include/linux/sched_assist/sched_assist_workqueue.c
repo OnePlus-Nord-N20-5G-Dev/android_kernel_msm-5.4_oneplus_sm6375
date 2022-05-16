@@ -4,7 +4,7 @@
  */
 
 
-#ifdef OPLUS_FEATURE_SCHED_ASSIST
+#ifdef CONFIG_OPLUS_FEATURE_SCHED_ASSIST
 #ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM
 
 #include <linux/workqueue.h>

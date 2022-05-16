@@ -10,7 +10,7 @@
 #include "sde_formats.h"
 #include "sde_trace.h"
 #ifdef OPLUS_BUG_STABILITY
-#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+#ifdef OPLUS_FEATURE_MM_FEEDBACK
 #include <soc/oplus/system/oplus_mm_kevent_fb.h>
 #endif /* CONFIG_OPLUS_FEATURE_MM_FEEDBACK */
 #endif /*OPLUS_BUG_STABILITY*/
@@ -553,7 +553,7 @@ static int _sde_encoder_phys_cmd_handle_ppdone_timeout(
 				pending_kickoff_cnt);
 
 #ifdef OPLUS_BUG_STABILITY
-#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+#ifdef OPLUS_FEATURE_MM_FEEDBACK
 		mm_fb_display_kevent("DisplayDriverID@@409$$", MM_FB_KEY_RATELIMIT_NONE, "ppdone timeout failed pp:%d kickoff timeout", phys_enc->hw_pp->idx - PINGPONG_0);
 #endif /*CONFIG_OPLUS_FEATURE_MM_FEEDBACK*/
 #endif /* OPLUS_BUG_STABILITY */
@@ -1655,7 +1655,7 @@ static int _sde_encoder_phys_cmd_handle_wr_ptr_timeout(
 		SDE_EVT32(DRMID(phys_enc->parent), switch_te, SDE_EVTLOG_ERROR);
 
 #ifdef OPLUS_BUG_STABILITY
-#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+#ifdef OPLUS_FEATURE_MM_FEEDBACK
 		mm_fb_display_kevent("DisplayDriverID@@418$$", MM_FB_KEY_RATELIMIT_30MIN, "wr_ptr_irq timeout failed switch_te:%d", switch_te);
 #endif /*CONFIG_OPLUS_FEATURE_MM_FEEDBACK*/
 #endif

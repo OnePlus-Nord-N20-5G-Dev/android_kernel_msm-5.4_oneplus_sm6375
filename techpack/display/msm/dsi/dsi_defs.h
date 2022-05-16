@@ -32,7 +32,7 @@
 								##__VA_ARGS__)
 
 #ifdef OPLUS_BUG_STABILITY
-#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+#ifdef OPLUS_FEATURE_MM_FEEDBACK
 #include <soc/oplus/system/oplus_mm_kevent_fb.h>
 #define DSI_MM_ERR(fmt, ...)	\
 	do { \

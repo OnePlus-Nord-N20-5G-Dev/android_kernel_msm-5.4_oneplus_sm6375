@@ -7461,7 +7461,7 @@ static int sched_colocate_write(struct cgroup_subsys_state *css,
 	return 0;
 }
 
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 #define WINDOW_POLICY_INVALID 4
 static u64
 window_policy_read(struct cgroup_subsys_state *css,
@@ -8342,7 +8342,7 @@ static struct cftype cpu_legacy_files[] = {
 		.read_u64 = sched_colocate_read,
 		.write_u64 = sched_colocate_write,
 	},
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 	{
 		.name = "uclamp.window_policy",
 		.read_u64 = window_policy_read,
@@ -8550,7 +8550,7 @@ static struct cftype cpu_files[] = {
 		.read_u64 = sched_colocate_read,
 		.write_u64 = sched_colocate_write,
 	},
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 	{
 		.name = "uclamp.window_policy",
 		.read_u64 = window_policy_read,

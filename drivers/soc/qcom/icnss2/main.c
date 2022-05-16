@@ -109,7 +109,7 @@ static const char * const icnss_pdr_cause[] = {
 	[ICNSS_HOST_ERROR] = "Host error",
 };
 
-#ifdef OPLUS_FEATURE_SWITCH_CHECK
+#ifdef CONFIG_OPLUS_FEATURE_SWITCH_CHECK
 //Add for: check fw status for switch issue
 static unsigned int cnssprobestate = 0;
 #endif /* OPLUS_FEATURE_SWITCH_CHECK */
@@ -3938,7 +3938,7 @@ static inline void icnss_runtime_pm_deinit(struct icnss_priv *priv)
 	pm_runtime_put_sync(&priv->pdev->dev);
 }
 
-#ifdef OPLUS_FEATURE_SWITCH_CHECK
+#ifdef CONFIG_OPLUS_FEATURE_SWITCH_CHECK
 //Add for: check fw status for switch issue
 static void icnss_create_fw_state_kobj(void);
 static ssize_t icnss_show_fw_ready(struct device_driver *driver, char *buf)
@@ -4046,7 +4046,7 @@ static int icnss_probe(struct platform_device *pdev)
 
 	icnss_init_control_params(priv);
 
-	#ifdef OPLUS_FEATURE_SWITCH_CHECK
+	#ifdef CONFIG_OPLUS_FEATURE_SWITCH_CHECK
 	//Add for: check fw status for switch issue
 	icnss_create_fw_state_kobj();
 	#endif /* OPLUS_FEATURE_SWITCH_CHECK */
@@ -4134,7 +4134,7 @@ static int icnss_probe(struct platform_device *pdev)
 
 	INIT_LIST_HEAD(&priv->icnss_tcdev_list);
 
-	#ifdef OPLUS_FEATURE_SWITCH_CHECK
+	#ifdef CONFIG_OPLUS_FEATURE_SWITCH_CHECK
 	//Add for: check fw status for switch issue
 	cnssprobestate = CNSS_PROBE_SUCCESS;
 	#endif /* OPLUS_FEATURE_SWITCH_CHECK */
@@ -4153,7 +4153,7 @@ out_free_resources:
 	icnss_put_resources(priv);
 out_reset_drvdata:
 	dev_set_drvdata(dev, NULL);
-#ifdef OPLUS_FEATURE_SWITCH_CHECK
+#ifdef CONFIG_OPLUS_FEATURE_SWITCH_CHECK
 //Add for: check fw status for switch issue
 	cnssprobestate = CNSS_PROBE_FAIL;
 #endif /* OPLUS_FEATURE_SWITCH_CHECK */
@@ -4438,7 +4438,7 @@ static struct platform_driver icnss_driver = {
 	},
 };
 
-#ifdef OPLUS_FEATURE_SWITCH_CHECK
+#ifdef CONFIG_OPLUS_FEATURE_SWITCH_CHECK
 //Add for: check fw status for switch issue
 static void icnss_create_fw_state_kobj(void) {
 	if (driver_create_file(&(icnss_driver.driver), &fw_ready_attr)) {

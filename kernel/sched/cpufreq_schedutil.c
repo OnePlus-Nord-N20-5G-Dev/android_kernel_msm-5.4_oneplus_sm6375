@@ -21,7 +21,7 @@
 
 #define IOWAIT_BOOST_MIN	(SCHED_CAPACITY_SCALE / 8)
 
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 /* Target load.  Lower values result in higher CPU speeds. */
 #define DEFAULT_TARGET_LOAD 80
 #define DEFAULT_RATE_LIMIT_US 0
@@ -38,7 +38,7 @@ struct sugov_tunables {
 	unsigned int		hispeed_freq;
 	unsigned int		rtg_boost_freq;
 	bool			pl;
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 	spinlock_t        target_loads_lock;
 	unsigned int            *target_loads;
 	int               ntarget_loads;
@@ -86,7 +86,7 @@ struct sugov_policy {
 #if defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
 	unsigned int flags;
 #endif /* defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST) */
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 	u64			hispeed_validate_time;
 	u64			update_time;
 	bool			after_limits_changed;
@@ -312,7 +312,7 @@ static void sugov_deferred_update(struct sugov_policy *sg_policy, u64 time,
 	walt_irq_work_queue(&sg_policy->irq_work);
 }
 
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 static unsigned int freq_to_targetload(
 	struct sugov_tunables *tunables, unsigned int freq)
 {
@@ -499,7 +499,7 @@ static unsigned int get_next_freq(struct sugov_policy *sg_policy,
 	unsigned int freq = arch_scale_freq_invariant() ?
 				policy->cpuinfo.max_freq : policy->cur;
 
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 	unsigned int prev_freq = freq;
 	unsigned int prev_laf = prev_freq * util * 100 / max;
 
@@ -830,7 +830,7 @@ static void sugov_walt_adjust(struct sugov_cpu *sg_cpu, unsigned long *util,
  */
 static inline void ignore_dl_rate_limit(struct sugov_cpu *sg_cpu, struct sugov_policy *sg_policy)
 {
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 	if (cpu_bw_dl(cpu_rq(sg_cpu->cpu)) > sg_cpu->bw_dl) {
 		sg_policy->limits_changed = true;
 		sg_policy->after_limits_changed = true;
@@ -1022,7 +1022,7 @@ sugov_update_shared(struct update_util_data *hook, u64 time, unsigned int flags)
 	if (sugov_should_update_freq(sg_policy, time) &&
 	    !(flags & SCHED_CPUFREQ_CONTINUE)) {
 		next_f = sugov_next_freq_shared(sg_cpu, time);
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 		sg_policy->update_time = time;
 		if (sugov_time_limit(sg_policy, next_f, flags))
 			goto out;
@@ -1033,7 +1033,7 @@ sugov_update_shared(struct update_util_data *hook, u64 time, unsigned int flags)
 		else
 			sugov_deferred_update(sg_policy, time, next_f);
 	}
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 out:
 #endif
 
@@ -1252,7 +1252,7 @@ static ssize_t pl_store(struct gov_attr_set *attr_set, const char *buf,
 	return count;
 }
 
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 static ssize_t target_loads_show(struct gov_attr_set *attr_set, char *buf)
 {
 	struct sugov_tunables *tunables = to_sugov_tunables(attr_set);
@@ -1387,7 +1387,7 @@ static struct governor_attr hispeed_load = __ATTR_RW(hispeed_load);
 static struct governor_attr hispeed_freq = __ATTR_RW(hispeed_freq);
 static struct governor_attr rtg_boost_freq = __ATTR_RW(rtg_boost_freq);
 static struct governor_attr pl = __ATTR_RW(pl);
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 static struct governor_attr target_loads =
 	__ATTR(target_loads, 0664, target_loads_show, target_loads_store);
 static struct governor_attr above_hispeed_delay =
@@ -1401,7 +1401,7 @@ static struct attribute *sugov_attrs[] = {
 	&hispeed_freq.attr,
 	&rtg_boost_freq.attr,
 	&pl.attr,
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 	&target_loads.attr,
 	&above_hispeed_delay.attr,
 #endif
@@ -1522,7 +1522,7 @@ static void sugov_tunables_save(struct cpufreq_policy *policy,
 	cached->hispeed_freq = tunables->hispeed_freq;
 	cached->up_rate_limit_us = tunables->up_rate_limit_us;
 	cached->down_rate_limit_us = tunables->down_rate_limit_us;
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 	cached->above_hispeed_delay = tunables->above_hispeed_delay;
 	cached->nabove_hispeed_delay = tunables->nabove_hispeed_delay;
 #endif
@@ -1551,7 +1551,7 @@ static void sugov_tunables_restore(struct cpufreq_policy *policy)
 	tunables->hispeed_freq = cached->hispeed_freq;
 	tunables->up_rate_limit_us = cached->up_rate_limit_us;
 	tunables->down_rate_limit_us = cached->down_rate_limit_us;
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 	tunables->above_hispeed_delay = cached->above_hispeed_delay;
 	tunables->nabove_hispeed_delay = cached->nabove_hispeed_delay;
 #endif
@@ -1607,7 +1607,7 @@ static int sugov_init(struct cpufreq_policy *policy)
 	tunables->down_rate_limit_us = cpufreq_policy_transition_delay_us(policy);
 	tunables->hispeed_load = DEFAULT_HISPEED_LOAD;
 	tunables->hispeed_freq = 0;
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 	tunables->target_loads = default_target_loads;
 	tunables->ntarget_loads = ARRAY_SIZE(default_target_loads);
 	spin_lock_init(&tunables->target_loads_lock);
@@ -1710,7 +1710,7 @@ static int sugov_start(struct cpufreq_policy *policy)
 #if defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
 	sg_policy->flags	= 0;
 #endif /* defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST) */
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 	sg_policy->hispeed_validate_time	= 0;
 	sg_policy->update_time	= 0;
 	sg_policy->after_limits_changed		= false;
@@ -1779,7 +1779,7 @@ static void sugov_limits(struct cpufreq_policy *policy)
 		sugov_fast_switch(sg_policy, now, freq);
 		raw_spin_unlock_irqrestore(&sg_policy->update_lock, flags);
 	}
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 	sg_policy->after_limits_changed = true;
 #endif
 	sg_policy->limits_changed = true;

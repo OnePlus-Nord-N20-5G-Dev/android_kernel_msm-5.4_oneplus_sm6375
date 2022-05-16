@@ -1,6 +1,6 @@
 # oplus kernel whitelist
 [abi_whitelist]
-#ifdef OPLUS_FEATURE_TP_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_TP_BASIC
   int_sqrt
   __kfifo_alloc
   remove_proc_subtree
@@ -11,7 +11,7 @@
   oplus_misc_healthinfo
 #endif
 
-#ifdef OPLUS_FEATURE_OPROJECT
+#ifdef CONFIG_OPLUS_FEATURE_OPROJECT
   kobject_create_and_add
   sysfs_create_group
   proc_symlink
@@ -21,14 +21,14 @@
   proc_create_data
 #endif /* OPLUS_FEATURE_OPROJECT */
 
-#ifdef OPLUS_FEATURE_UFS_DRIVER
+#ifdef CONFIG_OPLUS_FEATURE_UFS_DRIVER
   tracepoint_probe_register
   tracepoint_probe_unregister
   __tracepoint_android_vh_ufs_extra_query_retry
   __tracepoint_android_vh_ufs_gen_proc_devinfo
 #endif /* OPLUS_FEATURE_UFS_DRIVER */
 
-#ifdef OPLUS_FEATURE_SHUTDOWN_DETECT
+#ifdef CONFIG_OPLUS_FEATURE_SHUTDOWN_DETECT
   send_sig_info
   filp_open
   kernel_write
@@ -40,7 +40,7 @@
   kmsg_dump_get_line
 #endif
 
-#ifdef OPLUS_FEATURE_QCOM_PMICWD
+#ifdef CONFIG_OPLUS_FEATURE_QCOM_PMICWD
   rtc_set_alarm
   rtc_read_alarm
 #endif
@@ -62,27 +62,27 @@
   qcom_smem_alloc
 #endif
 
-#ifdef OPLUS_FEATURE_CONNECTIVITY_LUCKYMONEY
+#ifdef CONFIG_OPLUS_FEATURE_CONNECTIVITY_LUCKYMONEY
   nf_register_net_hooks
   nf_unregister_net_hooks
   netlink_rcv_skb
 #endif
 
-#ifdef OPLUS_FEATURE_CONNECTIVITY_NFC_DRIVER
+#ifdef CONFIG_OPLUS_FEATURE_CONNECTIVITY_NFC_DRIVER
   devm_gpiod_get
 #endif /* OPLUS_FEATURE_CONNECTIVITY_NFC_DRIVER */
 
-#ifdef OPLUS_FEATURE_QCOM_WATCHDOG
+#ifdef CONFIG_OPLUS_FEATURE_QCOM_WATCHDOG
   nr_irqs
 #endif
 
-#ifdef OPLUS_FEATURE_UFS_DRIVER
+#ifdef CONFIG_OPLUS_FEATURE_UFS_DRIVER
   __tracepoint_android_vh_check_throttle
   __tracepoint_android_vh_set_inactive_ratio
   __tracepoint_android_vh_set_swappiness
 #endif /* OPLUS_FEATURE_UFS_DRIVER */
 
-#ifdef OPLUS_FEATURE_WIFI_DHCP
+#ifdef CONFIG_OPLUS_FEATURE_WIFI_DHCP
   __tracepoint_android_vh_check_dhcp_pkt
   netlink_rcv_skb
 #endif
@@ -108,7 +108,7 @@
   cmd_db_read_slave_id
 #endif
 
-#ifdef OPLUS_FEATURE_UIFRIST
+#ifdef CONFIG_OPLUS_FEATURE_UIFRIST
   runqueues
   tracepoint_probe_register
   __tracepoint_android_rvh_check_preempt_wakeup
@@ -124,20 +124,20 @@
   __regmap_init_i2c
 #endif
 
-#ifdef OPLUS_FEATURE_TP_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_TP_BASIC
   prepare_creds
   flush_cache_all
   thermal_zone_device_unregister
 #endif
 
-#ifdef OPLUS_FEATURE_DATA_EVAL
+#ifdef CONFIG_OPLUS_FEATURE_DATA_EVAL
   tcp_write_xmit
   __tcp_transmit_skb
   __tcp_retransmit_skb
   tcp_rtx_synack
 #endif
 
-#ifdef OPLUS_FEATURE_WIFI_DHCP
+#ifdef CONFIG_OPLUS_FEATURE_WIFI_DHCP
   register_net_sysctl
   unregister_net_sysctl_table
   sock_gen_put
@@ -151,21 +151,21 @@
   __hid_register_driver
 #endif
 
-#ifdef OPLUS_FEATURE_UIFRIST_HEAVYLOAD
+#ifdef CONFIG_OPLUS_FEATURE_UIFRIST_HEAVYLOAD
   reciprocal_value
 #endif
 
-#ifdef OPLUS_FEATURE_SENSOR_MONITOR_GKI
+#ifdef CONFIG_OPLUS_FEATURE_SENSOR_MONITOR_GKI
   get_random_u64
   ktime_get_coarse_real_ts64
 #endif
 
-#ifdef OPLUS_FEATURE_NFC_GKI
+#ifdef CONFIG_OPLUS_FEATURE_NFC_GKI
   simple_strtol
   down_timeout
 #endif
 
-#ifdef OPLUS_FEATURE_CAMERA_GKI
+#ifdef CONFIG_OPLUS_FEATURE_CAMERA_GKI
   fan53870_cam_ldo_set_voltage
   fan53870_cam_ldo_disable
   wl2868c_set_ldo_value
@@ -174,7 +174,7 @@
   wl2868c_ldo_disable
 #endif
 
-#ifdef OPLUS_FEATURE_MIDAS_GKI
+#ifdef CONFIG_OPLUS_FEATURE_MIDAS_GKI
   __tracepoint_android_vh_binder_new_ref
   __tracepoint_android_vh_binder_del_ref
   __tracepoint_android_vh_binder_proc_transaction

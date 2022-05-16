@@ -3758,7 +3758,7 @@ static int balance_pgdat(pg_data_t *pgdat, int order, int classzone_idx)
 		.gfp_mask = GFP_KERNEL,
 		.order = order,
 		.may_unmap = 1,
-#ifdef OPLUS_FEATURE_PERFORMANCE
+#ifdef CONFIG_OPLUS_FEATURE_PERFORMANCE
 		.may_swap = 1,
 #endif
 	};
@@ -3848,7 +3848,7 @@ restart:
 		 * reclaim will be aborted.
 		 */
 		sc.may_writepage = !laptop_mode && !nr_boost_reclaim;
-#ifndef OPLUS_FEATURE_PERFORMANCE
+#ifndef CONFIG_OPLUS_FEATURE_PERFORMANCE
 		sc.may_swap = !nr_boost_reclaim;
 #endif
 

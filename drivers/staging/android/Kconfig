@@ -22,7 +22,7 @@ config ANDROID_VSOC
 	  a 'cuttlefish' Android image inside QEmu. The driver interacts with
 	  a QEmu ivshmem device. If built as a module, it will be called vsoc.
 
-#ifdef OPLUS_FEATURE_HANS_FREEZE
+#ifdef CONFIG_OPLUS_FEATURE_HANS_FREEZE
 config OPLUS_FEATURE_HANS
         bool "HANS kernel and HANS native communication channel"
         default n

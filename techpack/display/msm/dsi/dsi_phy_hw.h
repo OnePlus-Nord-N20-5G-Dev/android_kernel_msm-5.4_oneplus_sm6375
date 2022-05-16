@@ -21,7 +21,7 @@
 #define DSI_PHY_WARN(p, fmt, ...)	DRM_WARN("[msm-dsi-warn]: DSI_%d: " fmt,\
 		p ? p->index : -1, ##__VA_ARGS__)
 #ifdef OPLUS_BUG_STABILITY
-#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+#ifdef OPLUS_FEATURE_MM_FEEDBACK
 #undef DSI_PHY_ERR
 #include <soc/oplus/system/oplus_mm_kevent_fb.h>
 #define DSI_PHY_ERR(p, fmt, ...) \

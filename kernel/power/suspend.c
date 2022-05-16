@@ -468,7 +468,7 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 	}
 	#endif
 
-	#ifndef OPLUS_FEATURE_POWERINFO_STANDBY_DEBUG
+	#ifndef CONFIG_OPLUS_FEATURE_POWERINFO_STANDBY_DEBUG
 	if (suspend_test(TEST_PLATFORM))
 		goto Platform_wake;
 	#else
@@ -595,7 +595,7 @@ int suspend_devices_and_enter(suspend_state_t state)
 	do {
 		error = suspend_enter(state, &wakeup);
 	} while (!error && !wakeup && platform_suspend_again(state));
-	#ifdef OPLUS_FEATURE_POWERINFO_STANDBY_DEBUG
+	#ifdef CONFIG_OPLUS_FEATURE_POWERINFO_STANDBY_DEBUG
 	pr_info("suspend_enter end, error:%d, wakeup:%d\n", error, wakeup);
 	#endif /* OPLUS_FEATURE_POWERINFO_STANDBY_DEBUG */
  Resume_devices:

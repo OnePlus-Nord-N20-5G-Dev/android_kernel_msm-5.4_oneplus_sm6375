@@ -946,7 +946,7 @@ config OPLUS_FEATURE_WIFI_LIMMITBGSPEED
 	help
 	  Add for limit speed function.
 
-#ifdef OPLUS_FEATURE_WIFI_LIMMITBGSPEED
+#ifdef CONFIG_OPLUS_FEATURE_WIFI_LIMMITBGSPEED
 config NETFILTER_XT_TARGET_IMQ
     tristate '"IMQ" target support'
 	depends on NETFILTER_XTABLES

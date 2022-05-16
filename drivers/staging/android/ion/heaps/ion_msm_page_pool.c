@@ -31,7 +31,7 @@ static void ion_msm_page_pool_add(struct ion_msm_page_pool *pool,
 				  struct page *page)
 {
 	mutex_lock(&pool->mutex);
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 #ifdef CONFIG_OPLUS_HEALTHINFO
 	zone_page_state_add(1L << pool->order, page_zone(page),
 		NR_IONCACHE_PAGES);
@@ -96,7 +96,7 @@ void ion_msm_page_pool_refill(struct ion_msm_page_pool *pool)
 	/* skip refilling order 0 pools */
 	if (!pool->order)
 		return;
-#ifdef OPLUS_FEATURE_PERFORMANCE
+#ifdef CONFIG_OPLUS_FEATURE_PERFORMANCE
 	if (pool->order > 2)
 		gfp_refill &= ~__GFP_DIRECT_RECLAIM;
 #endif
@@ -130,7 +130,7 @@ static struct page *ion_msm_page_pool_remove(struct ion_msm_page_pool *pool,
 	}
 
 	atomic_dec(&pool->count);
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 #ifdef CONFIG_OPLUS_HEALTHINFO
 	zone_page_state_add(-(1L << pool->order), page_zone(page),
 			NR_IONCACHE_PAGES);

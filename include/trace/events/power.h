@@ -868,7 +868,7 @@ TRACE_EVENT(sugov_next_freq,
 		      __entry->freq)
 );
 
-#ifdef OPLUS_FEATURE_POWER_CPUFREQ
+#ifdef CONFIG_OPLUS_FEATURE_POWER_CPUFREQ
 TRACE_EVENT(sugov_next_freq_tl,
         TP_PROTO(unsigned int cpu, unsigned long util, unsigned long max,
              unsigned int freq, unsigned int laf, unsigned int prev_freq),

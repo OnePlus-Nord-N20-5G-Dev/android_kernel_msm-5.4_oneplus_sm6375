@@ -74,7 +74,7 @@
 #include <linux/uaccess.h>
 #include <asm/processor.h>
 
-#ifdef OPLUS_FEATURE_TASK_CPUSTATS
+#ifdef CONFIG_OPLUS_FEATURE_TASK_CPUSTATS
 #ifdef CONFIG_OPLUS_CTP
 #include <linux/task_cpustats.h>
 #endif
@@ -1712,7 +1712,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler = sysctl_sched_assist_input_boost_ctrl_handler,
 	},
 #endif /* defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST) */
-#ifdef OPLUS_FEATURE_TASK_CPUSTATS
+#ifdef CONFIG_OPLUS_FEATURE_TASK_CPUSTATS
 #ifdef CONFIG_OPLUS_CTP
 	{
 		.procname	= "task_cpustats_enable",

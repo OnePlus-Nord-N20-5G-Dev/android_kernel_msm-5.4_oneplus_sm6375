@@ -373,7 +373,7 @@ void kgsl_process_init_sysfs(struct kgsl_device *device,
 				memtypes[i].attr.name);
 	}
 }
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 #ifdef CONFIG_OPLUS_HEALTHINFO
 unsigned long gpu_total(void)
 {

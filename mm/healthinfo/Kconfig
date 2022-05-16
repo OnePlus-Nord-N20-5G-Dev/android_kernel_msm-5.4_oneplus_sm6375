@@ -1,4 +1,4 @@
-#ifdef OPLUS_FEATURE_HEALTHINFO
+#ifdef CONFIG_OPLUS_FEATURE_HEALTHINFO
 config OPLUS_MEM_MONITOR
 	bool "memory monitor "
 	default n
