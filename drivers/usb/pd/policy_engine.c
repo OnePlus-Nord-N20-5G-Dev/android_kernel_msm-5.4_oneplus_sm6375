@@ -170,7 +170,7 @@ static const char * const usbpd_ext_msg_strings[] = {
 	"Country_Codes",
 };
 
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 #define	POWER_SUPPLY_PROP_PD_ACTIVE			POWER_SUPPLY_IIO_PROP_PD_ACTIVE
 #define	POWER_SUPPLY_PROP_TYPEC_CC_ORIENTATION		POWER_SUPPLY_IIO_PROP_TYPEC_CC_ORIENTATION
 #define	POWER_SUPPLY_PROP_CONNECTOR_TYPE		POWER_SUPPLY_IIO_PROP_CONNECTOR_TYPE
@@ -203,7 +203,7 @@ enum iio_psy_property {
 	POWER_SUPPLY_PROP_REAL_TYPE,
 	POWER_SUPPLY_PROP_TYPEC_MODE,
 	POWER_SUPPLY_PROP_PE_START,
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 	POWER_SUPPLY_PROP_PD_SDP,
 #endif
 	POWER_SUPPLY_IIO_PROP_MAX,
@@ -213,7 +213,7 @@ static const char * const usbpd_iio_channel_map[] = {
 	"pd_active", "typec_cc_orientation", "connector_type",
 	"typec_power_role", "pd_usb_suspend_supported", "typec_src_rp",
 	"pd_in_hard_reset", "pr_current_max", "pr_swap", "pd_voltage_min",
-#ifndef OPLUS_FEATURE_CHG_BASIC
+#ifndef CONFIG_OPLUS_FEATURE_CHG_BASIC
 	"pd_voltage_max", "real_type", "typec_mode", "pe_start",
 #else
 	"pd_voltage_max", "real_type", "typec_mode", "pe_start", "pd_sdp",
@@ -957,7 +957,7 @@ static int pd_eval_src_caps(struct usbpd *pd)
 	usbpd_set_psy_iio_property(pd,
 			POWER_SUPPLY_PROP_PD_ACTIVE, &val);
 
-#ifndef OPLUS_FEATURE_CHG_BASIC
+#ifndef CONFIG_OPLUS_FEATURE_CHG_BASIC
 	/* First time connecting to a PD source and it supports USB data */
 	if (pd->peer_usb_comm && pd->current_dr == DR_UFP && !pd->pd_connected)
 		start_usb_peripheral(pd);
@@ -4651,7 +4651,7 @@ struct usbpd *devm_usbpd_get_by_phandle(struct device *dev, const char *phandle)
 }
 EXPORT_SYMBOL(devm_usbpd_get_by_phandle);
 
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 struct usbpd *pd_lobal;
 int oplus_pdo_select(int vbus_mv, int ibus_ma)
 {
@@ -4934,7 +4934,7 @@ struct usbpd *usbpd_create(struct device *parent,
 	/* force read initial power_supply values */
 	psy_changed(&pd->psy_nb, PSY_EVENT_PROP_CHANGED, pd->usb_psy);
 
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 	pd_lobal = pd;
 #endif
 

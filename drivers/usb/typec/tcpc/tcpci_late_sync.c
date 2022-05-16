@@ -81,7 +81,7 @@ static int __tcpc_class_complete_work(struct device *dev, void *data)
 	return 0;
 }
 
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 #ifndef CONFIG_QGKI
 #define OPLUS_RETRY_COUNT 60
 #define OPLUS_WORK_DELAY round_jiffies_relative(msecs_to_jiffies(500))
@@ -112,7 +112,7 @@ static void oplus_tcpc_complete_work(struct work_struct *data)
 
 static int __init tcpc_class_complete_init(void)
 {
-#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_OPLUS_FEATURE_CHG_BASIC
 #ifndef CONFIG_QGKI
 	struct tcpc_device *tcpc_dev;
 
