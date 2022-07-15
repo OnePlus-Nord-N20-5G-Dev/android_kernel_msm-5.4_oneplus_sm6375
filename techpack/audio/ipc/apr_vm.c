@@ -379,6 +379,10 @@ static void apr_adsp_up(void)
 		schedule_work(&apr_priv->add_chld_dev_work);
 	spin_unlock(&apr_priv->apr_lock);
 	snd_event_notify(apr_priv->dev, SND_EVENT_UP);
+	#ifdef OPLUS_FEATURE_ADSP_RECOVERY
+	/*Jianfeng.Qui@MULTIMEDIA.AUDIODRIVER.ADSP, 2019/11/26, Add for workaround to fix adsp issue*/
+	oplus_adsp_set_ssr_state(false);
+	#endif /* OPLUS_FEATURE_ADSP_RECOVERY */
 }
 
 int apr_load_adsp_image(void)
@@ -1421,12 +1425,10 @@ static int apr_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	}
 
-#ifdef CONFIG_IPC_LOGGING
 	apr_pkt_ctx = ipc_log_context_create(APR_PKT_IPC_LOG_PAGE_CNT,
 						"apr", 0);
 	if (!apr_pkt_ctx)
 		pr_err("%s: Unable to create ipc log context\n", __func__);
-#endif  /* CONFIG_IPC_LOGGING */
 
 	ret = of_property_read_string(pdev->dev.of_node,
 				      "qcom,subsys-name",

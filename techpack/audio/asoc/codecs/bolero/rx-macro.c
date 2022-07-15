@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /* Copyright (c) 2018-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #include <linux/module.h>
@@ -1397,7 +1396,7 @@ static int rx_macro_mclk_enable(struct rx_macro_priv *rx_priv,
 		}
 	}
 exit:
-	dev_dbg(rx_priv->dev, "%s: mclk_enable = %u, dapm = %d clk_users= %d\n",
+	trace_printk("%s: mclk_enable = %u, dapm = %d clk_users= %d\n",
 		__func__, mclk_enable, dapm, rx_priv->rx_mclk_users);
 	mutex_unlock(&rx_priv->mclk_lock);
 	return ret;
@@ -1484,6 +1483,7 @@ static int rx_macro_event_handler(struct snd_soc_component *component,
 		rx_macro_wcd_clsh_imped_config(component, data, false);
 		break;
 	case BOLERO_MACRO_EVT_SSR_DOWN:
+		trace_printk("%s, enter SSR down\n", __func__);
 		rx_priv->dev_up = false;
 		if (rx_priv->swr_ctrl_data) {
 			swrm_wcd_notify(
@@ -1518,6 +1518,7 @@ static int rx_macro_event_handler(struct snd_soc_component *component,
 		rx_macro_core_vote(rx_priv, false);
 		break;
 	case BOLERO_MACRO_EVT_SSR_UP:
+		trace_printk("%s, enter SSR up\n", __func__);
 		rx_priv->dev_up = true;
 		/* reset swr after ssr/pdr */
 		rx_priv->reset_swr = true;
@@ -3826,6 +3827,8 @@ static int rx_swrm_clock(void *handle, bool enable)
 
 	mutex_lock(&rx_priv->swr_clk_lock);
 
+	trace_printk("%s: swrm clock %s\n",
+			__func__, (enable ? "enable" : "disable"));
 	dev_dbg(rx_priv->dev, "%s: swrm clock %s\n",
 		__func__, (enable ? "enable" : "disable"));
 	if (enable) {
@@ -3892,6 +3895,8 @@ static int rx_swrm_clock(void *handle, bool enable)
 			}
 		}
 	}
+	trace_printk("%s: swrm clock users %d\n",
+		__func__, rx_priv->swr_clk_users);
 	dev_dbg(rx_priv->dev, "%s: swrm clock users %d\n",
 		__func__, rx_priv->swr_clk_users);
 exit:
@@ -4293,7 +4298,15 @@ static int rx_macro_probe(struct platform_device *pdev)
 	pm_runtime_set_suspended(&pdev->dev);
 	pm_suspend_ignore_children(&pdev->dev, true);
 	pm_runtime_enable(&pdev->dev);
+	#ifdef OPLUS_BUG_STABILITY
+	/* Le.LI@MULTIMEDIA.AUDIODRIVER.CODEC, 2020/11/27, Apply debug log for SWR issue */
+	dev_err(&pdev->dev, "%s: pm_runtime_enable done\n", __func__);
+	#endif /* OPLUS_BUG_STABILITY */
 	schedule_work(&rx_priv->rx_macro_add_child_devices_work);
+	#ifdef OPLUS_BUG_STABILITY
+	/* Le.LI@MULTIMEDIA.AUDIODRIVER.CODEC, 2020/11/27, Apply debug log for SWR issue */
+	dev_err(&pdev->dev, "%s: schedule work done\n", __func__);
+	#endif /* OPLUS_BUG_STABILITY */
 
 	return 0;
 

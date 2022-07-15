@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /* Copyright (c) 2018-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #include <linux/of_platform.h>
@@ -892,7 +891,7 @@ static int bolero_ssr_enable(struct device *dev, void *data)
 				priv->component,
 				BOLERO_MACRO_EVT_CLK_RESET, 0x0);
 	}
-	pr_debug("%s: clk count reset\n", __func__);
+	trace_printk("%s: clk count reset\n", __func__);
 
 	if (priv->rsc_clk_cb)
 		priv->rsc_clk_cb(priv->clk_dev, BOLERO_MACRO_EVT_SSR_GFMUX_UP);
@@ -915,6 +914,7 @@ static int bolero_ssr_enable(struct device *dev, void *data)
 	/* Add a 100usec sleep to ensure last register write is done */
 	usleep_range(100,110);
 	bolero_clk_rsc_enable_all_clocks(priv->clk_dev, false);
+	trace_printk("%s: regcache_sync done\n", __func__);
 	/* call ssr event for supported macros */
 	for (macro_idx = START_MACRO; macro_idx < MAX_MACRO; macro_idx++) {
 		if (!priv->macro_params[macro_idx].event_handler)
@@ -923,6 +923,7 @@ static int bolero_ssr_enable(struct device *dev, void *data)
 			priv->component,
 			BOLERO_MACRO_EVT_SSR_UP, 0x0);
 	}
+	trace_printk("%s: SSR up events processed by all macros\n", __func__);
 	bolero_cdc_notifier_call(priv, BOLERO_SLV_EVT_SSR_UP);
 	return 0;
 }
@@ -1252,10 +1253,62 @@ static void bolero_soc_codec_remove(struct snd_soc_component *component)
 	return;
 }
 
+
+#ifdef OPLUS_ARCH_EXTENDS
+/* Xiaojun.Lv@MULTIMEDIA.AUDIODRIVER.MACHINE, 2020/12/02, add for codec reg dump */
+static const char * const bolero_reg_dump_text[] = {
+	"ALL",
+};
+
+static SOC_ENUM_SINGLE_EXT_DECL(bolero_reg_dump_enum,
+				bolero_reg_dump_text);
+static int bolero_reg_dump_set(struct snd_kcontrol *kcontrol,
+				 struct snd_ctl_elem_value *ucontrol)
+{
+	int i = 0;
+	u32 reg = 0;
+	struct snd_soc_component *component = NULL;
+	struct bolero_priv *bolero = NULL;
+
+	if (!kcontrol) {
+		return -1;
+	}
+	component = snd_soc_kcontrol_component(kcontrol);
+
+	if (!component) {
+		return -1;
+	}
+	bolero = snd_soc_component_get_drvdata(component);
+
+	if (!bolero || !(bolero->regmap)) {
+		return -1;
+	}
+	dev_err(component->dev, "bolero_reg_dump");
+	for (i = 0; i < bolero_regmap_config.num_reg_defaults; i++) {
+		regmap_read(bolero->regmap, bolero_regmap_config.reg_defaults[i].reg, &reg);
+		dev_err(component->dev, "%04x:%04x\n",
+			bolero_regmap_config.reg_defaults[i].reg, reg);
+	}
+	dev_err(component->dev, "bolero_reg_dump end");
+	return 0;
+}
+
+static const struct snd_kcontrol_new bolero_soc_controls[] = {
+	SOC_ENUM_EXT("BOLERO REG DUMP", bolero_reg_dump_enum,
+		NULL, bolero_reg_dump_set),
+};
+
+#endif /* OPLUS_ARCH_EXTENDS */
+
 static const struct snd_soc_component_driver bolero = {
 	.name = DRV_NAME,
 	.probe = bolero_soc_codec_probe,
 	.remove = bolero_soc_codec_remove,
+#ifdef OPLUS_ARCH_EXTENDS
+/* Xiaojun.Lv@MULTIMEDIA.AUDIODRIVER.MACHINE, 2020/12/02, add for codec reg dump */
+	.controls = bolero_soc_controls,
+	.num_controls = ARRAY_SIZE(bolero_soc_controls),
+#endif
 };
 
 static void bolero_add_child_devices(struct work_struct *work)
@@ -1409,25 +1462,49 @@ static int bolero_probe(struct platform_device *pdev)
 	lpass_core_hw_vote = devm_clk_get(&pdev->dev, "lpass_core_hw_vote");
 	if (IS_ERR(lpass_core_hw_vote)) {
 		ret = PTR_ERR(lpass_core_hw_vote);
+		#ifndef OPLUS_BUG_STABILITY
+		/* Le.LI@MULTIMEDIA.AUDIODRIVER.CODEC, 2020/11/27, Apply debug log for SWR issue */
 		dev_dbg(&pdev->dev, "%s: clk get %s failed %d\n",
 			__func__, "lpass_core_hw_vote", ret);
+		#else /* OPLUS_BUG_STABILITY */
+		dev_err(&pdev->dev, "%s: clk get %s failed %d\n",
+			__func__, "lpass_core_hw_vote", ret);
+		#endif /* OPLUS_BUG_STABILITY */
 		lpass_core_hw_vote = NULL;
 		ret = 0;
 	}
 	priv->lpass_core_hw_vote = lpass_core_hw_vote;
 
+	#ifdef OPLUS_BUG_STABILITY
+	/* Le.LI@MULTIMEDIA.AUDIODRIVER.CODEC, 2020/11/27, Apply debug log for SWR issue */
+	dev_err(&pdev->dev, "%s:lpass_core_hw_vote obtained %p\n", __func__, lpass_core_hw_vote);
+	#endif /* OPLUS_BUG_STABILITY */
 	/* Register LPASS audio hw vote */
 	lpass_audio_hw_vote = devm_clk_get(&pdev->dev, "lpass_audio_hw_vote");
 	if (IS_ERR(lpass_audio_hw_vote)) {
 		ret = PTR_ERR(lpass_audio_hw_vote);
+		#ifndef OPLUS_BUG_STABILITY
+		/* Le.LI@MULTIMEDIA.AUDIODRIVER.CODEC, 2020/11/27, Apply debug log for SWR issue */
 		dev_dbg(&pdev->dev, "%s: clk get %s failed %d\n",
 			__func__, "lpass_audio_hw_vote", ret);
+		#else /* OPLUS_BUG_STABILITY */
+		dev_err(&pdev->dev, "%s: clk get %s failed %d\n",
+			__func__, "lpass_audio_hw_vote", ret);
+		#endif /* OPLUS_BUG_STABILITY */
 		lpass_audio_hw_vote = NULL;
 		ret = 0;
 	}
 	priv->lpass_audio_hw_vote = lpass_audio_hw_vote;
+	#ifdef OPLUS_BUG_STABILITY
+	/* Le.LI@MULTIMEDIA.AUDIODRIVER.CODEC, 2020/11/27, Apply debug log for SWR issue */
+	dev_err(&pdev->dev, "%s:lpass_audio_hw_vote obtained %p\n", __func__, lpass_audio_hw_vote);
+	#endif /* OPLUS_BUG_STABILITY */
 
 	schedule_work(&priv->bolero_add_child_devices_work);
+	#ifdef OPLUS_BUG_STABILITY
+	/* Le.LI@MULTIMEDIA.AUDIODRIVER.CODEC, 2020/11/27, Apply debug log for SWR issue */
+	dev_err(&pdev->dev, "%s:Schedule work done to add child devices\n", __func__);
+	#endif /* OPLUS_BUG_STABILITY */
 	return 0;
 }
 
@@ -1453,9 +1530,18 @@ int bolero_runtime_resume(struct device *dev)
 	int ret = 0;
 	static DEFINE_RATELIMIT_STATE(rtl, 1 * HZ, 1);
 
+	#ifdef OPLUS_BUG_STABILITY
+	/* Le.LI@MULTIMEDIA.AUDIODRIVER.CODEC, 2020/11/27, Apply debug log for SWR issue */
+	dev_err(dev, "%s: Entered\n", __func__);
+	#endif /* OPLUS_BUG_STABILITY */
 	mutex_lock(&priv->vote_lock);
 	if (priv->lpass_core_hw_vote == NULL) {
+		#ifndef OPLUS_BUG_STABILITY
+		/* Le.LI@MULTIMEDIA.AUDIODRIVER.CODEC, 2020/11/27, Apply debug log for SWR issue */
 		dev_dbg(dev, "%s: Invalid lpass core hw node\n", __func__);
+		#else /* OPLUS_BUG_STABILITY */
+		dev_err(dev, "%s: Invalid lpass core hw node\n", __func__);
+		#endif /* OPLUS_BUG_STABILITY */
 		goto audio_vote;
 	}
 
@@ -1468,10 +1554,17 @@ int bolero_runtime_resume(struct device *dev)
 		}
 	}
 	priv->core_hw_vote_count++;
+	trace_printk("%s: hw vote count %d\n",
+		__func__, priv->core_hw_vote_count);
 
 audio_vote:
 	if (priv->lpass_audio_hw_vote == NULL) {
+		#ifndef OPLUS_BUG_STABILITY
+		/* Le.LI@MULTIMEDIA.AUDIODRIVER.CODEC, 2020/11/27, Apply debug log for SWR issue */
 		dev_dbg(dev, "%s: Invalid lpass audio hw node\n", __func__);
+		#else /* OPLUS_BUG_STABILITY */
+		dev_err(dev, "%s: Invalid lpass audio hw node\n", __func__);
+		#endif /* OPLUS_BUG_STABILITY */
 		goto done;
 	}
 
@@ -1485,6 +1578,8 @@ audio_vote:
 		}
 	}
 	priv->core_audio_vote_count++;
+	trace_printk("%s: audio vote count %d\n",
+		__func__, priv->core_audio_vote_count);
 
 done:
 	mutex_unlock(&priv->vote_lock);
@@ -1508,7 +1603,7 @@ int bolero_runtime_suspend(struct device *dev)
 		dev_dbg(dev, "%s: Invalid lpass core hw node\n",
 			__func__);
 	}
-	pr_debug("%s: hw vote count %d\n",
+	trace_printk("%s: hw vote count %d\n",
 		__func__, priv->core_hw_vote_count);
 
 	if (priv->lpass_audio_hw_vote != NULL) {
@@ -1521,6 +1616,8 @@ int bolero_runtime_suspend(struct device *dev)
 		dev_dbg(dev, "%s: Invalid lpass audio hw node\n",
 			__func__);
 	}
+	trace_printk("%s: audio vote count %d\n",
+		__func__, priv->core_audio_vote_count);
 
 	mutex_unlock(&priv->vote_lock);
 	return 0;

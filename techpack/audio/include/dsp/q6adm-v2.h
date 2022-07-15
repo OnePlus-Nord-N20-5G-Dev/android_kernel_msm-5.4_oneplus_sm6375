@@ -192,6 +192,11 @@ int adm_get_pp_topo_module_list_v2(int port_id, int copp_idx,
 
 int adm_set_volume(int port_id, int copp_idx, int volume);
 
+#ifdef OPLUS_FEATURE_KTV
+// QinZhichao@MULTIMEDIA.AudioDriver.KTV, 2020/03/30, Add for ktv2.0
+int adm_set_reverb_param(int port_id, int copp_idx, int32_t* params);
+#endif /* OPLUS_FEATURE_KTV */
+
 int adm_set_softvolume(int port_id, int copp_idx,
 		       struct audproc_softvolume_params *softvol_param);
 

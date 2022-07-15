@@ -68,6 +68,7 @@ static int dsi_pwr_parse_supply_node(struct dsi_parser_utils *utils,
 		rc = utils->read_u32(node, "qcom,supply-ulp-load", &tmp);
 		if (rc) {
 			DSI_DEBUG("ulp-load not specified\n");
+			rc = 0;
 		}
 		regs->vregs[i].ulp_load = (!rc ? tmp :
 			regs->vregs[i].enable_load);
@@ -432,6 +433,10 @@ int dsi_pwr_enable_regulator(struct dsi_regulator_info *regs, bool enable)
 
 	return rc;
 }
+
+#ifdef OPLUS_BUG_STABILITY
+EXPORT_SYMBOL(dsi_pwr_enable_regulator);
+#endif
 
 /*
  * dsi_pwr_panel_regulator_mode_set()

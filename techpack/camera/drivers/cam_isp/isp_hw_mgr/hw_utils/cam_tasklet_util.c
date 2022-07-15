@@ -20,7 +20,11 @@
 /* Threshold for execution delay in ms */
 #define CAM_TASKLET_EXE_TIME_THRESHOLD          10
 
+#ifndef OPLUS_FEATURE_CAMERA_COMMON
 #define CAM_TASKLETQ_SIZE                          256
+#else
+#define CAM_TASKLETQ_SIZE                       512
+#endif
 
 static void cam_tasklet_action(unsigned long data);
 

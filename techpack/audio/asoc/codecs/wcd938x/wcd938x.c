@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2018-2020, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #include <linux/module.h>
@@ -2161,6 +2160,11 @@ static int wcd938x_event_notify(struct notifier_block *block,
 						     NULL);
 		wcd938x->mbhc->wcd_mbhc.deinit_in_progress = true;
 		mbhc = &wcd938x->mbhc->wcd_mbhc;
+		#ifdef OPLUS_ARCH_EXTENDS
+		/*Jianfeng.Qiu@MULTIMEDIA.AUDIODRIVER.HEADSETDET, 2020/09/16, Add for fix headset not correct after ssr*/
+		mbhc->plug_before_ssr = mbhc->current_plug;
+		pr_info("%s: mbhc->plug_before_ssr=%d\n", __func__, mbhc->plug_before_ssr);
+		#endif /* OPLUS_ARCH_EXTENDS */
 		wcd938x->usbc_hs_status = get_usbc_hs_status(component,
 						mbhc->mbhc_cfg);
 		wcd938x_mbhc_ssr_down(wcd938x->mbhc, component);
@@ -2920,95 +2924,6 @@ static int wcd938x_bcs_put(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
-/*
- * wcd938x_codec_enable_standalone_micbias - enable micbias standalone
- * @component: pointer to component instance
- * @micb_num: number of micbias to be enabled
- * @enable: true to enable micbias or false to disable
- *
- * This function is used to enable micbias (1, 2, 3 or 4) during
- * standalone independent of whether TX use-case is running or not
- *
- * Return: error code in case of failure or 0 for success
- */
-
-int wcd938x_codec_enable_standalone_micbias(struct snd_soc_component *component,
-					int micb_num,
-					bool enable)
-{
-	const char * const micb_names[] = {
-		DAPM_MICBIAS1_STANDALONE, DAPM_MICBIAS2_STANDALONE,
-		DAPM_MICBIAS3_STANDALONE, DAPM_MICBIAS4_STANDALONE
-	};
-	int micb_index = micb_num - 1;
-	int rc;
-	struct snd_soc_dapm_context *dapm =
-			snd_soc_component_get_dapm(component);
-
-	if ((micb_index < 0) || (micb_index > WCD938X_MAX_MICBIAS - 1)) {
-		dev_err(component->dev, "%s: Invalid micbias index, micb_ind:%d\n",
-			__func__, micb_index);
-		return -EINVAL;
-	}
-
-	if (enable)
-		rc = snd_soc_dapm_force_enable_pin(
-						dapm,
-						micb_names[micb_index]);
-	else
-		rc = snd_soc_dapm_disable_pin(
-						dapm,
-						micb_names[micb_index]);
-	if (!rc)
-		snd_soc_dapm_sync(dapm);
-	else
-		dev_err(component->dev, "%s: micbias%d force %s pin failed\n",
-			__func__, micb_num, (enable ? "enable" : "disable"));
-
-	return rc;
-}
-EXPORT_SYMBOL(wcd938x_codec_enable_standalone_micbias);
-
-static int wcd938x_get_micbias(struct snd_kcontrol *kcontrol,
-				struct snd_ctl_elem_value *ucontrol)
-{
-	struct snd_soc_component *component = snd_soc_kcontrol_component(kcontrol);
-	struct wcd938x_priv *wcd938x = snd_soc_component_get_drvdata(component);
-	int micb_num = ((struct soc_multi_mixer_control *)
-		    kcontrol->private_value)->shift;
-
-	ucontrol->value.integer.value[0] = wcd938x->micb_enabled[micb_num - 1];
-	return 0;
-}
-
-static int wcd938x_set_micbias(struct snd_kcontrol *kcontrol,
-				struct snd_ctl_elem_value *ucontrol)
-{
-	struct snd_soc_component *component = snd_soc_kcontrol_component(kcontrol);
-	struct wcd938x_priv *wcd938x = snd_soc_component_get_drvdata(component);
-	int micb_num = ((struct soc_multi_mixer_control *)
-		    kcontrol->private_value)->shift;
-	int value = ucontrol->value.integer.value[0];
-	bool enable;
-	int ret;
-
-	if ((micb_num != MIC_BIAS_1) && (micb_num != MIC_BIAS_2) &&
-	    (micb_num != MIC_BIAS_3) && (micb_num != MIC_BIAS_4))
-		return -EINVAL;
-
-	enable = !!value;
-	ret = wcd938x_codec_enable_standalone_micbias(component, micb_num,
-						    enable);
-	if (ret) {
-		dev_err(component->dev, "%s: Failed to enable standalone micb:%d\n",
-			__func__, micb_num);
-		return ret;
-	}
-
-	wcd938x->micb_enabled[micb_num - 1] = enable;
-	return ret;
-}
-
 static const char * const tx_mode_mux_text_wcd9380[] = {
 	"ADC_INVALID", "ADC_HIFI", "ADC_LO_HIF", "ADC_NORMAL", "ADC_LP",
 };
@@ -3135,15 +3050,184 @@ static const struct snd_kcontrol_new wcd938x_snd_controls[] = {
 			wcd938x_tx_master_ch_get, wcd938x_tx_master_ch_put),
 	SOC_ENUM_EXT("DMIC7 ChMap", tx_master_ch_enum,
 			wcd938x_tx_master_ch_get, wcd938x_tx_master_ch_put),
-	SOC_SINGLE_EXT("MIC BIAS1 Standalone", SND_SOC_NOPM, MIC_BIAS_1, 1, 0,
-			wcd938x_get_micbias, wcd938x_set_micbias),
-	SOC_SINGLE_EXT("MIC BIAS2 Standalone", SND_SOC_NOPM, MIC_BIAS_2, 1, 0,
-			wcd938x_get_micbias, wcd938x_set_micbias),
-	SOC_SINGLE_EXT("MIC BIAS3 Standalone", SND_SOC_NOPM, MIC_BIAS_3, 1, 0,
-			wcd938x_get_micbias, wcd938x_set_micbias),
-	SOC_SINGLE_EXT("MIC BIAS4 Standalone", SND_SOC_NOPM, MIC_BIAS_4, 1, 0,
-			wcd938x_get_micbias, wcd938x_set_micbias),
 };
+
+#ifdef OPLUS_ARCH_EXTENDS
+/* Jiaquan.Zhang@MULTIMEDIA.AUDIODRIVER.CODEC, 2021/09/07, add for wcd mic die test */
+const char * const die_crk_det_en_text[] = {"0x80", "0xC0"};
+const u8 det_en[] = {0x80, 0xC0};
+
+const char * const die_crk_det_int1_text[] = {"0xC2", "0x82", "0x42", "0x02"};
+const u8 det_int1[] = {0xC2, 0x82, 0x42, 0x02};
+
+const char * const die_crk_det_out_text[] = {"0x00"};
+
+static SOC_ENUM_SINGLE_EXT_DECL(die_crk_det_en_enum, die_crk_det_en_text);
+static SOC_ENUM_SINGLE_EXT_DECL(die_crk_det_int1_enum, die_crk_det_int1_text);
+static SOC_ENUM_SINGLE_EXT_DECL(die_crk_det_out_enum, die_crk_det_out_text);
+
+static int get_enum_index_from_reg(const u8 reg_array[], u8 array_num, u8 reg)
+{
+	u8 index = 0;
+
+	for (index = 0; index < array_num; index++) {
+		if (reg_array[index] == reg) {
+			return index;
+		}
+	}
+
+	return index;
+}
+
+static int wcd93xx_die_crk_det_en_put(struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol)
+{
+	u8 ctl_value = 0;
+	int ret = -1;
+	struct snd_soc_component *component = NULL;
+
+	if (!kcontrol) {
+		return -EINVAL;
+	}
+
+	component = snd_soc_kcontrol_component(kcontrol);
+	if (!component)
+		return -EINVAL;
+
+	if (ucontrol->value.enumerated.item[0] < ARRAY_SIZE(det_en)) {
+		ctl_value = det_en[ucontrol->value.enumerated.item[0]];
+		ret = snd_soc_component_update_bits(component,
+			WCD938X_DIE_CRACK_DIE_CRK_DET_EN, 0xFF, ctl_value);
+		dev_err(component->dev, "%s: det en update value %4x, return %d \n", __func__,ctl_value, ret);
+	} else {
+		dev_err(component->dev,
+			"%s: out of index ,please check your input value \n", __func__);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int wcd93xx_die_crk_det_en_get(struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol)
+{
+	u32 reg = 0;
+	struct snd_soc_component *component = NULL;
+	struct wcd938x_priv *wcd938x = NULL;
+
+	if (!kcontrol) {
+		return -EINVAL;
+	}
+	component = snd_soc_kcontrol_component(kcontrol);
+
+	if (!component) {
+		return -EINVAL;
+	}
+	wcd938x = snd_soc_component_get_drvdata(component);
+
+	if (!wcd938x || !(wcd938x->regmap)) {
+		return -EINVAL;
+	}
+
+	regmap_read(wcd938x->regmap, WCD938X_DIE_CRACK_DIE_CRK_DET_EN, &reg);
+	dev_err(component->dev, "%04x:%04x\n", WCD938X_DIE_CRACK_DIE_CRK_DET_EN, reg);
+
+	ucontrol->value.enumerated.item[0] = get_enum_index_from_reg(det_en, ARRAY_SIZE(det_en), reg);
+
+	return 0;
+}
+
+static int wcd93xx_die_crk_det_int1_put(struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol)
+{
+	u8 ctl_value = 0;
+	int ret = -1;
+	struct snd_soc_component *component = NULL;
+
+	if (!kcontrol) {
+		return -EINVAL;
+	}
+	component = snd_soc_kcontrol_component(kcontrol);
+	if (!component)
+		return -EINVAL;
+
+	if (ucontrol->value.enumerated.item[0] < ARRAY_SIZE(det_int1)) {
+		ctl_value = det_int1[ucontrol->value.enumerated.item[0]];
+		ret = snd_soc_component_update_bits(component,
+			WCD938X_DIE_CRACK_INT_DIE_CRK_DET_INT1, 0xFF, ctl_value);
+		dev_err(component->dev, "%s: det int1 update value %4x, return %d \n", __func__,ctl_value, ret);
+	} else {
+		dev_err(component->dev, "%s: out of index ,please check your input value \n", __func__);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int wcd93xx_die_crk_det_int1_get(struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol)
+{
+	u32 reg = 0;
+	struct snd_soc_component *component = NULL;
+	struct wcd938x_priv *wcd938x = NULL;
+
+	if (!kcontrol) {
+		return -EINVAL;
+	}
+	component = snd_soc_kcontrol_component(kcontrol);
+
+	if (!component) {
+		return -EINVAL;
+	}
+	wcd938x = snd_soc_component_get_drvdata(component);
+
+	if (!wcd938x || !(wcd938x->regmap)) {
+		return -EINVAL;
+	}
+
+	regmap_read(wcd938x->regmap, WCD938X_DIE_CRACK_INT_DIE_CRK_DET_INT1, &reg);
+	dev_err(component->dev, "%04x:%04x\n", WCD938X_DIE_CRACK_INT_DIE_CRK_DET_INT1, reg);
+
+	ucontrol->value.enumerated.item[0] = get_enum_index_from_reg(det_int1, ARRAY_SIZE(det_int1), reg);
+
+	return 0;
+}
+
+static int wcd93xx_die_crk_det_out_get(struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol )
+{
+	u32 reg = 0;
+	struct snd_soc_component *component = NULL;
+	struct wcd938x_priv *wcd938x = NULL;
+
+	if (!kcontrol) {
+		return -EINVAL;
+	}
+	component = snd_soc_kcontrol_component(kcontrol);
+
+	if (!component) {
+		return -EINVAL;
+	}
+	wcd938x = snd_soc_component_get_drvdata(component);
+
+	if (!wcd938x || !(wcd938x->regmap)) {
+		return -EINVAL;
+	}
+
+	regmap_read(wcd938x->regmap, WCD938X_DIE_CRACK_DIE_CRK_DET_OUT, &reg);
+	dev_err(component->dev, "%04x:%04x\n", WCD938X_DIE_CRACK_DIE_CRK_DET_OUT, reg);
+
+	ucontrol->value.enumerated.item[0] = reg;
+
+	return 0;
+}
+
+static const struct snd_kcontrol_new tx_die_crk_det_control[] = {
+	SOC_ENUM_EXT("DIE_CRK_DET_EN", die_crk_det_en_enum, wcd93xx_die_crk_det_en_get, wcd93xx_die_crk_det_en_put),
+	SOC_ENUM_EXT("DIE_CRK_DET_INT1", die_crk_det_int1_enum, wcd93xx_die_crk_det_int1_get, wcd93xx_die_crk_det_int1_put),
+	SOC_ENUM_EXT("DIE_CRK_DET_OUT", die_crk_det_out_enum, wcd93xx_die_crk_det_out_get, NULL),
+};
+#endif /* OPLUS_ARCH_EXTENDS */
 
 static const struct snd_kcontrol_new adc1_switch[] = {
 	SOC_DAPM_SINGLE("Switch", SND_SOC_NOPM, 0, 1, 0)
@@ -3925,6 +4009,20 @@ static int wcd938x_soc_codec_probe(struct snd_soc_component *component)
 			goto err_hwdep;
 		}
 	}
+
+#ifdef OPLUS_ARCH_EXTENDS
+/* Jiaquan.Zhang@MULTIMEDIA.AUDIODRIVER.CODEC, 2021/09/07, add for wcd mic die test */
+	do {
+		ret = snd_soc_add_component_controls(component, tx_die_crk_det_control,
+			ARRAY_SIZE(tx_die_crk_det_control));
+		if (ret < 0) {
+			dev_err(component->dev,
+				"%s: Failed to add snd ctrls for tx die crk det control\n", __func__);
+			goto err_hwdep; // just for test maybe no need go to err
+		}
+	} while(0);
+#endif /* OPLUS_ARCH_EXTENDS */
+
 	wcd938x->version = WCD938X_VERSION_1_0;
        /* Register event notifier */
 	wcd938x->nblock.notifier_call = wcd938x_event_notify;

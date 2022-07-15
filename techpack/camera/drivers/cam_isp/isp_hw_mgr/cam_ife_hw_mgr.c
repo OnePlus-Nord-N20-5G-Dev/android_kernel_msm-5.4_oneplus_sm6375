@@ -30,6 +30,7 @@
 #define CAM_IFE_SAFE_ENABLE 1
 #define SMMU_SE_IFE 0
 
+
 #define CAM_ISP_PACKET_META_MAX                     \
 	(CAM_ISP_PACKET_META_GENERIC_BLOB_COMMON + 1)
 
@@ -6354,7 +6355,7 @@ static int cam_isp_packet_generic_blob_handler(void *user_data,
 		struct cam_isp_sensor_blanking_config  *sensor_blanking_config;
 
 		if (blob_size < sizeof(struct cam_isp_sensor_blanking_config)) {
-			CAM_ERR(CAM_ISP, "Invalid blob size %zu expected %zu",
+			CAM_ERR(CAM_ISP, "Invalid blob size %u expected %zu",
 				blob_size,
 				sizeof(struct cam_isp_sensor_blanking_config));
 			return -EINVAL;
@@ -6373,7 +6374,7 @@ static int cam_isp_packet_generic_blob_handler(void *user_data,
 		struct cam_isp_sensor_config *csid_dim_config;
 
 		if (blob_size < sizeof(struct cam_isp_sensor_config)) {
-			CAM_ERR(CAM_ISP, "Invalid blob size %zu expected %zu",
+			CAM_ERR(CAM_ISP, "Invalid blob size %u expected %zu",
 				blob_size,
 				sizeof(struct cam_isp_sensor_config));
 			return -EINVAL;
@@ -6393,7 +6394,7 @@ static int cam_isp_packet_generic_blob_handler(void *user_data,
 		struct cam_isp_tpg_core_config *tpg_config;
 
 		if (blob_size < sizeof(struct cam_isp_tpg_core_config)) {
-			CAM_ERR(CAM_ISP, "Invalid blob size %zu expected %zu",
+			CAM_ERR(CAM_ISP, "Invalid blob size %u expected %zu",
 				blob_size,
 				sizeof(struct cam_isp_tpg_core_config));
 			return -EINVAL;
@@ -7990,14 +7991,6 @@ static int cam_ife_hw_mgr_handle_hw_eof(
 	case CAM_ISP_HW_VFE_IN_RDI1:
 	case CAM_ISP_HW_VFE_IN_RDI2:
 	case CAM_ISP_HW_VFE_IN_RDI3:
-		if (!ife_hw_mgr_ctx->is_rdi_only_context)
-			break;
-		if (atomic_read(&ife_hw_mgr_ctx->overflow_pending))
-			break;
-		ife_hw_irq_eof_cb(ife_hw_mgr_ctx->common.cb_priv,
-			CAM_ISP_HW_EVENT_EOF, (void *)&eof_done_event_data);
-		break;
-
 	case CAM_ISP_HW_VFE_IN_PDLIB:
 	case CAM_ISP_HW_VFE_IN_LCR:
 		break;
@@ -8385,10 +8378,17 @@ int cam_ife_hw_mgr_init(struct cam_hw_mgr_intf *hw_mgr_intf, int *iommu_hdl)
 				&g_ife_hw_mgr.ctx_pool[i].free_res_list);
 		}
 
+		#ifndef OPLUS_FEATURE_CAMERA_COMMON
 		g_ife_hw_mgr.ctx_pool[i].cdm_cmd =
 			kzalloc(((sizeof(struct cam_cdm_bl_request)) +
 				((CAM_ISP_CTX_CFG_MAX - 1) *
 				 sizeof(struct cam_cdm_bl_cmd))), GFP_KERNEL);
+		#else
+		g_ife_hw_mgr.ctx_pool[i].cdm_cmd =
+			kzalloc(((sizeof(struct cam_cdm_bl_request)) +
+				((CAM_ISP_CTX_CFG_MAX - 1) *
+				 sizeof(struct cam_cdm_bl_cmd))), GFP_KERNEL);
+		#endif /*OPLUS_FEATURE_CAMERA_COMMON*/
 		if (!g_ife_hw_mgr.ctx_pool[i].cdm_cmd) {
 			rc = -ENOMEM;
 			CAM_ERR(CAM_ISP, "Allocation Failed for cdm command");

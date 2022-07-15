@@ -12,6 +12,14 @@
 #include "cam_packet_util.h"
 #include <linux/math64.h>
 
+#ifndef OPLUS_FEATURE_CAMERA_COMMON
+#define OPLUS_FEATURE_CAMERA_COMMON
+#endif
+
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+#include "oplus_cam_flash_dev.h"
+#endif /*OPLUS_FEATURE_CAMERA_COMMON*/
+
 static uint default_on_timer = 2;
 module_param(default_on_timer, uint, 0644);
 
@@ -171,6 +179,13 @@ int cam_flash_i2c_power_ops(struct cam_flash_ctrl *fctrl,
 				return rc;
 			}
 		}
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+		rc = wl2868c_ldo_enable(EXT_LDO6, 1800);
+		if (rc) {
+			CAM_ERR(CAM_FLASH,"FTM flash powerup CCI fail");
+			goto free_pwr_settings;
+		}
+#endif /* OPLUS_FEATURE_CAMERA_COMMON*/
 
 		rc = cam_sensor_core_power_up(power_info, soc_info);
 		if (rc) {
@@ -188,6 +203,11 @@ int cam_flash_i2c_power_ops(struct cam_flash_ctrl *fctrl,
 		fctrl->is_regulator_enabled = true;
 	} else if ((!regulator_enable) &&
 		(fctrl->is_regulator_enabled == true)) {
+
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+		wl2868c_ldo_disable(EXT_LDO6, 0);
+#endif /* OPLUS_FEATURE_CAMERA_COMMON*/
+
 		rc = cam_sensor_util_power_down(power_info, soc_info);
 		if (rc) {
 			CAM_ERR(CAM_FLASH, "power down the core is failed:%d",
@@ -531,6 +551,20 @@ static int cam_flash_high(
 
 	return rc;
 }
+
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+int cam_flash_on(struct cam_flash_ctrl *flash_ctrl,
+	struct cam_flash_frame_setting *flash_data,
+	int mode) {
+	int rc = 0;
+	if (mode == 0) {
+		rc = cam_flash_low(flash_ctrl, flash_data);
+	} else if (mode == 1) {
+		rc = cam_flash_high(flash_ctrl, flash_data);
+	}
+	return rc;
+}
+#endif
 
 static int cam_flash_duration(struct cam_flash_ctrl *fctrl,
 	struct cam_flash_frame_setting *flash_data)
@@ -1633,7 +1667,6 @@ int cam_flash_pmic_pkt_parser(struct cam_flash_ctrl *fctrl, void *arg)
 			CAM_DBG(CAM_FLASH,
 				"FLASH_CMD_TYPE op:%d, req:%lld",
 				flash_data->opcode, csl_packet->header.request_id);
-
 			if (flash_data->opcode ==
 				CAMERA_SENSOR_FLASH_OP_FIREDURATION) {
 				add_req.trigger_eof = true;

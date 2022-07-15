@@ -1,6 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  * Copyright (c) 2015-2021, The Linux Foundation. All rights reserved.
  */
 
@@ -20,6 +19,9 @@
 #include "dsi_ctrl.h"
 #include "dsi_phy.h"
 #include "dsi_panel.h"
+#ifdef OPLUS_BUG_STABILITY
+#include "oplus_dsi_support.h"
+#endif /*OPLUS_BUG_STABILITY*/
 
 #define MAX_DSI_CTRLS_PER_DISPLAY             2
 #define DSI_CLIENT_NAME_SIZE		20
@@ -111,7 +113,6 @@ struct dsi_display_boot_param {
  * @shadow_cphy_clks:  Used for C-phy clock switch.
  */
 struct dsi_display_clk_info {
-	struct dsi_clk_link_set xo_clks;
 	struct dsi_clk_link_set src_clks;
 	struct dsi_clk_link_set mux_clks;
 	struct dsi_clk_link_set cphy_clks;
@@ -214,8 +215,6 @@ struct dsi_display {
 	int disp_te_gpio;
 	bool is_te_irq_enabled;
 	struct completion esd_te_gate;
-	bool needs_clk_src_reset;
-	bool needs_ctrl_vreg_disable;
 
 	u32 ctrl_count;
 	struct dsi_display_ctrl ctrl[MAX_DSI_CTRLS_PER_DISPLAY];
@@ -772,6 +771,15 @@ enum dsi_pixel_format dsi_display_get_dst_format(
  */
 int dsi_display_cont_splash_config(void *display);
 
+#ifdef OPLUS_BUG_STABILITY
+struct dsi_display *get_main_display(void);
+
+/* Add for implement panel register read */
+int dsi_host_alloc_cmd_tx_buffer(struct dsi_display *display);
+int dsi_display_cmd_engine_enable(struct dsi_display *display);
+int dsi_display_cmd_engine_disable(struct dsi_display *display);
+#endif
+
 /**
  * dsi_display_cont_splash_res_disable() - Disable resource votes added in probe
  * @display:    Pointer to dsi display
@@ -802,37 +810,5 @@ int dsi_display_dump_clks_state(struct dsi_display *display);
  * @display:         Handle to display
  */
 void dsi_display_dfps_update_parent(struct dsi_display *display);
-
-/**
- * dsi_display_unset_clk_src() - reset the clocks source to default
- * @display:         Handle to display
- *
- * Return: Zero on Success
- */
-int dsi_display_unset_clk_src(struct dsi_display *display);
-
-/**
- * dsi_display_set_clk_src() - set the clocks source
- * @display:         Handle to display
- *
- * Return: Zero on Success
- */
-int dsi_display_set_clk_src(struct dsi_display *display);
-
-/**
- * dsi_display_ctrl_vreg_on() - enable dsi ctrl regulator
- * @display:         Handle to display
- *
- * Return: Zero on Success
- */
-int dsi_display_ctrl_vreg_on(struct dsi_display *display);
-
-/**
- * dsi_display_ctrl_vreg_off() - disable dsi ctrl regulator
- * @display:         Handle to display
- *
- * Return: Zero on Success
- */
-int dsi_display_ctrl_vreg_off(struct dsi_display *display);
 
 #endif /* _DSI_DISPLAY_H_ */

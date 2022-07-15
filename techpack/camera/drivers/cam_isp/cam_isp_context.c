@@ -4119,16 +4119,6 @@ static int __cam_isp_ctx_rdi_only_sof_in_bubble_state(
 				CAM_DBG(CAM_ISP,
 					"CDM callback detected for req: %lld, possible buf_done delay, waiting for buf_done",
 					req->request_id);
-				if (req_isp->num_fence_map_out ==
-					req_isp->num_deferred_acks) {
-					__cam_isp_handle_deferred_buf_done(ctx_isp, req,
-						true,
-						CAM_SYNC_STATE_SIGNALED_ERROR,
-						CAM_SYNC_ISP_EVENT_BUBBLE);
-
-					__cam_isp_ctx_handle_buf_done_for_req_list(
-						ctx_isp, req);
-				}
 				goto end;
 			} else {
 				CAM_WARN(CAM_ISP,
@@ -4315,7 +4305,7 @@ static struct cam_isp_ctx_irq_ops
 			__cam_isp_ctx_rdi_only_sof_in_top_state,
 			__cam_isp_ctx_reg_upd_in_sof,
 			NULL,
-			__cam_isp_ctx_notify_eof_in_activated_state,
+			NULL,
 			NULL,
 		},
 	},
@@ -4326,7 +4316,7 @@ static struct cam_isp_ctx_irq_ops
 			__cam_isp_ctx_rdi_only_sof_in_applied_state,
 			NULL,
 			NULL,
-			__cam_isp_ctx_notify_eof_in_activated_state,
+			NULL,
 			__cam_isp_ctx_buf_done_in_applied,
 		},
 	},
@@ -4337,7 +4327,7 @@ static struct cam_isp_ctx_irq_ops
 			__cam_isp_ctx_rdi_only_sof_in_top_state,
 			NULL,
 			NULL,
-			__cam_isp_ctx_notify_eof_in_activated_state,
+			NULL,
 			__cam_isp_ctx_buf_done_in_epoch,
 		},
 	},
@@ -4348,7 +4338,7 @@ static struct cam_isp_ctx_irq_ops
 			__cam_isp_ctx_rdi_only_sof_in_bubble_state,
 			__cam_isp_ctx_rdi_only_reg_upd_in_bubble_state,
 			NULL,
-			__cam_isp_ctx_notify_eof_in_activated_state,
+			NULL,
 			__cam_isp_ctx_buf_done_in_bubble,
 		},
 	},
@@ -4359,7 +4349,7 @@ static struct cam_isp_ctx_irq_ops
 			__cam_isp_ctx_rdi_only_sof_in_bubble_applied,
 			__cam_isp_ctx_rdi_only_reg_upd_in_bubble_applied_state,
 			NULL,
-			__cam_isp_ctx_notify_eof_in_activated_state,
+			NULL,
 			__cam_isp_ctx_buf_done_in_bubble_applied,
 		},
 	},

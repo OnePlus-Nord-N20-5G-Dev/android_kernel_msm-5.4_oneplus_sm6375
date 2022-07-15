@@ -1,7 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
  * Copyright (c) 2015-2020, The Linux Foundation. All rights reserved.
- * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #ifndef _DSI_PHY_HW_H_
@@ -21,6 +20,18 @@
 		fmt, p ? p->index : -1, ##__VA_ARGS__)
 #define DSI_PHY_WARN(p, fmt, ...)	DRM_WARN("[msm-dsi-warn]: DSI_%d: " fmt,\
 		p ? p->index : -1, ##__VA_ARGS__)
+#ifdef OPLUS_BUG_STABILITY
+#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+#undef DSI_PHY_ERR
+#include <soc/oplus/system/oplus_mm_kevent_fb.h>
+#define DSI_PHY_ERR(p, fmt, ...) \
+	do { \
+		DRM_DEV_ERROR(NULL, "[msm-dsi-error]: DSI_%d: "\
+				fmt, p ? p->index : -1, ##__VA_ARGS__); \
+		mm_fb_display_kevent_named(MM_FB_KEY_RATELIMIT_1H, fmt, ##__VA_ARGS__); \
+	} while(0)
+#endif /* CONFIG_OPLUS_FEATURE_MM_FEEDBACK */
+#endif /* OPLUS_BUG_STABILITY */
 
 /**
  * enum dsi_phy_version - DSI PHY version enumeration
@@ -355,7 +366,6 @@ struct dsi_phy_hw_ops {
  * @length:                Length of the DSI dynamic refresh register base map.
  * @index:                 Instance ID of the controller.
  * @version:               DSI PHY version.
- * @clamp_enable           True if phy clamp is enabled
  * @phy_clamp_base:        Base address of phy clamp register map.
  * @feature_map:           Features supported by DSI PHY.
  * @ops:                   Function pointer to PHY operations.
@@ -368,7 +378,6 @@ struct dsi_phy_hw {
 	u32 index;
 
 	enum dsi_phy_version version;
-	bool clamp_enable;
 	void __iomem *phy_clamp_base;
 
 	DECLARE_BITMAP(feature_map, DSI_PHY_MAX_FEATURES);
