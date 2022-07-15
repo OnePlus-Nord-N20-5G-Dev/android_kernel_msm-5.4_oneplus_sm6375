@@ -30,6 +30,18 @@
 								##__VA_ARGS__)
 #define DSI_DEBUG(fmt, ...)	DRM_DEV_DEBUG(NULL, "[msm-dsi-debug]: "fmt, \
 								##__VA_ARGS__)
+
+#ifdef OPLUS_BUG_STABILITY
+#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+#include <soc/oplus/system/oplus_mm_kevent_fb.h>
+#define DSI_MM_ERR(fmt, ...)	\
+	do { \
+			DRM_DEV_ERROR(NULL, "[msm-dsi-error]: " fmt, ##__VA_ARGS__); \
+			mm_fb_display_kevent_named(MM_FB_KEY_RATELIMIT_1H, fmt, ##__VA_ARGS__); \
+		} while(0)
+#endif /*CONFIG_OPLUS_FEATURE_MM_FEEDBACK*/
+#endif /* OPLUS_BUG_STABILITY */
+
 /**
  * enum dsi_pixel_format - DSI pixel formats
  * @DSI_PIXEL_FORMAT_RGB565:
@@ -39,7 +51,6 @@
  * @DSI_PIXEL_FORMAT_RGB111:
  * @DSI_PIXEL_FORMAT_RGB332:
  * @DSI_PIXEL_FORMAT_RGB444:
- * @DSI_PIXEL_FORMAT_RGB101010:
  * @DSI_PIXEL_FORMAT_MAX:
  */
 enum dsi_pixel_format {
@@ -50,7 +61,6 @@ enum dsi_pixel_format {
 	DSI_PIXEL_FORMAT_RGB111,
 	DSI_PIXEL_FORMAT_RGB332,
 	DSI_PIXEL_FORMAT_RGB444,
-	DSI_PIXEL_FORMAT_RGB101010,
 	DSI_PIXEL_FORMAT_MAX
 };
 
@@ -288,6 +298,51 @@ enum dsi_cmd_set_type {
 	DSI_CMD_SET_POST_TIMING_SWITCH,
 	DSI_CMD_SET_QSYNC_ON,
 	DSI_CMD_SET_QSYNC_OFF,
+#ifdef OPLUS_BUG_STABILITY
+	DSI_CMD_POST_ON_BACKLIGHT,
+	DSI_CMD_AOD_ON,
+	DSI_CMD_AOD_OFF,
+	DSI_CMD_HBM_ON,
+	DSI_CMD_HBM_OFF,
+	DSI_CMD_HBM_OFF_HIGHLIGHT,
+	DSI_CMD_AOD_HBM_ON,
+	DSI_CMD_AOD_HBM_OFF,
+	DSI_CMD_SEED_MODE0,
+	DSI_CMD_SEED_MODE1,
+	DSI_CMD_SEED_MODE2,
+	DSI_CMD_SEED_MODE3,
+	DSI_CMD_SEED_MODE4,
+	DSI_CMD_SEED_OFF,
+	DSI_CMD_NORMAL_HBM_ON,
+	DSI_CMD_AOD_HIGH_LIGHT_MODE,
+	DSI_CMD_AOD_LOW_LIGHT_MODE,
+	DSI_CMD_SPR_MODE0,
+	DSI_CMD_SPR_MODE1,
+	DSI_CMD_SPR_MODE2,
+	DSI_CMD_DATA_DIMMING_ON,
+	DSI_CMD_DATA_DIMMING_OFF,
+	DSI_CMD_OSC_CLK_MODEO0,
+	DSI_CMD_OSC_CLK_MODEO1,
+	DSI_CMD_SET_PANEL_ID1,
+	DSI_CMD_READ_SAMSUNG_PANEL_REGISTER_ON,
+	DSI_CMD_READ_SAMSUNG_PANEL_REGISTER_OFF,
+	DSI_CMD_CABC_OFF,
+	DSI_CMD_CABC_MODE1,
+	DSI_CMD_CABC_MODE2,
+	DSI_CMD_CABC_MODE3,
+	DSI_CMD_LOADING_EFFECT_MODE1,
+	DSI_CMD_LOADING_EFFECT_MODE2,
+	DSI_CMD_LOADING_EFFECT_OFF,
+#if defined(OPLUS_FEATURE_PXLW_IRIS5)
+	DSI_CMD_SET_ABYP,
+#endif
+	DSI_CMD_SET_ILI_READ_ON,
+	DSI_CMD_SET_ILI_READ_OFF,
+#endif
+	DSI_CMD_FAILSAFE_ON,
+	DSI_CMD_FAILSAFE_OFF,
+	DSI_CMD_HBM_ENTER_SWITCH,
+	DSI_CMD_HBM_EXIT_SWITCH,
 	DSI_CMD_SET_MAX
 };
 
@@ -628,6 +683,10 @@ struct dsi_display_mode_priv_info {
 	struct msm_ratio pclk_scale;
 	struct msm_roi_caps roi_caps;
 	bool widebus_support;
+#ifdef OPLUS_BUG_STABILITY
+	int fod_on_vblank;
+	int fod_off_vblank;
+#endif /* OPLUS_BUG_STABILITY */
 	u32 allowed_mode_switch;
 };
 
@@ -742,8 +801,6 @@ static inline int dsi_pixel_format_to_bpp(enum dsi_pixel_format fmt)
 		return 8;
 	case DSI_PIXEL_FORMAT_RGB444:
 		return 12;
-	case DSI_PIXEL_FORMAT_RGB101010:
-		return 30;
 	}
 	return 24;
 }

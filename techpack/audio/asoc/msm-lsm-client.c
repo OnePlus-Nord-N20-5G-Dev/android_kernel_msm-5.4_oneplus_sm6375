@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2013-2020, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 #include <linux/init.h>
 #include <linux/err.h>
@@ -412,7 +411,6 @@ static void lsm_event_handler(uint32_t opcode, uint32_t token,
 		if (!temp) {
 			dev_err(rtd->dev, "%s: no memory for event status\n",
 				__func__);
-			spin_unlock_irqrestore(&prtd->event_lock, flags);
 			__pm_relax(prtd->ws);
 			return;
 		}
@@ -3094,6 +3092,17 @@ static int msm_lsm_close(struct snd_pcm_substream *substream)
 						__func__, ret);
 				prtd->lsm_client->lab_started = false;
 			}
+			#ifndef OPLUS_BUG_STABILITY
+			//AnXinlong@MULTIMEDIA.AUDIODRIVER, 2022/01/15, Unmap lsm buffer during lsm close,Qcom case 05559207 CR3103757
+			if (prtd->lsm_client->lab_buffer) {
+				ret = msm_lsm_lab_buffer_alloc(prtd,
+						LAB_BUFFER_DEALLOC);
+				if (ret)
+					dev_err(rtd->dev,
+						"%s: lab buffer dealloc failed ret %d\n",
+						__func__, ret);
+			}
+			#endif /* OPLUS_BUG_STABILITY */
 		}
 
 		if (!atomic_read(&prtd->read_abort)) {
@@ -3113,16 +3122,19 @@ static int msm_lsm_close(struct snd_pcm_substream *substream)
 
 		prtd->lsm_client->started = false;
 	}
-
+	#ifdef OPLUS_BUG_STABILITY
+	//AnXinlong@MULTIMEDIA.AUDIODRIVER, 2022/01/15, Unmap lsm buffer during lsm close,Qcom case 05559207 CR3103757
+	pr_err("%s:: lab_enable= %d \n", __func__, prtd->lsm_client->lab_enable);
 	if (prtd->lsm_client->lab_enable && prtd->lsm_client->lab_buffer) {
 		ret = msm_lsm_lab_buffer_alloc(prtd,
 				LAB_BUFFER_DEALLOC);
+		pr_err("%s:: lab buffer dealloc ret %d\n", __func__, ret);
 		if (ret)
 			dev_err(rtd->dev,
 				"%s: lab buffer dealloc failed ret %d\n",
 				__func__, ret);
 	}
-
+	#endif /* OPLUS_BUG_STABILITY */
 	/*
 	 * De-register existing sound models
 	 * to free SM and CAL buffer, even if

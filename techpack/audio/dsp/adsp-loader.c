@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Copyright (c) 2012-2014, 2017-2021, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2014, 2017-2020, The Linux Foundation. All rights reserved.
  */
 
 #include <linux/init.h>
@@ -18,13 +18,15 @@
 #include <linux/slab.h>
 #include <soc/qcom/boot_stats.h>
 #include <soc/qcom/subsystem_restart.h>
-
+//ifdef OPLUS_FEATURE_SENSOR_DRIVER
+//tangweiqin@BSP,Sensor,20201216,modify for sensor 1.8v always on
+#include <linux/regulator/consumer.h>
+//endif
 #define Q6_PIL_GET_DELAY_MS 100
 #define BOOT_CMD 1
 #define SSR_RESET_CMD 1
 #define IMAGE_UNLOAD_CMD 0
 #define MAX_FW_IMAGES 4
-#define BOOT_FOR_EARLY_CHIME_CMD 2
 
 static ssize_t adsp_boot_store(struct kobject *kobj,
 	struct kobj_attribute *attr,
@@ -111,7 +113,10 @@ static void adsp_load_fw(struct work_struct *adsp_ldr_work)
 	u32 adsp_state;
 	const char *img_name;
 	void *padsp_restart_cb = &adsp_load_state_notify_cb;
-
+//ifdef OPLUS_FEATURE_SENSOR_DRIVER
+//tangweiqin@BSP,Sensor,20201216,modify for sensor 1.8v always on
+	struct regulator *vdd_1v8 = NULL;
+//endif
 	if (!pdev) {
 		dev_err(&pdev->dev, "%s: Platform device null\n", __func__);
 		goto fail;
@@ -122,6 +127,21 @@ static void adsp_load_fw(struct work_struct *adsp_ldr_work)
 			"%s: Device tree information missing\n", __func__);
 		goto fail;
 	}
+
+//ifdef OPLUS_FEATURE_SENSOR_DRIVER
+//tangweiqin@BSP,Sensor,20201216,modify for sensor 1.8v always on
+	vdd_1v8 = regulator_get(&pdev->dev, "vddio");
+
+	if (vdd_1v8 != NULL)
+	{
+		dev_err(&pdev->dev,"%s: vdd_1v8 is not NULL\n", __func__);
+		regulator_set_voltage(vdd_1v8, 1704000, 1952000);
+		regulator_set_load(vdd_1v8, 200000);
+		regulator_enable(vdd_1v8);
+	}
+	else
+		dev_err(&pdev->dev,"%s: vdd_1v8 is NULL\n", __func__);
+//endif
 
 	rc = of_property_read_u32(pdev->dev.of_node, adsp_dt, &adsp_state);
 	if (rc) {
@@ -261,11 +281,7 @@ static ssize_t adsp_boot_store(struct kobject *kobj,
 	} else if (boot == IMAGE_UNLOAD_CMD) {
 		pr_debug("%s: going to call adsp_unloader\n", __func__);
 		adsp_loader_unload(adsp_private);
-	} else if (boot == BOOT_FOR_EARLY_CHIME_CMD) {
-		pr_debug("%s: going to call adsp_load_fw\n", __func__);
-		adsp_load_fw(NULL);
 	}
-
 	return count;
 }
 

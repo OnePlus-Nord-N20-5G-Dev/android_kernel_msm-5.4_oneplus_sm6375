@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /* Copyright (c) 2018-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #include <linux/module.h>
@@ -185,7 +184,6 @@ struct va_macro_priv {
 	int dec_mode[VA_MACRO_NUM_DECIMATORS];
 	u16 current_clk_id;
 	int pcm_rate[VA_MACRO_NUM_DECIMATORS];
-	bool dev_up;
 };
 
 static bool va_macro_get_data(struct snd_soc_component *component,
@@ -328,9 +326,9 @@ static int va_macro_event_handler(struct snd_soc_component *component,
 		va_macro_core_vote(va_priv, false);
 		break;
 	case BOLERO_MACRO_EVT_SSR_UP:
+		trace_printk("%s, enter SSR up\n", __func__);
 		/* reset swr after ssr/pdr */
 		va_priv->reset_swr = true;
-		va_priv->dev_up = true;
 		if (va_priv->swr_ctrl_data)
 			swrm_wcd_notify(
 				va_priv->swr_ctrl_data[0].va_swr_pdev,
@@ -340,7 +338,6 @@ static int va_macro_event_handler(struct snd_soc_component *component,
 		bolero_rsc_clk_reset(va_dev, VA_CORE_CLK);
 		break;
 	case BOLERO_MACRO_EVT_SSR_DOWN:
-		va_priv->dev_up = false;
 		if (va_priv->swr_ctrl_data) {
 			swrm_wcd_notify(
 				va_priv->swr_ctrl_data[0].va_swr_pdev,
@@ -444,7 +441,9 @@ static int va_macro_swr_pwr_event_v2(struct snd_soc_dapm_widget *w,
 		}
 		break;
 	case SND_SOC_DAPM_POST_PMD:
-		if (va_priv->current_clk_id == VA_CORE_CLK) {
+		if (va_priv->current_clk_id == VA_CORE_CLK &&
+			va_priv->va_swr_clk_cnt != 0 &&
+			va_priv->tx_clk_status) {
 			ret = bolero_clk_rsc_request_clock(va_priv->dev,
 					va_priv->default_clk_id,
 					TX_CORE_CLK,
@@ -453,8 +452,7 @@ static int va_macro_swr_pwr_event_v2(struct snd_soc_dapm_widget *w,
 				dev_dbg(component->dev,
 					"%s: request clock TX_CLK disable failed\n",
 					__func__);
-				if (va_priv->dev_up)
-					break;
+				break;
 			}
 			ret = bolero_clk_rsc_request_clock(va_priv->dev,
 					va_priv->default_clk_id,
@@ -464,11 +462,10 @@ static int va_macro_swr_pwr_event_v2(struct snd_soc_dapm_widget *w,
 				dev_dbg(component->dev,
 					"%s: request clock VA_CLK disable failed\n",
 					__func__);
-				if (va_priv->dev_up)
-					bolero_clk_rsc_request_clock(va_priv->dev,
-						TX_CORE_CLK,
-						TX_CORE_CLK,
-						false);
+				bolero_clk_rsc_request_clock(va_priv->dev,
+					TX_CORE_CLK,
+					TX_CORE_CLK,
+					false);
 				break;
 			}
 			va_priv->current_clk_id = TX_CORE_CLK;
@@ -707,13 +704,17 @@ static int va_macro_tx_va_mclk_enable(struct va_macro_priv *va_priv,
 							   TX_CORE_CLK,
 							   false);
 			if (ret < 0) {
-				if (va_priv->swr_clk_users == 0) {
-					msm_cdc_pinctrl_select_sleep_state(
-							va_priv->va_swr_gpio_p);
-				}
 				dev_err_ratelimited(va_priv->dev,
 					"%s: swr request clk failed\n",
 					__func__);
+				#ifdef OPLUS_ARCH_EXTENDS
+				//Nan.Zhong@MULTIMEDIA.AUDIODRIVER.CODEC, 2021/12/02, add for qcom workaround solve wcd not work after adsp ssr
+				if (va_priv->swr_clk_users == 0) {
+					pr_err("%s:: disable va_swr_gpio\n", __func__);
+					msm_cdc_pinctrl_select_sleep_state(
+				                    va_priv->va_swr_gpio_p);
+				}
+				#endif /* OPLUS_ARCH_EXTENDS */
 				goto done;
 			}
 		}
@@ -2846,8 +2847,6 @@ static int va_macro_init(struct snd_soc_component *component)
 	}
 	snd_soc_dapm_sync(dapm);
 
-	va_priv->dev_up = true;
-
 	for (i = 0; i < VA_MACRO_NUM_DECIMATORS; i++) {
 		va_priv->va_hpf_work[i].va_priv = va_priv;
 		va_priv->va_hpf_work[i].decimator = i;
@@ -3220,8 +3219,16 @@ static int va_macro_probe(struct platform_device *pdev)
 	pm_runtime_set_suspended(&pdev->dev);
 	pm_suspend_ignore_children(&pdev->dev, true);
 	pm_runtime_enable(&pdev->dev);
+	#ifdef OPLUS_BUG_STABILITY
+	/* Le.LI@MULTIMEDIA.AUDIODRIVER.CODEC, 2020/11/27, Apply debug log for SWR issue */
+	dev_err(&pdev->dev, "%s: pm_runtime_enable done\n", __func__);
+	#endif /* OPLUS_BUG_STABILITY */
 	if (is_used_va_swr_gpio)
 		schedule_work(&va_priv->va_macro_add_child_devices_work);
+	#ifdef OPLUS_BUG_STABILITY
+	/* Le.LI@MULTIMEDIA.AUDIODRIVER.CODEC, 2020/11/27, Apply debug log for SWR issue */
+	dev_err(&pdev->dev, "%s: Schedule work triggered.\n", __func__);
+	#endif /* OPLUS_BUG_STABILITY */
 	return ret;
 
 reg_macro_fail:

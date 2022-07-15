@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2016-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #include <linux/clk.h>
@@ -42,6 +41,16 @@
 #include "holi-port-config.h"
 #include "msm_holi_dailink.h"
 
+#ifdef OPLUS_FEATURE_AUDIO_FTM
+/*Jianfeng.Qiu@MULTIMEDIA.AUDIODRIVER.FEATURE.FTM, 2020/08/03, Add for Hostless*/
+#include "dailink_extends.h"
+#endif /* OPLUS_FEATURE_AUDIO_FTM */
+
+//#ifdef OPLUS_ARCH_EXTENDS
+//Le.Li@MULTIMEDIA.AUDIODRIVER.CODEC, 2020/09/08, Add for SIA8109 bringup
+#include "codecs/sia81xx/sia81xx_aux_dev_if.h"
+//#endif /* OPLUS_ARCH_EXTENDS */
+
 #define DRV_NAME "holi-asoc-snd"
 #define __CHIPSET__ "HOLI "
 #define MSM_DAILINK_NAME(name) (__CHIPSET__#name)
@@ -73,7 +82,12 @@
 #define CODEC_EXT_CLK_RATE          9600000
 #define ADSP_STATE_READY_TIMEOUT_MS 3000
 #define DEV_NAME_STR_LEN            32
+#ifndef OPLUS_ARCH_EXTENDS
+//Le.Li@MULTIMEDIA.AUDIODRIVER.CODEC, 2020/09/08, Add for headset bringup
 #define WCD_MBHC_HS_V_MAX           1600
+#else /* OPLUS_ARCH_EXTENDS */
+#define WCD_MBHC_HS_V_MAX           1700 //lile add
+#endif /* OPLUS_ARCH_EXTENDS */
 
 #define TDM_CHANNEL_MAX		8
 #define DEV_NAME_STR_LEN	32
@@ -730,7 +744,12 @@ static int msm_int_audrx_init(struct snd_soc_pcm_runtime *);
 static struct wcd_mbhc_config wcd_mbhc_cfg = {
 	.read_fw_bin = false,
 	.calibration = NULL,
+	#ifndef OPLUS_ARCH_EXTENDS
+	/* Jianfeng.Qiu@MULTIMEDIA.AUDIODRIVER.HEADSETDET.959366, 2017/04/10, Modify for headset detect. */
 	.detect_extn_cable = true,
+	#else /* OPLUS_ARCH_EXTENDS */
+	.detect_extn_cable = false,
+	#endif /* OPLUS_ARCH_EXTENDS */
 	.mono_stero_detection = false,
 	.swap_gnd_mic = NULL,
 	.hs_ext_micbias = true,
@@ -747,11 +766,21 @@ static struct wcd_mbhc_config wcd_mbhc_cfg = {
 	.mbhc_micbias = MIC_BIAS_2,
 	.anc_micbias = MIC_BIAS_2,
 	.enable_anc_mic_detect = false,
+	#ifndef OPLUS_ARCH_EXTENDS
+	//Le.Li@MULTIMEDIA.AUDIODRIVER.CODEC, 2020/09/08, Add for headset bringup
 	.moisture_duty_cycle_en = true,
+	#else /* OPLUS_ARCH_EXTENDS */
+	.moisture_duty_cycle_en = false,
+	#endif /* OPLUS_ARCH_EXTENDS */
 };
 
 /* set audio task affinity to core 1 & 2 */
+#ifndef OPLUS_ARCH_EXTENDS
+//Nan.Zhong@MULTIMEDIA.AUDIODRIVER, 2022/02/28, Modify for close cpu0~3 lpm
 static const unsigned int audio_core_list[] = {1, 2};
+#else /* OPLUS_ARCH_EXTENDS */
+static const unsigned int audio_core_list[] = {0, 1, 2, 3};
+#endif /* OPLUS_ARCH_EXTENDS */
 static cpumask_t audio_cpu_map = CPU_MASK_NONE;
 static struct dev_pm_qos_request *msm_audio_req = NULL;
 static unsigned int qos_client_active_cnt = 0;
@@ -4460,9 +4489,6 @@ static int msm_mi2s_snd_startup(struct snd_pcm_substream *substream)
 	}
 
 	if (++mi2s_intf_conf[index].ref_cnt == 1) {
-		/* Check if msm needs to provide the clock to the interface */
-		if (!mi2s_intf_conf[index].msm_is_mi2s_master)
-			mi2s_clk[index].clk_id = mi2s_ebit_clk[index];
 		ret = msm_mi2s_set_sclk(substream, true);
 		if (ret < 0) {
 			dev_err(rtd->card->dev,
@@ -4485,8 +4511,11 @@ static int msm_mi2s_snd_startup(struct snd_pcm_substream *substream)
 			atomic_inc(&(pdata->mi2s_gpio_ref_count[index]));
 		}
 	}
-	if (!mi2s_intf_conf[index].msm_is_mi2s_master)
+	/* Check if msm needs to provide the clock to the interface */
+	if (!mi2s_intf_conf[index].msm_is_mi2s_master) {
+		mi2s_clk[index].clk_id = mi2s_ebit_clk[index];
 		fmt = SND_SOC_DAIFMT_CBM_CFM;
+	}
 	ret = snd_soc_dai_set_fmt(cpu_dai, fmt);
 	if (ret < 0) {
 		pr_err("%s: set fmt cpu dai failed for MI2S (%d), err:%d\n",
@@ -4758,6 +4787,10 @@ static void *def_wcd_mbhc_cal(void)
 	btn_high = ((void *)&btn_cfg->_v_btn_low) +
 		(sizeof(btn_cfg->_v_btn_low[0]) * btn_cfg->num_btn);
 
+	#ifndef OPLUS_ARCH_EXTENDS
+	/*Jianfeng.Qiu@PSW.MM.AudioDriver.HeadsetDet.1226706, 2017/03/03,
+	 *Modify for headset button threshold.
+	 */
 	btn_high[0] = 75;
 	btn_high[1] = 150;
 	btn_high[2] = 237;
@@ -4766,6 +4799,16 @@ static void *def_wcd_mbhc_cal(void)
 	btn_high[5] = 500;
 	btn_high[6] = 500;
 	btn_high[7] = 500;
+	#else /* OPLUS_ARCH_EXTENDS */
+	btn_high[0] = 130;		/* Hook ,0 ~ 160 Ohm*/
+	btn_high[1] = 131;
+	btn_high[2] = 253;		/* Volume + ,160 ~ 360 Ohm*/
+	btn_high[3] = 425;		/* Volume - ,360 ~ 680 Ohm*/
+	btn_high[4] = 426;
+	btn_high[5] = 426;
+	btn_high[6] = 426;
+	btn_high[7] = 426;
+	#endif /* OPLUS_ARCH_EXTENDS */
 
 	return wcd_mbhc_cal;
 }
@@ -5193,6 +5236,10 @@ static struct snd_soc_dai_link msm_common_dai_links[] = {
 		.name = "TX3_CDC_DMA Hostless",
 		.stream_name = "TX3_CDC_DMA Hostless",
 		.dynamic = 1,
+		#ifdef OPLUS_FEATURE_AUDIO_FTM
+		/* Yongpei.Yao@MULTIMEDIA.AUDIODRIVER.FEATURE.FTM, 2020/04/14, Add for loopback test*/
+		.dpcm_playback = 1,
+		#endif /* OPLUS_FEATURE_AUDIO_FTM */
 		.dpcm_capture = 1,
 		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
 			    SND_SOC_DPCM_TRIGGER_POST},
@@ -5329,6 +5376,14 @@ static struct snd_soc_dai_link msm_common_misc_fe_dai_links[] = {
 		.ignore_suspend = 1,
 		SND_SOC_DAILINK_REG(afepcm_tx1),
 	},
+	#ifdef OPLUS_FEATURE_TFA98XX_VI_FEEDBACK
+	/*Jianfeng.Qiu@MULTIMEDIA.AUDIODRIVER.SMARTPA, 2019/07/20, Add for tfa98xx vi feedback*/
+	MI2S_TX_HOSTLESS_DAILINK("Primary MI2S TX_Hostless", "Primary MI2S_TX Hostless Capture", pri_mi2s_tx_hostless),
+	#endif /* OPLUS_FEATURE_TFA98XX_VI_FEEDBACK */
+	#ifdef OPLUS_FEATURE_AUDIO_FTM
+	/*Jianfeng.Qiu@MULTIMEDIA.AUDIODRIVER.FEATURE.FTM, 2020/08/03, Add for Hostless to the end*/
+	TX_CDC_DMA_HOSTLESS_DAILINK("TX4_CDC_DMA Hostless", "TX4_CDC_DMA Hostless", tx4_cdcdma_hostless),
+	#endif /* OPLUS_FEATURE_AUDIO_FTM */
 };
 
 static struct snd_soc_dai_link msm_common_be_dai_links[] = {
@@ -5912,6 +5967,29 @@ static struct snd_soc_dai_link msm_afe_rxtx_lb_be_dai_link[] = {
 	},
 };
 
+#ifdef OPLUS_ARCH_EXTENDS
+//Nan.Zhong@MULTIMEDIA.AUDIODRIVER.SMARTPA, 2021/07/05, Add for tfa98xx bringup
+SND_SOC_DAILINK_DEFS(tfa98xx_pri_mi2s_rx,
+	DAILINK_COMP_ARRAY(COMP_CPU("msm-dai-q6-mi2s.0")),
+	DAILINK_COMP_ARRAY(COMP_CODEC("tfa98xx.2-0034", "tfa98xx-aif-2-34"),),
+	DAILINK_COMP_ARRAY(COMP_PLATFORM("msm-pcm-routing")));
+
+static struct snd_soc_dai_link tfa98xx_mono_be_dai_links[] = {
+	{
+		.name = LPASS_BE_PRI_MI2S_RX,
+		.stream_name = "Primary MI2S Playback",
+		.no_pcm = 1,
+		.dpcm_playback = 1,
+		.id = MSM_BACKEND_DAI_PRI_MI2S_RX,
+		.be_hw_params_fixup = msm_be_hw_params_fixup,
+		.ops = &msm_mi2s_be_ops,
+		.ignore_suspend = 1,
+		.ignore_pmdown_time = 1,
+		SND_SOC_DAILINK_REG(tfa98xx_pri_mi2s_rx),
+	},
+};
+#endif /* OPLUS_ARCH_EXTENDS */
+
 static struct snd_soc_dai_link msm_holi_dai_links[
 			ARRAY_SIZE(msm_common_dai_links) +
 			ARRAY_SIZE(msm_common_misc_fe_dai_links) +
@@ -6178,6 +6256,13 @@ static struct snd_soc_card *populate_snd_card_dailinks(struct device *dev)
 	u32 val = 0;
 	u32 wcn_btfm_intf = 0;
 	const struct of_device_id *match;
+	#ifdef OPLUS_ARCH_EXTENDS
+	//Nan.Zhong@MULTIMEDIA.AUDIODRIVER.SMARTPA, 2021/07/05, Add for tfa98xx bringup
+	int i;
+	const char *product_name = NULL;
+	const char *oplus_speaker_type = "oplus,speaker-pa";
+	struct snd_soc_dai_link *temp_link;
+	#endif /* OPLUS_ARCH_EXTENDS */
 
 	match = of_match_node(holi_asoc_machine_of_match, dev->of_node);
 	if (!match) {
@@ -6223,6 +6308,25 @@ static struct snd_soc_card *populate_snd_card_dailinks(struct device *dev)
 				__func__);
 		} else {
 			if (mi2s_audio_intf) {
+				#ifdef OPLUS_ARCH_EXTENDS
+				//Nan.Zhong@MULTIMEDIA.AUDIODRIVER.SMARTPA, 2021/07/05, Add for tfa98xx bringup
+				if (!of_property_read_string(dev->of_node, oplus_speaker_type,
+						&product_name)) {
+					pr_err("%s: custom speaker product %s\n", __func__, product_name);
+					for (i = 0; i < ARRAY_SIZE(msm_mi2s_be_dai_links); i++) {
+						temp_link = &msm_mi2s_be_dai_links[i];
+						if (temp_link->id == MSM_BACKEND_DAI_PRI_MI2S_RX) {
+							#ifdef CONFIG_SND_SOC_TFA98XX
+							if (!strcmp(product_name, "nxp")) {
+								pr_info("%s: use nxp mono dailink replace\n", __func__);
+								memcpy(temp_link, &tfa98xx_mono_be_dai_links[0],
+										sizeof(tfa98xx_mono_be_dai_links[0]));
+							}
+							#endif
+						}
+					}
+				}
+				#endif /* OPLUS_ARCH_EXTENDS */
 				memcpy(msm_holi_dai_links + total_links,
 					msm_mi2s_be_dai_links,
 					sizeof(msm_mi2s_be_dai_links));
@@ -6668,6 +6772,11 @@ static int msm_asoc_machine_probe(struct platform_device *pdev)
 	int ret = 0;
 	uint index = 0;
 	struct clk *lpass_audio_hw_vote = NULL;
+	#ifdef OPLUS_ARCH_EXTENDS
+	//Le.Li@MULTIMEDIA.AUDIODRIVER.CODEC, 2020/09/08, Add for SIA8109 bringup
+	const char *pa_name = NULL;
+	const char *oplus_speaker_type = "oplus,speaker-pa";
+	#endif /* OPLUS_ARCH_EXTENDS */
 
 	if (!pdev->dev.of_node) {
 		dev_err(&pdev->dev,
@@ -6714,6 +6823,21 @@ static int msm_asoc_machine_probe(struct platform_device *pdev)
 		ret = -EPROBE_DEFER;
 		goto err;
 	}
+
+//#ifdef OPLUS_ARCH_EXTENDS
+//Le.Li@MULTIMEDIA.AUDIODRIVER.CODEC, 2020/09/08, Add for SIA8109 bringup
+	ret = of_property_read_string(pdev->dev.of_node, oplus_speaker_type,
+									&pa_name);
+	if (!ret && !strcmp(pa_name, "sia81xx")) {
+		ret = soc_aux_init_only_sia81xx(pdev, card);
+		if (ret) {
+			pr_err("%s soc_aux_init_only_sia81xx return error.\n", __func__);
+			goto err;
+		}
+	} else {
+		pr_err("%s not use aux sia81xx smartPA.\n", __func__);
+	}
+//#endif /* OPLUS_ARCH_EXTENDS */
 
 	ret = devm_snd_soc_register_card(&pdev->dev, card);
 	if (ret == -EPROBE_DEFER) {
@@ -6840,6 +6964,11 @@ static int msm_asoc_machine_probe(struct platform_device *pdev)
 
 	/* Add QoS request for audio tasks */
 	msm_audio_add_qos_request();
+
+	#ifdef OPLUS_BUG_DEBUG
+	/*Jianfeng.Qiu@MULTIMEDIA.AUDIODRIVER.MACHINE, 2020/08/20, Add for log*/
+	pr_warning("%s, %d, Successfully!\n", __func__, __LINE__);
+	#endif /* OPLUS_BUG_DEBUG */
 
 	return 0;
 err:

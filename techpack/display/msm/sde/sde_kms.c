@@ -1,5 +1,4 @@
 /*
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  * Copyright (c) 2014-2021, The Linux Foundation. All rights reserved.
  * Copyright (C) 2013 Red Hat
  * Author: Rob Clark <robdclark@gmail.com>
@@ -27,7 +26,6 @@
 #include <linux/of_irq.h>
 #include <linux/dma-buf.h>
 #include <linux/memblock.h>
-#include <linux/suspend.h>
 #include <drm/drm_atomic_uapi.h>
 #include <drm/drm_probe_helper.h>
 
@@ -62,6 +60,14 @@
 
 #define CREATE_TRACE_POINTS
 #include "sde_trace.h"
+#ifdef OPLUS_BUG_STABILITY
+#include "oplus_display_private_api.h"
+#include "oplus_onscreenfingerprint.h"
+#endif
+
+#ifdef OPLUS_BUG_STABILITY
+#include "oplus_dc_diming.h"
+#endif
 
 /* defines for secure channel call */
 #define MEM_PROTECT_SD_CTRL_SWITCH 0x18
@@ -113,8 +119,6 @@ static int _sde_kms_mmu_destroy(struct sde_kms *sde_kms);
 static int _sde_kms_mmu_init(struct sde_kms *sde_kms);
 static int _sde_kms_register_events(struct msm_kms *kms,
 		struct drm_mode_object *obj, u32 event, bool en);
-static void sde_kms_handle_power_event(u32 event_type, void *usr);
-
 bool sde_is_custom_client(void)
 {
 	return sdecustom;
@@ -1148,6 +1152,11 @@ static void sde_kms_prepare_commit(struct msm_kms *kms,
 	rc = pm_runtime_get_sync(sde_kms->dev->dev);
 	if (rc < 0) {
 		SDE_ERROR("failed to enable power resources %d\n", rc);
+		#ifdef OPLUS_BUG_STABILITY
+		#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+		SDE_MM_ERROR("DisplayDriverID@@415$$failed to enable power resources %d\n", rc);
+		#endif /*CONFIG_OPLUS_FEATURE_MM_FEEDBACK*/
+		#endif /* OPLUS_BUG_STABILITY */
 		SDE_EVT32(rc, SDE_EVTLOG_ERROR);
 		goto end;
 	}
@@ -1521,6 +1530,10 @@ static void sde_kms_complete_commit(struct msm_kms *kms,
 		_sde_kms_release_splash_resource(sde_kms, crtc);
 
 	SDE_EVT32_VERBOSE(SDE_EVTLOG_FUNC_EXIT);
+
+#ifdef OPLUS_BUG_STABILITY
+	oplus_notify_hbm_off();
+#endif
 	SDE_ATRACE_END("sde_kms_complete_commit");
 }
 
@@ -1736,7 +1749,11 @@ static int _sde_kms_setup_displays(struct drm_device *dev,
 		.soft_reset   = dsi_display_soft_reset,
 		.pre_kickoff  = dsi_conn_pre_kickoff,
 		.clk_ctrl = dsi_display_clk_ctrl,
+#ifdef OPLUS_BUG_STABILITY
+		.set_power = dsi_display_oplus_set_power,
+#else
 		.set_power = dsi_display_set_power,
+#endif
 		.get_mode_info = dsi_conn_get_mode_info,
 		.get_dst_format = dsi_display_get_dst_format,
 		.post_kickoff = dsi_conn_post_kickoff,
@@ -2182,38 +2199,14 @@ static int sde_kms_postinit(struct msm_kms *kms)
 	struct drm_crtc *crtc;
 	struct drm_connector *conn;
 	struct drm_connector_list_iter conn_iter;
-	struct msm_drm_private *priv;
-	int i, rc;
+	int rc;
 
-	if (!sde_kms || !sde_kms->dev || !sde_kms->dev->dev ||
-			!sde_kms->dev->dev_private) {
+	if (!sde_kms || !sde_kms->dev || !sde_kms->dev->dev) {
 		SDE_ERROR("invalid sde_kms\n");
 		return -EINVAL;
 	}
 
 	dev = sde_kms->dev;
-	priv = sde_kms->dev->dev_private;
-
-	/*
-	 * Handle (re)initializations during power enable, the sde power
-	 * event call has to be after drm_irq_install to handle irq update.
-	 */
-	sde_kms_handle_power_event(SDE_POWER_EVENT_POST_ENABLE, sde_kms);
-	sde_kms->power_event = sde_power_handle_register_event(&priv->phandle,
-			SDE_POWER_EVENT_POST_ENABLE |
-			SDE_POWER_EVENT_PRE_DISABLE,
-			sde_kms_handle_power_event, sde_kms, "kms");
-
-	if (sde_kms->splash_data.num_splash_displays) {
-		SDE_DEBUG("Skipping MDP Resources disable\n");
-	} else {
-		for (i = 0; i < SDE_POWER_HANDLE_DBUS_ID_MAX; i++)
-			sde_power_data_bus_set_quota(&priv->phandle, i,
-				SDE_POWER_HANDLE_ENABLE_BUS_AB_QUOTA,
-				SDE_POWER_HANDLE_ENABLE_BUS_IB_QUOTA);
-
-		pm_runtime_put_sync(sde_kms->dev->dev);
-	}
 
 	rc = _sde_debugfs_init(sde_kms);
 	if (rc)
@@ -3714,57 +3707,6 @@ void sde_kms_display_early_wakeup(struct drm_device *dev,
 	drm_connector_list_iter_end(&conn_iter);
 }
 
-#ifdef CONFIG_DEEPSLEEP
-static int _sde_kms_pm_deepsleep_helper(struct sde_kms *sde_kms, bool enter)
-{
-	int i, rc = 0;
-	void *display;
-	struct dsi_display *dsi_display;
-
-	if (mem_sleep_current != PM_SUSPEND_MEM)
-		return 0;
-
-	SDE_INFO("Deepsleep : enter %d\n", enter);
-
-	for (i = 0; i < sde_kms->dsi_display_count; i++) {
-		display = sde_kms->dsi_displays[i];
-		dsi_display = (struct dsi_display *)display;
-
-
-		if (enter) {
-			/* During deepsleep, clk_parent are reset at HW
-			 * but sw caching is retained in clk framework. To
-			 * maintain same state. unset parents and restore
-			 * during exit.
-			 */
-			if (dsi_display->needs_clk_src_reset)
-				(void)dsi_display_unset_clk_src(dsi_display);
-
-			/* DSI ctrl regulator can be disabled, even in static
-			 * screen, during deepsleep
-			 */
-			if (dsi_display->needs_ctrl_vreg_disable)
-				(void)dsi_display_ctrl_vreg_off(dsi_display);
-		} else {
-			if (dsi_display->needs_ctrl_vreg_disable)
-				(void)dsi_display_ctrl_vreg_on(dsi_display);
-
-			if (dsi_display->needs_clk_src_reset)
-				(void)dsi_display_set_clk_src(dsi_display);
-
-		}
-	}
-
-	return rc;
-}
-#else
-static inline int _sde_kms_pm_deepsleep_helper(struct sde_kms *sde_kms,
-					bool enter)
-{
-	return 0;
-}
-#endif
-
 static void _sde_kms_pm_suspend_idle_helper(struct sde_kms *sde_kms,
 	struct device *dev)
 {
@@ -3956,8 +3898,6 @@ unlock:
 	pm_runtime_put_sync(dev);
 	pm_runtime_get_noresume(dev);
 
-	_sde_kms_pm_deepsleep_helper(sde_kms, true);
-
 	/* dump clock state before entering suspend */
 	if (sde_kms->pm_suspend_clk_dump)
 		_sde_kms_dump_clks_state(sde_kms);
@@ -3994,9 +3934,6 @@ retry:
 	} else if (WARN_ON(ret)) {
 		goto end;
 	}
-
-	/* If coming out of deepsleep, restore resources.*/
-	_sde_kms_pm_deepsleep_helper(sde_kms, false);
 
 	sde_kms->suspend_block = false;
 
@@ -4770,7 +4707,7 @@ static int sde_kms_hw_init(struct msm_kms *kms)
 	struct drm_device *dev;
 	struct msm_drm_private *priv;
 	struct platform_device *platformdev;
-	int irq_num, rc = -EINVAL;
+	int i, irq_num, rc = -EINVAL;
 
 	if (!kms) {
 		SDE_ERROR("invalid kms\n");
@@ -4819,6 +4756,26 @@ static int sde_kms_hw_init(struct msm_kms *kms)
 	 */
 	dev->mode_config.allow_fb_modifiers = true;
 
+	/*
+	 * Handle (re)initializations during power enable
+	 */
+	sde_kms_handle_power_event(SDE_POWER_EVENT_POST_ENABLE, sde_kms);
+	sde_kms->power_event = sde_power_handle_register_event(&priv->phandle,
+			SDE_POWER_EVENT_POST_ENABLE |
+			SDE_POWER_EVENT_PRE_DISABLE,
+			sde_kms_handle_power_event, sde_kms, "kms");
+
+	if (sde_kms->splash_data.num_splash_displays) {
+		SDE_DEBUG("Skipping MDP Resources disable\n");
+	} else {
+		for (i = 0; i < SDE_POWER_HANDLE_DBUS_ID_MAX; i++)
+			sde_power_data_bus_set_quota(&priv->phandle, i,
+				SDE_POWER_HANDLE_ENABLE_BUS_AB_QUOTA,
+				SDE_POWER_HANDLE_ENABLE_BUS_IB_QUOTA);
+
+		pm_runtime_put_sync(sde_kms->dev->dev);
+	}
+
 	sde_kms->affinity_notify.notify = sde_kms_irq_affinity_notify;
 	sde_kms->affinity_notify.release = sde_kms_irq_affinity_release;
 
@@ -4865,7 +4822,6 @@ struct msm_kms *sde_kms_init(struct drm_device *dev)
 
 	msm_kms_init(&sde_kms->base, &kms_funcs);
 	sde_kms->dev = dev;
-	sde_kms->irq_num = -1;
 
 	return &sde_kms->base;
 }

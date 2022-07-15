@@ -10,6 +10,10 @@
 #include <linux/kernel.h>
 #include <linux/component.h>
 #include <soc/soundwire.h>
+#ifdef OPLUS_BUG_STABILITY
+//Yongzhi.Zhang@PSW.MM.AudioDriver.Platform.1068440, 2021/02/20, add qcom temp patch to resolve swr write error
+#include <linux/delay.h>
+#endif /* OPLUS_BUG_STABILITY */
 
 #define SWR_MAX_RETRY 5
 
