@@ -3124,8 +3124,7 @@ MODULE_DEVICE_TABLE(of, cnss_of_match_table);
 static inline bool
 cnss_use_nv_mac(struct cnss_plat_data *plat_priv)
 {
-	return of_property_read_bool(plat_priv->plat_dev->dev.of_node,
-				     "use-nv-mac");
+	return true;
 }
 
 static inline bool
