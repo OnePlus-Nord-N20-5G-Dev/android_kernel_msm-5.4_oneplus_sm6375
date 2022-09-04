@@ -918,6 +918,10 @@ config DYNAMIC_TUNNING_SWAPPINESS
 	help
 		tunning swappiness depends on file_pages size
 
+config OPLUS_FEATURE_VIRTUAL_RESERVE_MEMORY
+  bool "OPLUS VIRTUAL RESERVE MEMORY"
+  default n
+
 source "mm/process_reclaim/Kconfig"
 source "mm/malloc_track/Kconfig"
 source "mm/task_mem/Kconfig"
