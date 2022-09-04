@@ -1731,9 +1731,6 @@ static int exec_binprm(struct linux_binprm *bprm)
 
 	return ret;
 }
-#ifdef CONFIG_OPLUS_KERNEL_SECURE_GUARD
-extern int oplus_exec_block(struct file *file);
-#endif /* CONFIG_OPLUS_KERNEL_SECURE_GUARD */
 /*
  * sys_execve() executes a new program.
  */
