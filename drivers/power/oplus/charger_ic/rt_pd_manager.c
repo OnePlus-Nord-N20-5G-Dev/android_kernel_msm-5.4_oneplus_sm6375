@@ -24,9 +24,9 @@
 #include <linux/version.h>
 #include <linux/qti_power_supply.h>
 
-#include "../../../../../../drivers/usb/typec/tcpc/inc/tcpci.h"
-#include "../../../../../../drivers/usb/typec/tcpc/inc/tcpm.h"
-#include "../../../../../../drivers/usb/typec/tcpc/inc/tcpci_typec.h"
+#include "../../../../drivers/usb/typec/tcpc/inc/tcpci.h"
+#include "../../../../drivers/usb/typec/tcpc/inc/tcpm.h"
+#include "../../../../drivers/usb/typec/tcpc/inc/tcpci_typec.h"
 #include "../oplus_charger.h"
 #include "oplus_sy6974b.h"
 //#undef dev_info
