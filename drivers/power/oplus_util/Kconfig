@@ -1,6 +1,0 @@
-config OPLUS_POWER_UTIL
-	bool "oplus power util debug feature"
-	depends on PM_SLEEP
-	default n
-	help
-	    Oplus power debug feature
