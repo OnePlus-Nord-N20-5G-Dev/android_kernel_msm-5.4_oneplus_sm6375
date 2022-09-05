@@ -25,9 +25,7 @@
 #include <linux/slab.h>
 #include <soc/qcom/boot_stats.h>
 
-#ifdef OPLUS_FEATURE_CHG_BASIC
 #include <soc/oplus/system/boot_mode.h>
-#endif /* OPLUS_FEATURE_CHG_BASIC */
 
 #define SE_I2C_TX_TRANS_LEN		(0x26C)
 #define SE_I2C_RX_TRANS_LEN		(0x270)
@@ -1021,7 +1019,6 @@ geni_i2c_gsi_xfer_out:
 	return ret;
 }
 
-#ifdef OPLUS_FEATURE_CHG_BASIC
 #define MAX_RESET_COUNT			10
 #define FG_DEVICE_ADDR			0x55
 #define DEVICE_TYPE_ZY0602		3
@@ -1167,7 +1164,6 @@ static void i2c_oplus_gpio_reset(struct geni_i2c_dev *gi2c)
 err:
 	i2c_reset_processing = false;
 }
-#endif /* OPLUS_FEATURE_CHG_BASIC */
 
 static int geni_i2c_xfer(struct i2c_adapter *adap,
 			 struct i2c_msg msgs[],
@@ -1373,7 +1369,6 @@ static int geni_i2c_xfer(struct i2c_adapter *adap,
 			i2c_put_dma_safe_msg_buf(dma_buf, &msgs[i], !gi2c->err);
 		}
 		ret = gi2c->err;
-#ifdef OPLUS_FEATURE_CHG_BASIC
 		if(msgs[i].addr == FG_DEVICE_ADDR) {
 			if (gi2c->err) {
 				/* dev_err(gi2c->dev, "gi2c->adap.nr[%d], err_count[%d], msgs[i].addr[0x%x]\n", gi2c->adap.nr, err_count, msgs[i].addr); */
@@ -1398,7 +1393,6 @@ static int geni_i2c_xfer(struct i2c_adapter *adap,
 				}
 			}
 		}
-#endif /* OPLUS_FEATURE_CHG_BASIC */
 		if (gi2c->err) {
 			GENI_SE_ERR(gi2c->ipcl, true, gi2c->dev,
 				"i2c error :%d\n", gi2c->err);
@@ -1569,7 +1563,6 @@ static int geni_i2c_probe(struct platform_device *pdev)
 		gi2c->is_shared = true;
 		dev_info(&pdev->dev, "Multi-EE usecase\n");
 	}
-#ifdef OPLUS_FEATURE_CHG_BASIC
 	gi2c->i2c_rsc.geni_gpio_pulldown =
 		pinctrl_lookup_state(gi2c->i2c_rsc.geni_pinctrl,
 					PINCTRL_PULLDOWN);
@@ -1582,7 +1575,6 @@ static int geni_i2c_probe(struct platform_device *pdev)
 	if (IS_ERR_OR_NULL(gi2c->i2c_rsc.geni_gpio_pullup)) {
 		dev_err(&pdev->dev, "No pullup config specified\n");
 	}
-#endif /* OPLUS_FEATURE_CHG_BASIC */
 	if (of_property_read_u32(pdev->dev.of_node, "qcom,clk-freq-out",
 				&gi2c->i2c_rsc.clk_freq_out))
 		gi2c->i2c_rsc.clk_freq_out = KHz(400);
