@@ -420,4 +420,10 @@ config PINCTRL_TB10X
 	depends on OF && ARC_PLAT_TB10X
 	select GPIOLIB
 
+config OPLUS_FEATURE_CHG_BASIC
+	bool "OPLUS charger"
+	default n
+	help
+	  Say Y to include support
+
 endif

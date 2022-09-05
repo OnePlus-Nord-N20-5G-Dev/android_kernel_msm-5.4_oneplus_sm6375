@@ -525,23 +525,11 @@ config HISI_HIKEY_USB
 	  If you say yes here you get support for usb functionality of HiSilicon Hikey Platform.
 
 
-#ifdef OPLUS_FEATURE_TP_BASIC
 config SIM_DETECT
 	tristate "SIM_DETECT system"
 	default n
 	help
 	  Say Y here to enable sim detect system support
-#endif /* OPLUS_FEATURE_TP_BASIC */
-
-#ifdef OPLUS_FEATURE_RF_CALBLE
-config OPLUS_RF_CABLE_MONITOR
-	bool "OPLUS rf cable monitor system"
-	depends on OF
-	select PINMUX
-	default n
-	help
-	  Say Y here to enable OPLUS rf cable monitor system support
-#endif /* OPLUS_FEATURE_RF_CALBLE */
 
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
@@ -558,5 +546,4 @@ source "drivers/misc/cxl/Kconfig"
 source "drivers/misc/ocxl/Kconfig"
 source "drivers/misc/cardreader/Kconfig"
 source "drivers/misc/habanalabs/Kconfig"
-source "drivers/misc/oplus_misc_healthinfo/Kconfig"
 endmenu

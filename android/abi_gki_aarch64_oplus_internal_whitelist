@@ -118,11 +118,6 @@
   oplus_show_utc_time
 #endif
 
-#ifdef OPLUS_FEATURE_SWITCH_CHECK
-#Add for: check fw status for switch issue
-  driver_create_file
-#endif /* OPLUS_FEATURE_SWITCH_CHECK */
-
 #ifdef OPLUS_FEATURE_NFC_GKI
   prj_name
 #endif
