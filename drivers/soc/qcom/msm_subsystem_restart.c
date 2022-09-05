@@ -207,7 +207,6 @@ struct subsys_device {
 	struct list_head list;
 };
 
-#ifdef OPLUS_FEATURE_ADSP_RECOVERY
 static bool oplus_adsp_ssr = false;
 
 void oplus_adsp_set_ssr_state(bool state)
@@ -238,7 +237,6 @@ int oplus_adsp_get_restart_level(const char *name)
 	return dev->restart_level;
 }
 EXPORT_SYMBOL(oplus_adsp_get_restart_level);
-#endif /* OPLUS_FEATURE_ADSP_RECOVERY */
 
 static struct subsys_device *to_subsys(struct device *d)
 {
@@ -1337,7 +1335,6 @@ int subsystem_restart_dev(struct subsys_device *dev)
 
 	name = dev->desc->name;
 
-	#ifdef OPLUS_FEATURE_ADSP_RECOVERY
 	if (name && !strcmp(name, "adsp")) {
 		pr_err("adsp subsystem restart.\n");
 		if (oplus_adsp_get_ssr_state()) {
@@ -1348,7 +1345,6 @@ int subsystem_restart_dev(struct subsys_device *dev)
 			oplus_adsp_set_ssr_state(true);
 		}
 	}
-	#endif /* OPLUS_FEATURE_ADSP_RECOVERY */
 
 #ifdef OPLUS_FEATURE_SWITCH_CHECK
 	__wlan_subsystem_send_uevent(&(dev->dev), "", dev->desc->name);

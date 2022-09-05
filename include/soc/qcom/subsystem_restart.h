@@ -142,11 +142,9 @@ struct dev_crash_report_work {
 };
 #endif /*OPLUS_FEATURE_MODEM_MINIDUMP*/
 
-#ifdef OPLUS_FEATURE_ADSP_RECOVERY
 extern void oplus_adsp_set_ssr_state(bool state);
 extern bool oplus_adsp_get_ssr_state(void);
 extern int oplus_adsp_get_restart_level(const char *name);
-#endif /* OPLUS_FEATURE_ADSP_RECOVERY */
 
 extern int subsys_get_restart_level(struct subsys_device *dev);
 extern int subsystem_restart_dev(struct subsys_device *dev);
@@ -184,7 +182,6 @@ static inline void complete_shutdown_ack(struct subsys_desc *desc)
 struct subsys_device *find_subsys_device(const char *str);
 #else
 
-#ifdef OPLUS_FEATURE_ADSP_RECOVERY
 static inline void oplus_adsp_set_ssr_state(bool ssr_state) { }
 
 static inline bool oplus_adsp_get_ssr_state(void)
@@ -196,7 +193,6 @@ static inline int oplus_adsp_get_restart_level(const char *name)
 {
 	return 0;
 }
-#endif /* OPLUS_FEATURE_ADSP_RECOVERY */
 
 static inline int subsys_get_restart_level(struct subsys_device *dev)
 {
