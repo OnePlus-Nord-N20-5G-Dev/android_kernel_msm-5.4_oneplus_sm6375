@@ -18,7 +18,7 @@
 	reserved-memory {
 		kboot_uboot_logmem: kboot_uboot_logmem@0x9FE00000 {
 			reg = <0x0 0x9FE00000 0x0 0x200000>;
-			compatible = "oplus,xbl_uefi_kbootlog";
+			compatible = "oppo,xbl_uefi_kbootlog";
 			xbluefi-offset = <0x1F7000>;
 			no-map;
 		};

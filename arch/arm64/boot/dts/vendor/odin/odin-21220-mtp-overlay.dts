@@ -132,7 +132,7 @@
 	//#endif /*OPLUS_FEATURE_FINGERPRINT*/
 
 	/* add pingrp for touchscreen */
-	pmx_ts_int_active_oplus {
+	pmx_ts_int_active_oppo {
 		ts_int_active: ts_int_active {
 			mux {
 				pins = "gpio22";
@@ -148,7 +148,7 @@
 		};
 	};
 
-	pmx_ts_int_suspend_oplus {
+	pmx_ts_int_suspend_oppo {
 		ts_int_suspend1: ts_int_suspend1 {
 			mux {
 				pins = "gpio22";
@@ -165,7 +165,7 @@
 		};
 	};
 
-	pmx_ts_reset_active_oplus {
+	pmx_ts_reset_active_oppo {
 		ts_reset_active: ts_reset_active {
 			mux {
 				pins = "gpio21";
@@ -181,7 +181,7 @@
 		};
 	};
 
-	pmx_ts_reset_suspend_oplus {
+	pmx_ts_reset_suspend_oppo {
 		ts_reset_suspend1: ts_reset_suspend1 {
 			mux {
 				pins = "gpio21";
