@@ -804,14 +804,8 @@ void do_coredump(const kernel_siginfo_t *siginfo)
 	if (ispipe && core_pipe_limit)
 		wait_for_dump_helpers(cprm.file);
 close_fail:
-	if (cprm.file) {
-#ifdef CONFIG_OPLUS_AGING_DEBUG
-		if (unlikely(is_global_init(current))){
-			vfs_fsync(cprm.file, 1);
-		}
-#endif
+	if (cprm.file)
 		filp_close(cprm.file, NULL);
-	}
 fail_dropcount:
 	if (ispipe)
 		atomic_dec(&core_dump_count);

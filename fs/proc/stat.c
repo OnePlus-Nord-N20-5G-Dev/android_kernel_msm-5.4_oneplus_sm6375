@@ -22,11 +22,8 @@
 #endif
 
 #ifdef arch_idle_time
-#if (!defined OPLUS_FEATURE_HEALTHINFO) || (!defined CONFIG_OPLUS_HEALTHINFO)
+
 static u64 get_idle_time(struct kernel_cpustat *kcs, int cpu)
-#else
-u64 get_idle_time(struct kernel_cpustat *kcs, int cpu)
-#endif /* OPLUS_FEATURE_HEALTHINFO */
 {
 	u64 idle;
 
@@ -36,11 +33,7 @@ u64 get_idle_time(struct kernel_cpustat *kcs, int cpu)
 	return idle;
 }
 
-#if (!defined OPLUS_FEATURE_HEALTHINFO) || (!defined CONFIG_OPLUS_HEALTHINFO)
 static u64 get_iowait_time(struct kernel_cpustat *kcs, int cpu)
-#else
-u64 get_iowait_time(struct kernel_cpustat *kcs, int cpu)
-#endif /* OPLUS_FEATURE_HEALTHINFO */
 {
 	u64 iowait;
 
@@ -52,11 +45,7 @@ u64 get_iowait_time(struct kernel_cpustat *kcs, int cpu)
 
 #else
 
-#if (!defined OPLUS_FEATURE_HEALTHINFO) || (!defined CONFIG_OPLUS_HEALTHINFO)
 static u64 get_idle_time(struct kernel_cpustat *kcs, int cpu)
-#else
-u64 get_idle_time(struct kernel_cpustat *kcs, int cpu)
-#endif /* OPLUS_FEATURE_HEALTHINFO */
 {
 	u64 idle, idle_usecs = -1ULL;
 
@@ -72,11 +61,7 @@ u64 get_idle_time(struct kernel_cpustat *kcs, int cpu)
 	return idle;
 }
 
-#if (!defined OPLUS_FEATURE_HEALTHINFO) || (!defined CONFIG_OPLUS_HEALTHINFO)
 static u64 get_iowait_time(struct kernel_cpustat *kcs, int cpu)
-#else
-u64 get_iowait_time(struct kernel_cpustat *kcs, int cpu)
-#endif /* OPLUS_FEATURE_HEALTHINFO */
 {
 	u64 iowait, iowait_usecs = -1ULL;
 

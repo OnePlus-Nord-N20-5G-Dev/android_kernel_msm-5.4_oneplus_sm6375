@@ -73,7 +73,6 @@
 
 #include <trace/events/sched.h>
 
-
 int suid_dumpable = 0;
 
 static LIST_HEAD(formats);
@@ -1249,9 +1248,6 @@ char *__get_task_comm(char *buf, size_t buf_size, struct task_struct *tsk)
 }
 EXPORT_SYMBOL_GPL(__get_task_comm);
 
-#if defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
-extern void sched_assist_target_comm(struct task_struct *task);
-#endif /* defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST) */
 /*
  * These functions flushes out all traces of the currently running executable
  * so that a new one can be started
@@ -1262,9 +1258,6 @@ void __set_task_comm(struct task_struct *tsk, const char *buf, bool exec)
 	task_lock(tsk);
 	trace_task_rename(tsk, buf);
 	strlcpy(tsk->comm, buf, sizeof(tsk->comm));
-#if defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
-	sched_assist_target_comm(tsk);
-#endif /* defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST) */
 	task_unlock(tsk);
 	perf_event_comm(tsk, exec);
 }
@@ -1731,6 +1724,7 @@ static int exec_binprm(struct linux_binprm *bprm)
 
 	return ret;
 }
+
 /*
  * sys_execve() executes a new program.
  */
@@ -1784,13 +1778,7 @@ static int __do_execve_file(int fd, struct filename *filename,
 	retval = PTR_ERR(file);
 	if (IS_ERR(file))
 		goto out_unmark;
-#ifdef CONFIG_OPLUS_KERNEL_SECURE_GUARD
-    retval = oplus_exec_block(file);
-	if (retval){
-		fput(file);
-		goto out_unmark;
-	}
-#endif /* CONFIG_OPLUS_KERNEL_SECURE_GUARD */
+
 	sched_exec();
 
 	bprm->file = file;
