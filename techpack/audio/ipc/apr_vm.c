@@ -379,6 +379,9 @@ static void apr_adsp_up(void)
 		schedule_work(&apr_priv->add_chld_dev_work);
 	spin_unlock(&apr_priv->apr_lock);
 	snd_event_notify(apr_priv->dev, SND_EVENT_UP);
+	#ifdef OPLUS_FEATURE_ADSP_RECOVERY
+	oplus_adsp_set_ssr_state(false);
+	#endif /* OPLUS_FEATURE_ADSP_RECOVERY */
 }
 
 int apr_load_adsp_image(void)
@@ -585,7 +588,7 @@ static int apr_vm_cb_thread(void *data)
 	unsigned long delay = jiffies + (HZ / 2);
 	int status = 0;
 	int ret = 0;
-	struct sched_param param = {.sched_priority = 3};
+	struct sched_param param = {.sched_priority = 1};
 
 	sched_setscheduler(current, SCHED_FIFO, &param);
 
