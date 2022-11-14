@@ -24,7 +24,11 @@
 #define CAM_MAX_SW_CDM_VERSION_SUPPORTED  1
 #define CAM_SW_CDM_INDEX                  0
 #define CAM_CDM_INFLIGHT_WORKS            5
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+#define CAM_CDM_HW_RESET_TIMEOUT          900
+#else
 #define CAM_CDM_HW_RESET_TIMEOUT          300
+#endif
 
 /*
  * Macros to get prepare and get information

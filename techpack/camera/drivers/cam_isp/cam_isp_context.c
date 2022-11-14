@@ -845,11 +845,24 @@ static int __cam_isp_ctx_handle_buf_done_for_req_list(
 				ctx->ctx_id);
 			ctx_isp->last_bufdone_err_apply_req_id = 0;
 		} else {
+#ifndef OPLUS_FEATURE_CAMERA_COMMON
 			list_add(&req->list, &ctx->pending_req_list);
 			CAM_DBG(CAM_REQ,
 				"Move active request %lld to pending list(cnt = %d) [bubble recovery], ctx %u",
 				req->request_id, ctx_isp->active_req_cnt,
 				ctx->ctx_id);
+#else
+			CAM_DBG(CAM_REQ,"ctx %u, ctx state %d, request %lld",
+			ctx->ctx_id,ctx->state,req->request_id);
+
+			if (ctx->state != CAM_CTX_FLUSHED) {
+				list_add(&req->list, &ctx->pending_req_list);
+				CAM_DBG(CAM_REQ,
+					"Move active request %lld to pending list(cnt = %d) [bubble recovery], ctx %u",
+					req->request_id, ctx_isp->active_req_cnt,
+					ctx->ctx_id);
+			}
+#endif
 		}
 	} else {
 		if (!ctx_isp->use_frame_header_ts) {
@@ -3541,19 +3554,6 @@ hw_dump:
 	return rc;
 }
 
-static int __cam_isp_ctx_flush_req_in_flushed_state(
-	struct cam_context               *ctx,
-	struct cam_req_mgr_flush_request *flush_req)
-{
-	if (flush_req->type == CAM_REQ_MGR_FLUSH_TYPE_ALL) {
-		CAM_INFO(CAM_ISP, "Flush in flushed state req id %lld ctx_id:%d",
-			flush_req->req_id, ctx->ctx_id);
-		ctx->last_flush_req = flush_req->req_id;
-	}
-
-	return 0;
-}
-
 static int __cam_isp_ctx_flush_req(struct cam_context *ctx,
 	struct list_head *req_list, struct cam_req_mgr_flush_request *flush_req)
 {
@@ -3656,15 +3656,22 @@ static int __cam_isp_ctx_flush_req_in_top_state(
 	CAM_DBG(CAM_ISP, "Flush pending list");
 	spin_lock_bh(&ctx->lock);
 	rc = __cam_isp_ctx_flush_req(ctx, &ctx->pending_req_list, flush_req);
+#ifndef OPLUS_FEATURE_CAMERA_COMMON
 	spin_unlock_bh(&ctx->lock);
+#endif
 
 	if (flush_req->type == CAM_REQ_MGR_FLUSH_TYPE_ALL) {
 		if (ctx->state <= CAM_CTX_READY) {
 			ctx->state = CAM_CTX_ACQUIRED;
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+			spin_unlock_bh(&ctx->lock);
+#endif
 			goto end;
 		}
 
+#ifndef OPLUS_FEATURE_CAMERA_COMMON
 		spin_lock_bh(&ctx->lock);
+#endif
 		ctx->state = CAM_CTX_FLUSHED;
 		ctx_isp->substate_activated = CAM_ISP_CTX_ACTIVATED_HALT;
 		spin_unlock_bh(&ctx->lock);
@@ -3722,7 +3729,13 @@ static int __cam_isp_ctx_flush_req_in_top_state(
 			CAM_ERR(CAM_ISP, "Failed to reset HW rc: %d", rc);
 
 		ctx_isp->init_received = false;
+#ifndef OPLUS_FEATURE_CAMERA_COMMON
 	}
+#else
+	} else {
+		spin_unlock_bh(&ctx->lock);
+	}
+#endif
 
 end:
 	ctx_isp->bubble_frame_cnt = 0;
@@ -4648,14 +4661,6 @@ static int __cam_isp_ctx_config_dev_in_top_state(
 		CAM_INFO(CAM_ISP,
 			"request %lld has been flushed, reject packet",
 			packet->header.request_id);
-		rc = -EBADR;
-		goto free_req;
-	} else if ((packet_opcode == CAM_ISP_PACKET_INIT_DEV)
-		&& (packet->header.request_id <= ctx->last_flush_req)
-		&& ctx->last_flush_req && packet->header.request_id) {
-		CAM_WARN(CAM_ISP,
-			"last flushed req is %lld, config dev(init) for req %lld",
-			ctx->last_flush_req, packet->header.request_id);
 		rc = -EBADR;
 		goto free_req;
 	}
@@ -5948,7 +5953,6 @@ static struct cam_ctx_ops
 		.crm_ops = {
 			.unlink = __cam_isp_ctx_unlink_in_ready,
 			.process_evt = __cam_isp_ctx_process_evt,
-			.flush_req = __cam_isp_ctx_flush_req_in_flushed_state,
 		},
 		.irq_ops = NULL,
 		.pagefault_ops = cam_isp_context_dump_requests,
