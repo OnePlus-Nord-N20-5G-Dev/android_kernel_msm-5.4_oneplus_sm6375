@@ -2204,14 +2204,13 @@ static inline int typec_handle_debounce_timeout(struct tcpc_device *tcpc)
 {
 #ifdef CONFIG_TYPEC_CAP_NORP_SRC
 	uint32_t chip_id;
-	bool vbus_valid;
 	int rc;
 
 	rc = tcpci_get_chip_id(tcpc, &chip_id);
 	if (!rc &&  chip_id == SC2150A_DID)
-		vbus_valid = tcpci_check_vbus_valid_from_ic(tcpc);
+		tcpci_check_vbus_valid_from_ic(tcpc);
 	else
-		vbus_valid = tcpci_check_vbus_valid(tcpc);
+		tcpci_check_vbus_valid(tcpc);
 	if (typec_is_cc_no_res() && tcpci_check_vbus_valid_from_ic(tcpc)
 		&& (tcpc->typec_state == typec_unattached_snk))
 		return typec_norp_src_attached_entry(tcpc);
