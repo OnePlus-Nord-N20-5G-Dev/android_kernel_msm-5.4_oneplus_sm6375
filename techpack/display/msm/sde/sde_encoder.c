@@ -43,6 +43,12 @@
 #include "sde_encoder_dce.h"
 #include "sde_vm.h"
 
+#ifdef OPLUS_BUG_STABILITY
+#include "oplus_display_private_api.h"
+#include "oplus_onscreenfingerprint.h"
+#include "oplus_dc_diming.h"
+#endif
+
 #define SDE_DEBUG_ENC(e, fmt, ...) SDE_DEBUG("enc%d " fmt,\
 		(e) ? (e)->base.base.id : -1, ##__VA_ARGS__)
 
@@ -918,10 +924,9 @@ static int _sde_encoder_atomic_check_reserve(struct drm_encoder *drm_enc,
 		}
 
 		/* Skip RM allocation for Primary during CWB usecase */
-		if ((!crtc_state->mode_changed && !crtc_state->active_changed &&
+		if (!crtc_state->mode_changed && !crtc_state->active_changed &&
 			crtc_state->connectors_changed && (conn_state->crtc ==
-			conn_state->connector->state->crtc)) ||
-			(crtc_state->active_changed && !crtc_state->active))
+			conn_state->connector->state->crtc))
 			goto skip_reserve;
 
 		/* Reserve dynamic resources, indicating atomic_check phase */
@@ -2628,6 +2633,9 @@ static void _sde_encoder_setup_dither(struct sde_encoder_phys *phys)
 	struct msm_display_dsc_info *dsc = NULL;
 	struct sde_encoder_virt *sde_enc;
 	struct sde_hw_pingpong *hw_pp;
+#ifdef OPLUS_BUG_STABILITY
+	struct drm_msm_dither dither;
+#endif
 	u32 bpp, bpc;
 	int num_lm;
 
@@ -2669,8 +2677,22 @@ static void _sde_encoder_setup_dither(struct sde_encoder_phys *phys)
 	num_lm = sde_rm_topology_get_num_lm(&sde_kms->rm, topology);
 	for (i = 0; i < num_lm; i++) {
 		hw_pp = sde_enc->hw_pp[i];
+#ifndef OPLUS_BUG_STABILITY
 		phys->hw_pp->ops.setup_dither(hw_pp,
 				dither_cfg, len);
+#else
+		if (hw_pp) {
+			if (len == sizeof(dither)) {
+				memcpy(&dither, dither_cfg, len);
+				dither.c0_bitdepth = 6;
+				dither.c1_bitdepth = 6;
+				dither.c2_bitdepth = 6;
+				dither.c3_bitdepth = 6;
+				dither.temporal_en = 1;
+				phys->hw_pp->ops.setup_dither(hw_pp, &dither, len);
+			}
+		}
+#endif
 	}
 }
 
@@ -4128,6 +4150,13 @@ int sde_encoder_prepare_for_kickoff(struct drm_encoder *drm_enc,
 	SDE_DEBUG_ENC(sde_enc, "\n");
 	SDE_EVT32(DRMID(drm_enc));
 
+#ifdef OPLUS_BUG_STABILITY
+	if (sde_enc->cur_master) {
+		sde_connector_update_backlight(sde_enc->cur_master->connector, false);
+		sde_connector_update_hbm(sde_enc->cur_master->connector);
+	}
+#endif /* OPLUS_BUG_STABILITY */
+
 	is_cmd_mode = sde_encoder_check_curr_mode(drm_enc,
 				MSM_DISPLAY_CMD_MODE);
 	if (sde_enc->cur_master && sde_enc->cur_master->connector
@@ -4297,6 +4326,9 @@ void sde_encoder_kickoff(struct drm_encoder *drm_enc, bool is_error,
 	}
 
 	SDE_ATRACE_END("encoder_kickoff");
+#ifdef OPLUS_BUG_STABILITY
+	sde_connector_update_backlight(sde_enc->cur_master->connector, true);
+#endif /* OPLUS_BUG_STABILITY */
 }
 
 void sde_encoder_helper_get_pp_line_count(struct drm_encoder *drm_enc,

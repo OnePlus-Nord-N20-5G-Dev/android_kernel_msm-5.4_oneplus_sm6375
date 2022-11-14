@@ -60,6 +60,14 @@
 
 #define CREATE_TRACE_POINTS
 #include "sde_trace.h"
+#ifdef OPLUS_BUG_STABILITY
+#include "oplus_display_private_api.h"
+#include "oplus_onscreenfingerprint.h"
+#endif
+
+#ifdef OPLUS_BUG_STABILITY
+#include "oplus_dc_diming.h"
+#endif
 
 /* defines for secure channel call */
 #define MEM_PROTECT_SD_CTRL_SWITCH 0x18
@@ -985,9 +993,11 @@ static void _sde_kms_drm_check_dpms(struct drm_atomic_state *old_state,
 			notifier_data.refresh_rate = new_fps;
 			notifier_data.id = connector->base.id;
 
+#ifndef OPLUS_BUG_STABILITY
 			if (connector->panel)
 				drm_panel_notifier_call_chain(connector->panel,
 							event, &notifier_data);
+#endif
 		}
 	}
 
@@ -1144,6 +1154,11 @@ static void sde_kms_prepare_commit(struct msm_kms *kms,
 	rc = pm_runtime_get_sync(sde_kms->dev->dev);
 	if (rc < 0) {
 		SDE_ERROR("failed to enable power resources %d\n", rc);
+#ifdef OPLUS_BUG_STABILITY
+#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+		SDE_MM_ERROR("DisplayDriverID@@415$$failed to enable power resources %d\n", rc);
+#endif /*CONFIG_OPLUS_FEATURE_MM_FEEDBACK*/
+#endif /* OPLUS_BUG_STABILITY */
 		SDE_EVT32(rc, SDE_EVTLOG_ERROR);
 		goto end;
 	}
@@ -1517,6 +1532,9 @@ static void sde_kms_complete_commit(struct msm_kms *kms,
 		_sde_kms_release_splash_resource(sde_kms, crtc);
 
 	SDE_EVT32_VERBOSE(SDE_EVTLOG_FUNC_EXIT);
+#ifdef OPLUS_BUG_STABILITY
+	oplus_notify_hbm_off();
+#endif
 	SDE_ATRACE_END("sde_kms_complete_commit");
 }
 
@@ -1732,7 +1750,11 @@ static int _sde_kms_setup_displays(struct drm_device *dev,
 		.soft_reset   = dsi_display_soft_reset,
 		.pre_kickoff  = dsi_conn_pre_kickoff,
 		.clk_ctrl = dsi_display_clk_ctrl,
+#ifdef OPLUS_BUG_STABILITY
+		.set_power = dsi_display_oplus_set_power,
+#else
 		.set_power = dsi_display_set_power,
+#endif
 		.get_mode_info = dsi_conn_get_mode_info,
 		.get_dst_format = dsi_display_get_dst_format,
 		.post_kickoff = dsi_conn_post_kickoff,
@@ -2176,8 +2198,6 @@ static int sde_kms_postinit(struct msm_kms *kms)
 	struct sde_kms *sde_kms = to_sde_kms(kms);
 	struct drm_device *dev;
 	struct drm_crtc *crtc;
-	struct drm_connector *conn;
-	struct drm_connector_list_iter conn_iter;
 	int rc;
 
 	if (!sde_kms || !sde_kms->dev || !sde_kms->dev->dev) {
@@ -2194,10 +2214,6 @@ static int sde_kms_postinit(struct msm_kms *kms)
 	drm_for_each_crtc(crtc, dev)
 		sde_crtc_post_init(dev, crtc);
 
-	drm_connector_list_iter_begin(dev, &conn_iter);
-	drm_for_each_connector_iter(conn, &conn_iter)
-		sde_connector_post_init(dev, conn);
-	drm_connector_list_iter_end(&conn_iter);
 	return rc;
 }
 

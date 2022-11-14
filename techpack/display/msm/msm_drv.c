@@ -50,7 +50,9 @@
 #include "msm_mmu.h"
 #include "sde_wb.h"
 #include "sde_dbg.h"
-
+#ifdef OPLUS_BUG_STABILITY
+#include <soc/oplus/system/oplus_project.h>
+#endif
 /*
  * MSM driver version:
  * - 1.0.0 - initial interface
@@ -84,6 +86,12 @@
 	} while (0)
 
 static DEFINE_MUTEX(msm_release_lock);
+
+
+#ifdef OPLUS_BUG_STABILITY
+extern int __init lcd_bias_init(void);
+extern void __exit lcd_bias_exit(void);
+#endif
 
 static void msm_fb_output_poll_changed(struct drm_device *dev)
 {
@@ -2240,6 +2248,11 @@ static int __init msm_drm_register(void)
 	msm_edp_register();
 	msm_hdmi_register();
 	sde_wb_register();
+#ifdef OPLUS_BUG_STABILITY
+	if(is_project(21341) || is_project(21141)) {
+		lcd_bias_init();
+	}
+#endif
 	return platform_driver_register(&msm_platform_driver);
 }
 
@@ -2247,6 +2260,11 @@ static void __exit msm_drm_unregister(void)
 {
 	DBG("fini");
 	platform_driver_unregister(&msm_platform_driver);
+#ifdef OPLUS_BUG_STABILITY
+	if(is_project(21341) || is_project(21141)) {
+		lcd_bias_exit();
+	}
+#endif
 	sde_wb_unregister();
 	msm_hdmi_unregister();
 	msm_edp_unregister();

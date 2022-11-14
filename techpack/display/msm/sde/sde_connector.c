@@ -19,7 +19,9 @@
 #include "sde_rm.h"
 #include "sde_vm.h"
 #include <drm/drm_probe_helper.h>
-
+#ifdef OPLUS_BUG_STABILITY
+#include "oplus_display_private_api.h"
+#endif
 #define BL_NODE_NAME_SIZE 32
 #define HDR10_PLUS_VSIF_TYPE_CODE      0x81
 
@@ -72,6 +74,11 @@ static const struct drm_prop_enum_list e_frame_trigger_mode[] = {
 	{FRAME_DONE_WAIT_POSTED_START, "posted_start"},
 };
 
+#ifdef OPLUS_BUG_STABILITY
+extern int oplus_debug_max_brightness;
+extern int oplus_seed_backlight;
+#endif
+
 static inline struct sde_kms *_sde_connector_get_kms(struct drm_connector *conn)
 {
 	struct msm_drm_private *priv;
@@ -89,6 +96,11 @@ static inline struct sde_kms *_sde_connector_get_kms(struct drm_connector *conn)
 	return to_sde_kms(priv->kms);
 }
 
+#ifdef OPLUS_BUG_STABILITY
+static u32 dither_matrix[DITHER_MATRIX_SZ] = {
+	15, 7, 13, 5, 3, 11, 1, 9, 12, 4, 14, 6, 0, 8, 2, 10
+};
+#endif
 static int sde_backlight_device_update_status(struct backlight_device *bd)
 {
 	int brightness;
@@ -119,9 +131,46 @@ static int sde_backlight_device_update_status(struct backlight_device *bd)
 	if (brightness > c_conn->thermal_max_brightness)
 		brightness = c_conn->thermal_max_brightness;
 
+#ifndef OPLUS_BUG_STABILITY
 	/* map UI brightness into driver backlight level with rounding */
 	bl_lvl = mult_frac(brightness, display->panel->bl_config.bl_max_level,
 			display->panel->bl_config.brightness_max_level);
+#else
+	if (oplus_debug_max_brightness) {
+		bl_lvl = mult_frac(brightness, oplus_debug_max_brightness,
+			display->panel->bl_config.brightness_max_level);
+	}else {
+		if (display->panel->oplus_priv.bl_remap && display->panel->oplus_priv.bl_remap_count) {
+			int i = 0;
+			int count = display->panel->oplus_priv.bl_remap_count;
+			struct oplus_brightness_alpha *lut = display->panel->oplus_priv.bl_remap;
+
+			for (i = 0; i < display->panel->oplus_priv.bl_remap_count; i++) {
+			if (display->panel->oplus_priv.bl_remap[i].brightness >= brightness)
+				break;
+			}
+
+			if (i == 0)
+				bl_lvl = lut[0].alpha;
+			else if (i == count)
+				bl_lvl = lut[count - 1].alpha;
+			else
+				bl_lvl = interpolate(brightness, lut[i-1].brightness,
+						lut[i].brightness, lut[i-1].alpha,
+						lut[i].alpha);
+			SDE_INFO("original_bl_lvl is %d,  remapped_bl_lvl is %d\n", brightness, bl_lvl);
+		} else if (brightness > display->panel->bl_config.brightness_normal_max_level) {
+			bl_lvl = interpolate(brightness,
+					display->panel->bl_config.brightness_normal_max_level,
+					display->panel->bl_config.brightness_max_level,
+					display->panel->bl_config.bl_normal_max_level,
+					display->panel->bl_config.bl_max_level);
+		} else {
+			bl_lvl = mult_frac(brightness, display->panel->bl_config.bl_normal_max_level,
+					display->panel->bl_config.brightness_normal_max_level);
+		}
+	}
+#endif
 
 	if (!bl_lvl && brightness)
 		bl_lvl = 1;
@@ -211,7 +260,11 @@ static int sde_backlight_setup(struct sde_connector *c_conn,
 	props.type = BACKLIGHT_RAW;
 	props.power = FB_BLANK_UNBLANK;
 	props.max_brightness = bl_config->brightness_max_level;
+#ifndef OPLUS_BUG_STABILITY
 	props.brightness = bl_config->brightness_max_level;
+#else
+	props.brightness = bl_config->brightness_default_level;
+#endif
 	snprintf(bl_node_name, BL_NODE_NAME_SIZE, "panel%u-backlight",
 							display_count);
 	c_conn->bl_device = backlight_device_register(bl_node_name, dev->dev,
@@ -325,12 +378,64 @@ void sde_connector_unregister_event(struct drm_connector *connector,
 	(void)sde_connector_register_event(connector, event_idx, 0, 0);
 }
 
+#ifdef OPLUS_BUG_STABILITY
+static int _sde_connector_get_default_dither_cfg_v1(
+		struct sde_connector *c_conn, void *cfg)
+{
+	struct drm_msm_dither *dither_cfg = (struct drm_msm_dither *)cfg;
+	enum dsi_pixel_format dst_format = DSI_PIXEL_FORMAT_MAX;
+
+	if (!c_conn || !cfg) {
+		SDE_ERROR("invalid argument(s), c_conn %pK, cfg %pK\n",
+				c_conn, cfg);
+		return -EINVAL;
+	}
+
+	if (!c_conn->ops.get_dst_format) {
+		SDE_DEBUG("get_dst_format is unavailable\n");
+		return 0;
+	}
+
+	dst_format = c_conn->ops.get_dst_format(&c_conn->base, c_conn->display);
+	switch (dst_format) {
+	case DSI_PIXEL_FORMAT_RGB888:
+		dither_cfg->c0_bitdepth = 8;
+		dither_cfg->c1_bitdepth = 8;
+		dither_cfg->c2_bitdepth = 8;
+		dither_cfg->c3_bitdepth = 8;
+		break;
+	case DSI_PIXEL_FORMAT_RGB666:
+	case DSI_PIXEL_FORMAT_RGB666_LOOSE:
+		dither_cfg->c0_bitdepth = 6;
+		dither_cfg->c1_bitdepth = 6;
+		dither_cfg->c2_bitdepth = 6;
+		dither_cfg->c3_bitdepth = 6;
+		break;
+	default:
+		SDE_DEBUG("no default dither config for dst_format %d\n",
+			dst_format);
+		return -ENODATA;
+	}
+
+	memcpy(&dither_cfg->matrix, dither_matrix,
+			sizeof(u32) * DITHER_MATRIX_SZ);
+	dither_cfg->temporal_en = 0;
+	return 0;
+}
+#endif
 static void _sde_connector_install_dither_property(struct drm_device *dev,
 		struct sde_kms *sde_kms, struct sde_connector *c_conn)
 {
 	char prop_name[DRM_PROP_NAME_LEN];
 	struct sde_mdss_cfg *catalog = NULL;
 	u32 version = 0;
+#ifdef OPLUS_BUG_STABILITY
+	void *cfg;
+	struct drm_property_blob *blob_ptr;
+	int ret = 0;
+	u32 len = 0;
+	bool defalut_dither_needed = false;
+#endif
 
 	if (!dev || !sde_kms || !c_conn) {
 		SDE_ERROR("invld args (s), dev %pK, sde_kms %pK, c_conn %pK\n",
@@ -349,11 +454,31 @@ static void _sde_connector_install_dither_property(struct drm_device *dev,
 		msm_property_install_blob(&c_conn->property_info, prop_name,
 			DRM_MODE_PROP_BLOB,
 			CONNECTOR_PROP_PP_DITHER);
+#ifdef OPLUS_BUG_STABILITY
+		len = sizeof(struct drm_msm_dither);
+		cfg = kzalloc(len, GFP_KERNEL);
+		if (!cfg)
+			return;
+
+		ret = _sde_connector_get_default_dither_cfg_v1(c_conn, cfg);
+		if (!ret)
+			defalut_dither_needed = true;
+#endif
 		break;
 	default:
 		SDE_ERROR("unsupported dither version %d\n", version);
 		return;
 	}
+#ifdef OPLUS_BUG_STABILITY
+	if (defalut_dither_needed) {
+		blob_ptr = drm_property_create_blob(dev, len, cfg);
+		if (IS_ERR_OR_NULL(blob_ptr))
+			goto exit;
+		c_conn->blob_dither = blob_ptr;
+	}
+exit:
+	kfree(cfg);
+#endif
 }
 
 int sde_connector_get_dither_cfg(struct drm_connector *conn,
@@ -363,7 +488,9 @@ int sde_connector_get_dither_cfg(struct drm_connector *conn,
 	struct sde_connector *c_conn = NULL;
 	struct sde_connector_state *c_state = NULL;
 	size_t dither_sz = 0;
+#ifndef OPLUS_BUG_STABILITY
 	bool is_dirty;
+#endif
 	u32 *p = (u32 *)cfg;
 
 	if (!conn || !state || !p) {
@@ -374,6 +501,7 @@ int sde_connector_get_dither_cfg(struct drm_connector *conn,
 	c_conn = to_sde_connector(conn);
 	c_state = to_sde_connector_state(state);
 
+#ifndef OPLUS_BUG_STABILITY
 	is_dirty = msm_property_is_dirty(&c_conn->property_info,
 			&c_state->property_state,
 			CONNECTOR_PROP_PP_DITHER);
@@ -396,6 +524,19 @@ int sde_connector_get_dither_cfg(struct drm_connector *conn,
 			return 0;
 	}
 	*len = dither_sz;
+#else
+	/* try to get user config data first */
+	*cfg = msm_property_get_blob(&c_conn->property_info,
+			&c_state->property_state,
+			&dither_sz,
+			CONNECTOR_PROP_PP_DITHER);
+	/* if user config data doesn't exist, use default dither blob */
+	if (*cfg == NULL && c_conn->blob_dither) {
+		*cfg = c_conn->blob_dither->data;
+		dither_sz = c_conn->blob_dither->length;
+	}
+	*len = dither_sz;
+#endif
 	return 0;
 }
 
@@ -641,6 +782,10 @@ static int _sde_connector_update_bl_scale(struct sde_connector *c_conn)
 	struct dsi_backlight_config *bl_config;
 	int rc = 0;
 
+#ifdef OPLUS_BUG_STABILITY
+	struct backlight_device *bd;
+#endif /* OPLUS_BUG_STABILITY */
+
 	if (!c_conn) {
 		SDE_ERROR("Invalid params sde_connector null\n");
 		return -EINVAL;
@@ -654,10 +799,23 @@ static int _sde_connector_update_bl_scale(struct sde_connector *c_conn)
 		return -EINVAL;
 	}
 
+#ifdef OPLUS_BUG_STABILITY
+	bd = c_conn->bl_device;
+	if (!bd) {
+		SDE_ERROR("Invalid params backlight_device null\n");
+		return -EINVAL;
+	}
+
+	mutex_lock(&bd->update_lock);
+#endif /* OPLUS_BUG_STABILITY */
+
 	bl_config = &dsi_display->panel->bl_config;
 
 	if (!c_conn->allow_bl_update) {
 		c_conn->unset_bl_level = bl_config->bl_level;
+#ifdef OPLUS_BUG_STABILITY
+		mutex_unlock(&bd->update_lock);
+#endif /* OPLUS_BUG_STABILITY */
 		return 0;
 	}
 
@@ -676,8 +834,19 @@ static int _sde_connector_update_bl_scale(struct sde_connector *c_conn)
 			dsi_display, bl_config->bl_level);
 	c_conn->unset_bl_level = 0;
 
+#ifdef OPLUS_BUG_STABILITY
+	mutex_unlock(&bd->update_lock);
+#endif /* OPLUS_BUG_STABILITY */
+
 	return rc;
 }
+#ifdef OPLUS_BUG_STABILITY
+int _sde_connector_update_bl_scale_(struct sde_connector *c_conn)
+{
+	return _sde_connector_update_bl_scale(c_conn);
+}
+EXPORT_SYMBOL(_sde_connector_update_bl_scale_);
+#endif
 
 void sde_connector_set_colorspace(struct sde_connector *c_conn)
 {
@@ -1025,9 +1194,6 @@ void sde_connector_destroy(struct drm_connector *connector)
 	}
 
 	c_conn = to_sde_connector(connector);
-
-	if (c_conn->sysfs_dev)
-		device_unregister(c_conn->sysfs_dev);
 
 	/* cancel if any pending esd work */
 	sde_connector_schedule_status_work(connector, false);
@@ -2813,6 +2979,12 @@ static int _sde_connector_install_properties(struct drm_device *dev,
 		}
 	}
 
+#ifdef OPLUS_BUG_STABILITY
+ /* Support custom propertys */
+	msm_property_install_range(&c_conn->property_info,"CONNECTOR_CUST",
+		0x0, 0, INT_MAX, 0, CONNECTOR_PROP_CUSTOM);
+#endif
+
 	msm_property_install_range(&c_conn->property_info, "bl_scale",
 		0x0, 0, MAX_BL_SCALE_LEVEL, MAX_BL_SCALE_LEVEL,
 		CONNECTOR_PROP_BL_SCALE);
@@ -2846,104 +3018,6 @@ static int _sde_connector_install_properties(struct drm_device *dev,
 			CONNECTOR_PROP_LP);
 
 	return 0;
-}
-
-static ssize_t panel_power_state_show(struct device *device,
-	struct device_attribute *attr, char *buf)
-{
-	struct drm_connector *conn;
-	struct sde_connector *sde_conn;
-
-	conn = dev_get_drvdata(device);
-	sde_conn = to_sde_connector(conn);
-
-	return scnprintf(buf, PAGE_SIZE, "%d\n", sde_conn->last_panel_power_mode);
-}
-
-static ssize_t twm_enable_store(struct device *device,
-	struct device_attribute *attr, const char *buf, size_t count)
-{
-	struct drm_connector *conn;
-	struct sde_connector *sde_conn;
-	struct dsi_display *dsi_display;
-	int rc;
-	int data;
-
-	conn = dev_get_drvdata(device);
-	sde_conn = to_sde_connector(conn);
-	dsi_display = (struct dsi_display *) sde_conn->display;
-	rc = kstrtoint(buf, 10, &data);
-	if (rc) {
-		SDE_ERROR("kstrtoint failed, rc = %d\n", rc);
-		return -EINVAL;
-	}
-	sde_conn->twm_en = data ? true : false;
-	dsi_display->panel->is_twm_en = sde_conn->twm_en;
-	sde_conn->allow_bl_update = data ? false : true;
-	SDE_DEBUG("TWM: %s\n", sde_conn->twm_en ? "ENABLED" : "DISABLED");
-	return count;
-}
-
-static ssize_t twm_enable_show(struct device *device,
-	struct device_attribute *attr, char *buf)
-{
-	struct drm_connector *conn;
-	struct sde_connector *sde_conn;
-
-	conn = dev_get_drvdata(device);
-	sde_conn = to_sde_connector(conn);
-
-	SDE_DEBUG("TWM: %s\n", sde_conn->twm_en ? "ENABLED" : "DISABLED");
-	return scnprintf(buf, PAGE_SIZE, "%d\n", sde_conn->twm_en);
-}
-
-static DEVICE_ATTR_RO(panel_power_state);
-static DEVICE_ATTR_RW(twm_enable);
-
-static struct attribute *sde_connector_dev_attrs[] = {
-	&dev_attr_panel_power_state.attr,
-	&dev_attr_twm_enable.attr,
-	NULL
-};
-
-static const struct attribute_group sde_connector_attr_group = {
-	.attrs = sde_connector_dev_attrs,
-};
-static const struct attribute_group *sde_connector_attr_groups[] = {
-	&sde_connector_attr_group,
-	NULL,
-};
-
-int sde_connector_post_init(struct drm_device *dev, struct drm_connector *conn)
-{
-	struct sde_connector *c_conn;
-	int rc = 0;
-
-	if (!dev || !dev->primary || !dev->primary->kdev || !conn) {
-		SDE_ERROR("invalid input param(s)\n");
-		rc = -EINVAL;
-		return rc;
-	}
-
-	c_conn =  to_sde_connector(conn);
-
-	if (conn->connector_type != DRM_MODE_CONNECTOR_DSI)
-		return rc;
-
-	c_conn->sysfs_dev =
-		device_create_with_groups(dev->primary->kdev->class, dev->primary->kdev, 0,
-			conn, sde_connector_attr_groups, "sde-conn-%d-%s", conn->index,
-			conn->name);
-	if (IS_ERR_OR_NULL(c_conn->sysfs_dev)) {
-		SDE_ERROR("connector:%d sysfs create failed rc:%ld\n", &c_conn->base.index,
-			PTR_ERR(c_conn->sysfs_dev));
-		if (!c_conn->sysfs_dev)
-			rc = -EINVAL;
-		else
-			rc = PTR_ERR(c_conn->sysfs_dev);
-	}
-
-	return rc;
 }
 
 struct drm_connector *sde_connector_init(struct drm_device *dev,
@@ -2997,7 +3071,6 @@ struct drm_connector *sde_connector_init(struct drm_device *dev,
 	c_conn->dpms_mode = DRM_MODE_DPMS_ON;
 	c_conn->lp_mode = 0;
 	c_conn->last_panel_power_mode = SDE_MODE_DPMS_ON;
-	c_conn->twm_en = false;
 
 	sde_kms = to_sde_kms(priv->kms);
 	if (sde_kms->vbif[VBIF_NRT]) {
