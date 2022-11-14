@@ -46,11 +46,21 @@ config TOUCHPANEL_NOTIFY
       Say Y here if you have touchscreen notify build into driver.
       Say M here if you have touchscreen notify as module.
 
+config TOUCHPANEL_GOODIX
+    tristate "TP Goodix_IC enable or not for OPLUS"
+    help
+    Say Y to enable driver for Touchpanel using GOODIX_IC
+    Say M to enable driver for Touchpanel using GOODIX_IC as module.
+
 config TOUCHPANEL_ILITEK
     tristate "TP ilitek IC enable or not for OPLUS"
     ---help---
     say Y to enable driver for Touchpanel using ilitek IC
     Say M to enable driver for Touchpanel using ilitek IC as module.
+    
+if TOUCHPANEL_GOODIX
+source "drivers/input/touchscreen/oplus_touchscreen_v2/Goodix/Kconfig"
+endif
 
 if TOUCHPANEL_ILITEK
 source "drivers/input/touchscreen/oplus_touchscreen_v2/ilitek/Kconfig"

@@ -14,5 +14,5 @@ obj-$(CONFIG_TOUCHPANEL_OPLUS) += oplus_bsp_tp_comon.o
 
 oplus_bsp_tp_notify-y += touchpanel_notify/touchpanel_event_notify.o
 obj-$(CONFIG_TOUCHPANEL_NOTIFY) += oplus_bsp_tp_notify.o
-
+obj-$(CONFIG_TOUCHPANEL_GOODIX) += Goodix/
 obj-$(CONFIG_TOUCHPANEL_ILITEK) += ilitek/
