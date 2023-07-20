@@ -1759,6 +1759,7 @@ static int aio_poll_wake(struct wait_queue_entry *wait, unsigned mode, int sync,
 		struct kioctx *ctx = iocb->ki_ctx;
 
 		list_del_init(&req->wait.entry);
+
 		list_del(&iocb->ki_list);
 		iocb->ki_res.res = mangle_poll(mask);
 		if (iocb->ki_eventfd && eventfd_signal_count()) {
