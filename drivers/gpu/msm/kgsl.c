@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2008-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022-2023 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #include <uapi/linux/msm_ion.h>
@@ -31,6 +30,9 @@
 #include "kgsl_sync.h"
 #include "kgsl_sysfs.h"
 #include "kgsl_trace.h"
+#if defined(OPLUS_FEATURE_VIRTUAL_RESERVE_MEMORY) && defined(CONFIG_VIRTUAL_RESERVE_MEMORY)
+#include <linux/reserve_area.h>
+#endif
 
 #ifndef arch_mmap_check
 #define arch_mmap_check(addr, len, flags)	(0)
@@ -346,6 +348,8 @@ static void kgsl_destroy_ion(struct kgsl_memdesc *memdesc)
 
 	if (meta != NULL) {
 		remove_dmabuf_list(meta);
+		dma_buf_unmap_attachment(meta->attach, meta->table,
+		DMA_BIDIRECTIONAL);
 		dma_buf_detach(meta->dmabuf, meta->attach);
 		dma_buf_put(meta->dmabuf);
 		kfree(meta);
@@ -1300,9 +1304,9 @@ kgsl_sharedmem_find(struct kgsl_process_private *private, uint64_t gpuaddr)
 	if (!private)
 		return NULL;
 
-	if (!kgsl_mmu_gpuaddr_in_range(private->pagetable, gpuaddr, 0) &&
+	if (!kgsl_mmu_gpuaddr_in_range(private->pagetable, gpuaddr) &&
 		!kgsl_mmu_gpuaddr_in_range(
-			private->pagetable->mmu->securepagetable, gpuaddr, 0))
+			private->pagetable->mmu->securepagetable, gpuaddr))
 		return NULL;
 
 	spin_lock(&private->mem_lock);
@@ -2518,15 +2522,6 @@ static int memdesc_sg_virt(struct kgsl_memdesc *memdesc, unsigned long useraddr)
 
 	ret = sg_alloc_table_from_pages(memdesc->sgt, pages, npages,
 					0, memdesc->size, GFP_KERNEL);
-
-	if (ret)
-		goto out;
-
-	ret = kgsl_cache_range_op(memdesc, 0, memdesc->size,
-			KGSL_CACHE_OP_FLUSH);
-
-	if (ret)
-		sg_free_table(memdesc->sgt);
 out:
 	if (ret) {
 		for (i = 0; i < npages; i++)
@@ -2581,6 +2576,15 @@ static int kgsl_setup_anon_useraddr(struct kgsl_pagetable *pagetable,
 }
 
 #ifdef CONFIG_DMA_SHARED_BUFFER
+static int match_file(const void *p, struct file *file, unsigned int fd)
+{
+	/*
+	 * We must return fd + 1 because iterate_fd stops searching on
+	 * non-zero return, but 0 is a valid fd.
+	 */
+	return (p == file) ? (fd + 1) : 0;
+}
+
 static void _setup_cache_mode(struct kgsl_mem_entry *entry,
 		struct vm_area_struct *vma)
 {
@@ -2617,6 +2621,8 @@ static int kgsl_setup_dmabuf_useraddr(struct kgsl_device *device,
 	vma = find_vma(current->mm, hostptr);
 
 	if (vma && vma->vm_file) {
+		int fd;
+
 		ret = check_vma_flags(vma, entry->memdesc.flags);
 		if (ret) {
 			up_read(&current->mm->mmap_sem);
@@ -2632,10 +2638,15 @@ static int kgsl_setup_dmabuf_useraddr(struct kgsl_device *device,
 			return -EFAULT;
 		}
 
-		/* Take a refcount because dma_buf_put() decrements the refcount */
-		get_file(vma->vm_file);
-
-		dmabuf = vma->vm_file->private_data;
+		/* Look for the fd that matches this the vma file */
+		fd = iterate_fd(current->files, 0, match_file, vma->vm_file);
+		if (fd != 0) {
+			dmabuf = dma_buf_get(fd - 1);
+			if (IS_ERR(dmabuf)) {
+				up_read(&current->mm->mmap_sem);
+				return PTR_ERR(dmabuf);
+			}
+		}
 	}
 
 	if (!dmabuf) {
@@ -2998,8 +3009,6 @@ static int kgsl_setup_dma_buf(struct kgsl_device *device,
 		ret = PTR_ERR(sg_table);
 		goto out;
 	}
-
-	dma_buf_unmap_attachment(attach, sg_table, DMA_BIDIRECTIONAL);
 
 	meta->table = sg_table;
 	entry->priv_data = meta;
