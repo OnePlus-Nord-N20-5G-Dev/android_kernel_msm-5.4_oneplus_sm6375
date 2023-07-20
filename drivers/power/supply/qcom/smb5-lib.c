@@ -1354,15 +1354,12 @@ static void smblib_uusb_removal(struct smb_charger *chg)
 			smblib_err(chg, "Couldn't restore max pulses rc=%d\n",
 					rc);
 
-		if (!chg->disable_suspend_on_collapse) {
-			rc = smblib_masked_write(chg, USBIN_AICL_OPTIONS_CFG_REG,
-						 SUSPEND_ON_COLLAPSE_USBIN_BIT,
-						 SUSPEND_ON_COLLAPSE_USBIN_BIT);
-			if (rc < 0)
-				smblib_err(chg,
-					"Couldn't turn on SUSPEND_ON_COLLAPSE_USBIN_BIT rc=%d\n",
+		rc = smblib_masked_write(chg, USBIN_AICL_OPTIONS_CFG_REG,
+				SUSPEND_ON_COLLAPSE_USBIN_BIT,
+				SUSPEND_ON_COLLAPSE_USBIN_BIT);
+		if (rc < 0)
+			smblib_err(chg, "Couldn't turn on SUSPEND_ON_COLLAPSE_USBIN_BIT rc=%d\n",
 					rc);
-		}
 
 		chg->qc2_unsupported_voltage = QC2_COMPLIANT;
 	}
@@ -6461,15 +6458,12 @@ static void typec_src_removal(struct smb_charger *chg)
 			smblib_err(chg, "Couldn't restore max pulses rc=%d\n",
 					rc);
 
-		if (!chg->disable_suspend_on_collapse) {
-			rc = smblib_masked_write(chg, USBIN_AICL_OPTIONS_CFG_REG,
-						 SUSPEND_ON_COLLAPSE_USBIN_BIT,
-						 SUSPEND_ON_COLLAPSE_USBIN_BIT);
-			if (rc < 0)
-				smblib_err(chg,
-					"Couldn't turn on SUSPEND_ON_COLLAPSE_USBIN_BIT rc=%d\n",
+		rc = smblib_masked_write(chg, USBIN_AICL_OPTIONS_CFG_REG,
+				SUSPEND_ON_COLLAPSE_USBIN_BIT,
+				SUSPEND_ON_COLLAPSE_USBIN_BIT);
+		if (rc < 0)
+			smblib_err(chg, "Couldn't turn on SUSPEND_ON_COLLAPSE_USBIN_BIT rc=%d\n",
 					rc);
-		}
 
 		chg->qc2_unsupported_voltage = QC2_COMPLIANT;
 	}
