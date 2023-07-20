@@ -2174,7 +2174,7 @@ static int sdhci_msm_vreg_enable(struct sdhci_msm_reg_data *vreg)
 
 	if (!vreg->is_enabled) {
 		/* Set voltage level */
-		ret = sdhci_msm_vreg_set_voltage(vreg, vreg->low_vol_level,
+		ret = sdhci_msm_vreg_set_voltage(vreg, vreg->high_vol_level,
 						vreg->high_vol_level);
 		if (ret)
 			return ret;
@@ -4301,10 +4301,10 @@ static int sdhci_msm_probe(struct platform_device *pdev)
 
 	if (pdev->dev.of_node) {
 		ret = of_alias_get_id(pdev->dev.of_node, "sdhc");
-		if (ret < 0)
+		if (ret <= 0)
 			dev_err(&pdev->dev, "get slot index failed %d\n", ret);
-		else if (ret <= 1)
-			sdhci_slot[ret] = msm_host;
+		else if (ret <= 2)
+			sdhci_slot[ret-1] = msm_host;
 	}
 
 	/*
