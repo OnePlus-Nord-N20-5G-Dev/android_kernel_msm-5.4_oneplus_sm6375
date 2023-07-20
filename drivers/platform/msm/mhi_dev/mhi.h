@@ -452,7 +452,6 @@ struct event_req {
 	struct list_head	list;
 	u32			flush_num;
 	bool		is_cmd_cpl;
-	bool		is_stale;
 };
 
 struct mhi_cmd_cmpl_ctx {
