@@ -2324,10 +2324,6 @@ static void dwc3_restart_usb_work(struct work_struct *w)
 
 	dwc->err_evt_seen = false;
 	flush_delayed_work(&mdwc->sm_work);
-
-	/* see comments in dwc3_msm_suspend */
-	if (!mdwc->vbus_active)
-		pm_relax(mdwc->dev);
 }
 
 /*
@@ -3379,12 +3375,6 @@ static int dwc3_msm_suspend(struct dwc3_msm *mdwc, bool force_power_collapse,
 
 	dwc3_msm_update_bus_bw(mdwc, BUS_VOTE_NONE);
 
-	/*
-	 * If in_restart is marked as true from restart work do not release the wakeup
-	 * active source as it can lead the device to enter system suspend (if usb is
-	 * the last holding the wakeup active source). If actual cable disconnect happens
-	 * while in_restart is true wakeup active source will be released from restart work.
-	 */
 	if (!mdwc->in_restart) {
 		/*
 		 * release wakeup source with timeout to defer system suspend to
@@ -5694,6 +5684,13 @@ static int dwc3_msm_gadget_vbus_draw(struct dwc3_msm *mdwc, unsigned int mA)
 
 	if (mdwc->apsd_source == IIO && chg_type != POWER_SUPPLY_TYPE_USB)
 		return 0;
+
+#ifdef CONFIG_OPLUS_FEATURE_CHG_MISC
+	dev_info(mdwc->dev, "Avail curr from USB = %u, pre max_power = %u\n", mA, mdwc->max_power);
+	if (mA == 0 || mA == 2) {
+		return 0;
+	}
+#endif
 
 	/* Set max current limit in uA */
 	pval.intval = 1000 * mA;
