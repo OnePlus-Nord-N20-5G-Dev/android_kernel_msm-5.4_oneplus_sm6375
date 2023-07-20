@@ -117,9 +117,6 @@
 #define GET_TABLE_IDX_FROM_CTXID(ctxid) \
 	((ctxid & FASTRPC_CTX_TABLE_IDX_MASK) >> FASTRPC_CTX_TABLE_IDX_POS)
 
-#define VALID_FASTRPC_CID(cid) \
-	(cid >= ADSP_DOMAIN_ID && cid < NUM_CHANNELS)
-
 /* Reserve few entries in context table for critical kernel and static RPC
  * calls to avoid user invocations from exhausting all entries.
  */
@@ -1203,8 +1200,9 @@ static int fastrpc_mmap_remove(struct fastrpc_file *fl, int fd, uintptr_t va,
 
 	spin_lock(&me->hlock);
 	hlist_for_each_entry_safe(map, n, &me->maps, hn) {
-		if (map->refs == 1 && map->raddr == va &&
+		if ((fd < 0 || map->fd == fd) && map->raddr == va &&
 			map->raddr + map->len == va + len &&
+			map->refs == 1 && !map->is_persistent &&
 			/*Remove map if not used in process initialization*/
 			!map->is_filemap) {
 			match = map;
@@ -1218,9 +1216,10 @@ static int fastrpc_mmap_remove(struct fastrpc_file *fl, int fd, uintptr_t va,
 		return 0;
 	}
 	hlist_for_each_entry_safe(map, n, &fl->maps, hn) {
-		if (map->refs == 1 && map->raddr == va &&
+		if ((fd < 0 || map->fd == fd) && map->raddr == va &&
 			map->raddr + map->len == va + len &&
-			/*Remove map if not used in process initialization*/
+			map->refs == 1 &&
+			/*Remove map if not used in process initializaton*/
 			!map->is_filemap) {
 			match = map;
 			hlist_del_init(&map->hn);
@@ -2063,11 +2062,7 @@ static int context_alloc(struct fastrpc_file *fl, uint32_t kernel,
 		if (err)
 			goto bail;
 	}
-	VERIFY(err, VALID_FASTRPC_CID(cid));
-	if (err) {
-		err = -ECHRNG;
-		goto bail;
-	}
+
 	chan = &me->channel[cid];
 
 	spin_lock_irqsave(&chan->ctxlock, irq_flags);
@@ -3605,12 +3600,6 @@ static int fastrpc_init_attach_process(struct fastrpc_file *fl,
 	remote_arg_t ra[1];
 	struct fastrpc_ioctl_invoke_async ioctl;
 
-	if (fl->dev_minor == MINOR_NUM_DEV) {
-		err = -ECONNREFUSED;
-		ADSPRPC_ERR(
-			"untrusted app trying to attach to privileged DSP PD\n");
-		return err;
-	}
 	/*
 	 * Prepare remote arguments for creating thread group
 	 * in guestOS/staticPD on the remote subsystem.
@@ -3700,8 +3689,8 @@ static int fastrpc_init_create_dynamic_process(struct fastrpc_file *fl,
 		mutex_lock(&fl->map_mutex);
 		err = fastrpc_mmap_create(fl, init->filefd, 0,
 			init->file, init->filelen, mflags, &file);
-		if (file)
-			file->is_filemap = true;
+			  if (file)
+				  file->is_filemap = true;
 		mutex_unlock(&fl->map_mutex);
 		if (err)
 			goto bail;
@@ -3885,13 +3874,6 @@ static int fastrpc_init_create_static_process(struct fastrpc_file *fl,
 		unsigned int pageslen;
 	} inbuf;
 
-	if (fl->dev_minor == MINOR_NUM_DEV) {
-		err = -ECONNREFUSED;
-		ADSPRPC_ERR(
-			"untrusted app trying to attach to audio PD\n");
-		return err;
-	}
-
 	if (!init->filelen)
 		goto bail;
 
@@ -3930,8 +3912,6 @@ static int fastrpc_init_create_static_process(struct fastrpc_file *fl,
 			mutex_lock(&fl->map_mutex);
 			err = fastrpc_mmap_create(fl, -1, 0, init->mem,
 				 init->memlen, ADSP_MMAP_REMOTE_HEAP_ADDR, &mem);
-			if (mem)
-				mem->is_filemap = true;
 			mutex_unlock(&fl->map_mutex);
 			if (err)
 				goto bail;
@@ -4738,6 +4718,7 @@ static int fastrpc_internal_munmap(struct fastrpc_file *fl,
 	mutex_unlock(&fl->map_mutex);
 	if (err)
 		goto bail;
+
 	VERIFY(err, map != NULL);
 	if (err) {
 		err = -EINVAL;
@@ -5370,7 +5351,6 @@ static ssize_t fastrpc_debugfs_read(struct file *filp, char __user *buffer,
 		len += scnprintf(fileinfo + len, DEBUGFS_SIZE - len,
 			"%s%s%s%s%s\n", single_line, single_line,
 			single_line, single_line, single_line);
-		spin_lock(&me->hlock);
 		hlist_for_each_entry_safe(gmaps, n, &me->maps, hn) {
 			len += scnprintf(fileinfo + len, DEBUGFS_SIZE - len,
 				"%-20d|0x%-18llX|0x%-18X|0x%-20lX\n\n",
@@ -5378,21 +5358,18 @@ static ssize_t fastrpc_debugfs_read(struct file *filp, char __user *buffer,
 				(uint32_t)gmaps->size,
 				gmaps->va);
 		}
-		spin_unlock(&me->hlock);
 		len += scnprintf(fileinfo + len, DEBUGFS_SIZE - len,
 			"%-20s|%-20s|%-20s|%-20s\n",
 			"len", "refs", "raddr", "flags");
 		len += scnprintf(fileinfo + len, DEBUGFS_SIZE - len,
 			"%s%s%s%s%s\n", single_line, single_line,
 			single_line, single_line, single_line);
-		spin_lock(&me->hlock);
 		hlist_for_each_entry_safe(gmaps, n, &me->maps, hn) {
 			len += scnprintf(fileinfo + len, DEBUGFS_SIZE - len,
 				"0x%-18X|%-20d|%-20lu|%-20u\n",
 				(uint32_t)gmaps->len, gmaps->refs,
 				gmaps->raddr, gmaps->flags);
 		}
-		spin_unlock(&me->hlock);
 	} else {
 		len += scnprintf(fileinfo + len, DEBUGFS_SIZE - len,
 			"\n%s %13s %d\n", "cid", ":", fl->cid);
@@ -5434,14 +5411,12 @@ static ssize_t fastrpc_debugfs_read(struct file *filp, char __user *buffer,
 			"%s%s%s%s%s\n",
 			single_line, single_line, single_line,
 			single_line, single_line);
-		mutex_lock(&fl->map_mutex);
 		hlist_for_each_entry_safe(map, n, &fl->maps, hn) {
 			len += scnprintf(fileinfo + len, DEBUGFS_SIZE - len,
 				"0x%-20lX|0x%-20llX|0x%-20zu\n\n",
 				map->va, map->phys,
 				map->size);
 		}
-		mutex_unlock(&fl->map_mutex);
 		len += scnprintf(fileinfo + len, DEBUGFS_SIZE - len,
 			"%-20s|%-20s|%-20s|%-20s\n",
 			"len", "refs",
@@ -5450,27 +5425,24 @@ static ssize_t fastrpc_debugfs_read(struct file *filp, char __user *buffer,
 			"%s%s%s%s%s\n",
 			single_line, single_line, single_line,
 			single_line, single_line);
-		mutex_lock(&fl->map_mutex);
 		hlist_for_each_entry_safe(map, n, &fl->maps, hn) {
 			len += scnprintf(fileinfo + len, DEBUGFS_SIZE - len,
 				"%-20zu|%-20d|0x%-20lX|%-20d\n\n",
 				map->len, map->refs, map->raddr,
 				map->uncached);
 		}
-		mutex_unlock(&fl->map_mutex);
 		len += scnprintf(fileinfo + len, DEBUGFS_SIZE - len,
 			"%-20s|%-20s\n", "secure", "attr");
 		len += scnprintf(fileinfo + len, DEBUGFS_SIZE - len,
 			"%s%s%s%s%s\n",
 			single_line, single_line, single_line,
 			single_line, single_line);
-		mutex_lock(&fl->map_mutex);
 		hlist_for_each_entry_safe(map, n, &fl->maps, hn) {
 			len += scnprintf(fileinfo + len, DEBUGFS_SIZE - len,
 				"%-20d|0x%-20lX\n\n",
 				map->secure, map->attr);
 		}
-		mutex_unlock(&fl->map_mutex);
+
 		len += scnprintf(fileinfo + len, DEBUGFS_SIZE - len,
 			"\n======%s %s %s======\n", title,
 			" LIST OF BUFS ", title);
