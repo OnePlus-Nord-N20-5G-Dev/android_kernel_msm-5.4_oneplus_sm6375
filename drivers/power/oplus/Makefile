@@ -37,7 +37,6 @@ oplus_chg-y += charger_ic/s2asl01_switching.o
 oplus_chg-y += charger_ic/oplus_switching.o
 ifneq ($(CONFIG_OPLUS_CHARGER_MTK),y)
 oplus_chg-y += wireless_ic/oplus_p922x.o
-oplus_chg-y += wireless_ic/oplus_ra9530.o
 oplus_chg-y += wireless_ic/oplus_nu1619.o
 oplus_chg-y += wireless_ic/oplus_chargepump.o
 endif
