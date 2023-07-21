@@ -12,4 +12,3 @@
 #include "at_camera_setting/ov08d10_setting.h"
 #include "at_camera_setting/ov16a1q_setting.h"
 #include "at_camera_setting/imx581_setting.h"
-#include "at_camera_setting/s5kjn1sq_setting.h"

@@ -2771,21 +2771,16 @@ int cam_req_mgr_process_add_req(void *priv, void *data)
 			device->dev_info.name);
 	}
 
-	if ((add_req->skip_at_eof & 0xFF) > slot->inject_delay_at_eof) {
-		slot->inject_delay_at_eof = (add_req->skip_at_eof & 0xFF);
-		CAM_DBG(CAM_CRM,
-			"Req_id %llu injecting delay %llu frame at EOF by %s",
-			add_req->req_id,
-			slot->inject_delay_at_eof,
-			device->dev_info.name);
-	}
-
+#ifndef OPLUS_FEATURE_CAMERA_COMMON
 	/* Used when Precise Flash is enabled */
 #if 0
 	if ((add_req->trigger_eof) && (!add_req->skip_before_applying)) {
 #else
 	if ((add_req->trigger_eof) && (!add_req->skip_at_sof)) {
 #endif
+#else /*OPLUS_FEATURE_CAMERA_COMMON*/
+    if (add_req->trigger_eof) {
+#endif /*OPLUS_FEATURE_CAMERA_COMMON*/
 		slot->ops.apply_at_eof = true;
 		slot->ops.dev_hdl = add_req->dev_hdl;
 		CAM_DBG(CAM_REQ,
@@ -3035,7 +3030,6 @@ static int cam_req_mgr_process_trigger(void *priv, void *data)
 				in_q->last_applied_idx = -1;
 			if (idx == in_q->rd_idx)
 				__cam_req_mgr_dec_idx(&idx, 1, in_q->num_slots);
-
 			reset_step = link->max_delay;
 			for (i = 0; i < link->num_sync_links; i++) {
 				if (link->sync_link[i]) {

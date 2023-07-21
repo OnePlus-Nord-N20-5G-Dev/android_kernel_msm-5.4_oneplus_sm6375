@@ -23,10 +23,9 @@
 #define GC02M1_SENSOR_ID		0xe0
 #define OV16A1Q_SENSOR_ID		0x1641
 #define IMX581_SENSOR_ID		0x0581
-#define S5KJN1SQ_SENSOR_ID		0x38e1
 
 struct cam_sensor_settings sensor_settings = {
-#include "cam_sensor_settings.h"
+#include "CAM_SENSOR_SETTINGS.h"
 };
 
 struct cam_sensor_settings sensor_init_settings = {
@@ -44,7 +43,6 @@ struct cam_sensor_settings sensor_init_settings = {
 #include "init_camera_setting/ov08d10_setting.h"
 #include "init_camera_setting/ov16a1q_setting.h"
 #include "init_camera_setting/imx581_setting.h"
-#include "init_camera_setting/s5kjn1sq_setting.h"
 };
 
 /* Add for AT camera test */
@@ -61,7 +59,7 @@ long oplus_cam_sensor_subdev_ioctl(struct v4l2_subdev *sd,
 	case VIDIOC_CAM_FTM_POWNER_DOWN:
 		CAM_INFO(CAM_SENSOR, "FTM stream off");
 		rc = cam_sensor_power_down(s_ctrl);
-		CAM_INFO(CAM_SENSOR, "FTM power down.rc=%d, sensorid is %x",rc,s_ctrl->sensordata->slave_info.sensor_id);
+		CAM_ERR(CAM_SENSOR, "FTM power down.rc=%d, sensorid is %x",rc,s_ctrl->sensordata->slave_info.sensor_id);
 		break;
 	case VIDIOC_CAM_FTM_POWNER_UP:
 		rc = cam_sensor_power_up(s_ctrl);
@@ -116,9 +114,6 @@ long oplus_cam_sensor_subdev_ioctl(struct v4l2_subdev *sd,
 			break;
 		case IMX581_SENSOR_ID:
 			ptr = &sensor_settings.imx581_setting;
-			break;
-		case S5KJN1SQ_SENSOR_ID:
-			ptr = &sensor_settings.s5kjn1sq_setting;
 			break;
 		default:
 			break;
@@ -237,10 +232,6 @@ int sensor_start_thread(void *arg) {
 			case IMX581_SENSOR_ID:
 				ptr = &sensor_init_settings.imx581_setting;
 				CAM_INFO(CAM_SENSOR, "IMX581_SENSOR_ID");
-				break;
-			case S5KJN1SQ_SENSOR_ID:
-				ptr = &sensor_init_settings.s5kjn1sq_setting;
-				CAM_INFO(CAM_SENSOR, "S5KJN1SQ_SENSOR_ID");
 				break;
 			default:
 			    CAM_INFO(CAM_SENSOR, "no matching sensor_id");

@@ -32,7 +32,6 @@
 
 /* max requests per ctx for isp */
 #define CAM_ISP_CTX_REQ_MAX                     8
-
 #ifndef OPLUS_FEATURE_CAMERA_COMMON
 /*
  * Maximum configuration entry size  - This is based on the
@@ -40,7 +39,6 @@
  */
 #define CAM_ISP_CTX_CFG_MAX                     25
 #endif /*OPLUS_FEATURE_CAMERA_COMMON*/
-
 
 /*
  * Maximum entries in state monitoring array for error logging

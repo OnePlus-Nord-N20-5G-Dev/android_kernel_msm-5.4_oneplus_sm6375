@@ -30,7 +30,6 @@ static int cam_sensor_subdev_close_internal(struct v4l2_subdev *sd,
 	}
 
 	mutex_lock(&(s_ctrl->cam_sensor_mutex));
-
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
         if (!is_ftm_current_test) {
             cam_sensor_shutdown(s_ctrl);
@@ -453,7 +452,6 @@ static int32_t cam_sensor_driver_platform_probe(
 	int rc = 0;
 
 	CAM_DBG(CAM_SENSOR, "Adding Sensor component");
-
 	rc = component_add(&pdev->dev, &cam_sensor_component_ops);
 	if (rc)
 		CAM_ERR(CAM_SENSOR, "failed to add component rc: %d", rc);

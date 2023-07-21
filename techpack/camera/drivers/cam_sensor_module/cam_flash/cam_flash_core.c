@@ -180,10 +180,13 @@ int cam_flash_i2c_power_ops(struct cam_flash_ctrl *fctrl,
 			}
 		}
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
-	wl2868c_set_ldo_value(WL2868C_VDDOIS,1800);
-	wl2868c_set_en_ldo(WL2868C_VDDOIS,1);
-	CAM_ERR(CAM_FLASH,"FTM flash powerup CCI");
+		rc = wl2868c_ldo_enable(EXT_LDO6, 1800);
+		if (rc) {
+			CAM_ERR(CAM_FLASH,"FTM flash powerup CCI fail");
+			goto free_pwr_settings;
+		}
 #endif /* OPLUS_FEATURE_CAMERA_COMMON*/
+
 		rc = cam_sensor_core_power_up(power_info, soc_info);
 		if (rc) {
 			CAM_ERR(CAM_FLASH, "power up the core is failed:%d",
@@ -201,10 +204,11 @@ int cam_flash_i2c_power_ops(struct cam_flash_ctrl *fctrl,
 	} else if ((!regulator_enable) &&
 		(fctrl->is_regulator_enabled == true)) {
 
-		rc = cam_sensor_util_power_down(power_info, soc_info);
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
-		wl2868c_set_en_ldo(WL2868C_VDDOIS,0);
+		wl2868c_ldo_disable(EXT_LDO6, 0);
 #endif /* OPLUS_FEATURE_CAMERA_COMMON*/
+
+		rc = cam_sensor_util_power_down(power_info, soc_info);
 		if (rc) {
 			CAM_ERR(CAM_FLASH, "power down the core is failed:%d",
 				rc);
@@ -549,7 +553,6 @@ static int cam_flash_high(
 }
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
-/*Add by hongbo.dai@Camera 20180319 for flash*/
 int cam_flash_on(struct cam_flash_ctrl *flash_ctrl,
 	struct cam_flash_frame_setting *flash_data,
 	int mode) {
@@ -733,9 +736,6 @@ int cam_flash_i2c_apply_setting(struct cam_flash_ctrl *fctrl,
 	struct i2c_settings_list *i2c_list;
 	struct i2c_settings_array *i2c_set = NULL;
 	int frame_offset = 0, rc = 0;
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
-	uint32_t data = 0;
-#endif
 	CAM_DBG(CAM_FLASH, "req_id=%llu", req_id);
 	if (req_id == 0) {
 		/* NonRealTime Init settings*/
@@ -798,14 +798,6 @@ int cam_flash_i2c_apply_setting(struct cam_flash_ctrl *fctrl,
 		i2c_set = &fctrl->i2c_data.per_frame[frame_offset];
 		if ((i2c_set->is_settings_valid == true) &&
 			(i2c_set->request_id == req_id)) {
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
-		if(!strcmp(fctrl->flash_name, "i2c_flash")) {
-			rc = camera_io_dev_read(&(fctrl->io_master_info),
-				0x0A, &data, 1, 1);
-			rc = camera_io_dev_read(&(fctrl->io_master_info),
-				0x0B, &data, 1, 1);
-		}
-#endif
 			list_for_each_entry(i2c_list,
 				&(i2c_set->list_head), list) {
 				rc = cam_sensor_util_i2c_apply_setting(
@@ -1272,16 +1264,7 @@ int cam_flash_i2c_pkt_parser(struct cam_flash_ctrl *fctrl, void *arg)
 			CAM_DBG(CAM_FLASH, "settings already valid");
 			i2c_reg_settings->request_id = 0;
 			i2c_reg_settings->is_settings_valid = false;
-		#ifndef OPLUS_FEATURE_CAMERA_COMMON
 			goto update_req_mgr;
-		#else /*OPLUS_FEATURE_CAMERA_COMMON*/
-			rc = delete_request(i2c_reg_settings);
-			if (rc) {
-				CAM_ERR(CAM_FLASH,
-				"Failed in Deleting the err: %d", rc);
-				return rc;
-			}
-		#endif /*OPLUS_FEATURE_CAMERA_COMMON*/
 		}
 		i2c_reg_settings->is_settings_valid = true;
 		i2c_reg_settings->request_id =

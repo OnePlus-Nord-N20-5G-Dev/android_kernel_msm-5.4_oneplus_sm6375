@@ -25,6 +25,8 @@
 #include <linux/gpio.h>
 
 #include <soc/oplus/device_info.h>
+//#include <soc/oplus/oplus_project.h>
+//#include <soc/oplus/boot_mode.h>
 #include <linux/regmap.h>
 #define FAN53870_PRODUCT_ID_REG  0x00
 #define FAN53870_LDO_ENABLE_REG  0x03
@@ -87,8 +89,6 @@ static int ceil(int numerator, int denominator)
 /*export functions*/
 int fan53870_ldo1_set_voltage(int set_uV)
 {
-    return 0;
-#if 0
     int ret;
     unsigned int reg_value = 0x0; /*1.104V*/
     struct fan53870_pw_chip *pchip = fan53870_pchip;
@@ -116,7 +116,6 @@ int fan53870_ldo1_set_voltage(int set_uV)
 out:
     pr_err("[lcd]fan53870_ldo1_set_voltagefailed!\n");
     return ret;
-#endif
 }
 EXPORT_SYMBOL(fan53870_ldo1_set_voltage);
 
@@ -132,8 +131,6 @@ EXPORT_SYMBOL(fan53870_ldo1_disable);
 
 int fan53870_cam_ldo_set_voltage(int LDO_NUM, int set_mv)
 {
-    return 0;
-#if 0
     int ret                         = 0;
     int ldo_idx                     = LDO_NUM - 1;
     unsigned int reg_value          = 0; /*2.804V*/
@@ -267,14 +264,11 @@ out:
     }
     mutex_unlock(&pchip->lock);
     return ret;
-#endif
 }
 EXPORT_SYMBOL_GPL(fan53870_cam_ldo_set_voltage);
 
 int fan53870_cam_ldo_disable(int LDO_NUM)
 {
-    return 0;
-#if 0
     int ret                         = 0;
     int ldo_idx                     = LDO_NUM - 1;
     struct fan53870_pw_chip *pchip  = fan53870_pchip;
@@ -297,13 +291,12 @@ int fan53870_cam_ldo_disable(int LDO_NUM)
     mutex_unlock(&pchip->lock);
 
     return ret;
-#endif
 }
 EXPORT_SYMBOL_GPL(fan53870_cam_ldo_disable);
 
 int is_fan53870_pmic(void)
 {
-    pr_err("[hjz_debug]probe pmic, is_fan53870_1p1: %d \n", is_fan53870_1p1);
+    pr_err("probe pmic, is_fan53870_1p1: %d \n", is_fan53870_1p1);
     return is_fan53870_1p1;
 }
 EXPORT_SYMBOL(is_fan53870_pmic);

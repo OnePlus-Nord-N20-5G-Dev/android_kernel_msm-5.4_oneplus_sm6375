@@ -12,10 +12,12 @@
 #include "cam_packet_util.h"
 #include "oplus_cam_sensor_core.h"
 #include "cam_sensor_core.h"
+#include "../cam_flash/oplus_cam_flash_dev.h"
+
+extern struct cam_flash_settings flash_ftm_data;
 
 #define MAX_LENGTH 128
 
-/*add by hongbo.dai@camera 20190225, for fix current leak issue*/
 /*static int RamWriteByte(struct camera_io_master *cci_master_info,
 	uint32_t addr, uint32_t data, unsigned short mdelay)
 {
@@ -351,7 +353,6 @@ free_cam_regs:
 		break;
 	}
 
-	/*add by hongbo.dai@camera 20190221, get DPC Data for IMX471*/
 	case CAM_GET_DPC_DATA: {
 		if (0x0471 != s_ctrl->sensordata->slave_info.sensor_id) {
 			rc = -EFAULT;

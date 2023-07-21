@@ -6355,7 +6355,7 @@ static int cam_isp_packet_generic_blob_handler(void *user_data,
 		struct cam_isp_sensor_blanking_config  *sensor_blanking_config;
 
 		if (blob_size < sizeof(struct cam_isp_sensor_blanking_config)) {
-			CAM_ERR(CAM_ISP, "Invalid blob size %zu expected %zu",
+			CAM_ERR(CAM_ISP, "Invalid blob size %u expected %zu",
 				blob_size,
 				sizeof(struct cam_isp_sensor_blanking_config));
 			return -EINVAL;
@@ -6374,7 +6374,7 @@ static int cam_isp_packet_generic_blob_handler(void *user_data,
 		struct cam_isp_sensor_config *csid_dim_config;
 
 		if (blob_size < sizeof(struct cam_isp_sensor_config)) {
-			CAM_ERR(CAM_ISP, "Invalid blob size %zu expected %zu",
+			CAM_ERR(CAM_ISP, "Invalid blob size %u expected %zu",
 				blob_size,
 				sizeof(struct cam_isp_sensor_config));
 			return -EINVAL;
@@ -6394,7 +6394,7 @@ static int cam_isp_packet_generic_blob_handler(void *user_data,
 		struct cam_isp_tpg_core_config *tpg_config;
 
 		if (blob_size < sizeof(struct cam_isp_tpg_core_config)) {
-			CAM_ERR(CAM_ISP, "Invalid blob size %zu expected %zu",
+			CAM_ERR(CAM_ISP, "Invalid blob size %u expected %zu",
 				blob_size,
 				sizeof(struct cam_isp_tpg_core_config));
 			return -EINVAL;

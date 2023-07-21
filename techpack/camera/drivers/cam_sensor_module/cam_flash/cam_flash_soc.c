@@ -13,7 +13,6 @@
 #define OPLUS_FEATURE_CAMERA_COMMON
 #endif
 
-
 void cam_flash_put_source_node_data(struct cam_flash_ctrl *fctrl)
 {
 	uint32_t count = 0, i = 0;
@@ -298,7 +297,14 @@ int cam_flash_get_dt_data(struct cam_flash_ctrl *fctrl,
 		rc = -ENOMEM;
 		goto release_soc_res;
 	}
-	of_node = fctrl->pdev->dev.of_node;
+
+	if (fctrl->of_node == NULL) {
+		CAM_ERR(CAM_FLASH, "device node is NULL");
+		rc = -EINVAL;
+		goto free_soc_private;
+	}
+
+	of_node = fctrl->of_node;
 
 	rc = cam_soc_util_get_dt_properties(soc_info);
 	if (rc) {
@@ -307,13 +313,11 @@ int cam_flash_get_dt_data(struct cam_flash_ctrl *fctrl,
 	}
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
-/*Add by Zhengrong.Zhang@Camera 20160630 for flash*/
 	rc = of_property_read_string(of_node, "qcom,flash-name",
 		&fctrl->flash_name);
 	if (rc < 0) {
 		pr_err("get flash_name failed rc %d\n", rc);
 	}
-/*Add by Fangyan@Camera 2020/08/18 for flash current*/
 	fctrl->flash_current = 0;
 	rc = of_property_read_u32(of_node, "qcom,flash-current",
 		&fctrl->flash_current);

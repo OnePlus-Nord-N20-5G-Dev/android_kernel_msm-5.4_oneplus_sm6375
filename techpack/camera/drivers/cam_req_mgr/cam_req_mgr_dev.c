@@ -29,8 +29,12 @@
 #include "cam_compat.h"
 #include "cam_cpas_hw.h"
 
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+/*fujiahao@camera add for exit camera after continuous picture*/
+#define CAM_REQ_MGR_EVENT_MAX 256
+#else
 #define CAM_REQ_MGR_EVENT_MAX 30
-
+#endif
 static struct cam_req_mgr_device g_dev;
 struct kmem_cache *g_cam_req_mgr_timer_cachep;
 static struct list_head cam_req_mgr_ordered_sd_list;

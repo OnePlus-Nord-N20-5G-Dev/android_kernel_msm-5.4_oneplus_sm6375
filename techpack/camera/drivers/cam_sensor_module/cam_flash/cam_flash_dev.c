@@ -203,6 +203,7 @@ static int32_t cam_flash_driver_cmd(struct cam_flash_ctrl *fctrl,
 			cam_flash_off(fctrl);
 		}
 #endif /*OPLUS_FEATURE_CAMERA_COMMON*/
+
 		fctrl->func_tbl.flush_req(fctrl, FLUSH_ALL, 0);
 		fctrl->last_flush_req = 0;
 		fctrl->flash_state = CAM_FLASH_STATE_ACQUIRE;
@@ -457,6 +458,7 @@ static int cam_flash_component_bind(struct device *dev,
 		return -ENOMEM;
 
 	fctrl->pdev = pdev;
+	fctrl->of_node = pdev->dev.of_node;
 	fctrl->soc_info.pdev = pdev;
 	fctrl->soc_info.dev = &pdev->dev;
 	fctrl->soc_info.dev_name = pdev->name;
@@ -563,7 +565,7 @@ static int cam_flash_component_bind(struct device *dev,
 	CAM_DBG(CAM_FLASH, "Component bound successfully");
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
-	oplus_cam_flash_proc_init(fctrl, pdev);
+	rc = oplus_cam_flash_proc_init(fctrl, pdev);
 #endif
 
 	return rc;
@@ -633,12 +635,23 @@ static int32_t cam_flash_i2c_driver_probe(struct i2c_client *client,
 {
 	int32_t rc = 0, i = 0;
 	struct cam_flash_ctrl *fctrl;
+	struct cam_hw_soc_info *soc_info = NULL;
 
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	CAM_DBG(CAM_FLASH, "Enter probe flash");
 	if (client == NULL || id == NULL) {
 		CAM_ERR(CAM_FLASH, "Invalid Args client: %pK id: %pK",
 			client, id);
+#else /*OPLUS_FEATURE_CAMERA_COMMON*/
+	if (client == NULL) {
+		CAM_ERR(CAM_FLASH, "Invalid Args client: %pK",
+			client);
+#endif /*OPLUS_FEATURE_CAMERA_COMMON*/
 		return -EINVAL;
+	}
+
+	if (id == NULL) {
+		CAM_DBG(CAM_FLASH, "device id is Null");
 	}
 
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
@@ -652,9 +665,9 @@ static int32_t cam_flash_i2c_driver_probe(struct i2c_client *client,
 	if (!fctrl)
 		return -ENOMEM;
 
-	i2c_set_clientdata(client, fctrl);
-
+	client->dev.driver_data = fctrl;
 	fctrl->io_master_info.client = client;
+	fctrl->of_node = client->dev.of_node;
 	fctrl->soc_info.dev = &client->dev;
 	fctrl->soc_info.dev_name = client->name;
 	fctrl->io_master_info.master_type = I2C_MASTER;
@@ -666,6 +679,40 @@ static int32_t cam_flash_i2c_driver_probe(struct i2c_client *client,
 #endif /*OPLUS_FEATURE_CAMERA_COMMON*/
 	if (rc) {
 		CAM_ERR(CAM_FLASH, "failed: cam_sensor_parse_dt rc %d", rc);
+		goto free_ctrl;
+	}
+
+	rc = cam_flash_init_default_params(fctrl);
+	if (rc) {
+		CAM_ERR(CAM_FLASH,
+				"failed: cam_flash_init_default_params rc %d",
+				rc);
+		goto free_ctrl;
+	}
+
+	soc_info = &fctrl->soc_info;
+	rc = cam_sensor_util_regulator_powerup(soc_info);
+	if (rc < 0) {
+		CAM_ERR(CAM_FLASH, "regulator power up for flash failed %d",
+				rc);
+		goto free_ctrl;
+	}
+
+	if (!soc_info->gpio_data) {
+		CAM_DBG(CAM_FLASH, "No GPIO found");
+		rc = 0;
+		return rc;
+	}
+
+	if (!soc_info->gpio_data->cam_gpio_common_tbl_size) {
+		CAM_DBG(CAM_FLASH, "No GPIO found");
+		return -EINVAL;
+	}
+
+	rc = cam_sensor_util_init_gpio_pin_tbl(soc_info,
+			&fctrl->power_info.gpio_num_info);
+	if ((rc < 0) || (!fctrl->power_info.gpio_num_info)) {
+		CAM_ERR(CAM_FLASH, "No/Error Flash GPIOs");
 		goto free_ctrl;
 	}
 
@@ -704,7 +751,7 @@ static int32_t cam_flash_i2c_driver_probe(struct i2c_client *client,
 	fctrl->flash_state = CAM_FLASH_STATE_INIT;
 
 #ifdef OPLUS_FEATURE_CAMERA_COMMON
-	oplus_cam_i2c_flash_proc_init(fctrl, client);
+	rc = oplus_cam_i2c_flash_proc_init(fctrl, client);
 #endif
 
 	CAM_DBG(CAM_FLASH, "I2c flash probe sucess");
@@ -743,9 +790,11 @@ static struct i2c_driver cam_flash_i2c_driver = {
 	.remove = cam_flash_i2c_driver_remove,
 	.driver = {
 		.name = FLASH_DRIVER_I2C,
-	#ifdef OPLUS_FEATURE_CAMERA_COMMON
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 		.of_match_table = cam_i2c_flash_dt_match,
-	#endif
+#else /*OPLUS_FEATURE_CAMERA_COMMON*/
+		.of_match_table = cam_flash_dt_match,
+#endif /*OPLUS_FEATURE_CAMERA_COMMON*/
 	},
 };
 
@@ -753,10 +802,9 @@ int32_t cam_flash_init_module(void)
 {
 	int32_t rc = 0;
 
-	#ifdef OPLUS_FEATURE_CAMERA_COMMON
-	/*zhaopengfei@Camera 2021/12/30 set flash off in shutdown*/
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	reigster_flash_shutdown_notifier();
-	#endif
+#endif
 
 	CAM_DBG(CAM_FLASH, "flash platform probe start");
 	rc = platform_driver_register(&cam_flash_platform_driver);
@@ -767,7 +815,7 @@ int32_t cam_flash_init_module(void)
 
 	CAM_DBG(CAM_FLASH, "flash i2c probe start");
 	rc = i2c_add_driver(&cam_flash_i2c_driver);
-	if (rc)
+	if (rc < 0)
 		CAM_ERR(CAM_FLASH, "i2c_add_driver failed rc: %d", rc);
 
 	CAM_DBG(CAM_FLASH, "flash  probe end");
@@ -776,10 +824,10 @@ int32_t cam_flash_init_module(void)
 
 void cam_flash_exit_module(void)
 {
-	#ifdef OPLUS_FEATURE_CAMERA_COMMON
-	/*zhaopengfei@Camera 2021/12/30 set flash off in shutdown*/
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
 	unreigster_flash_shutdown_notifier();
-	#endif
+#endif
+
 	platform_driver_unregister(&cam_flash_platform_driver);
 	i2c_del_driver(&cam_flash_i2c_driver);
 }

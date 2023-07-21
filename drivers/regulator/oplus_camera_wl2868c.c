@@ -63,7 +63,7 @@ static int wl2868c_i2c_remove(struct i2c_client *client);
 /*****************************************************************************
  * Extern Area
  *****************************************************************************/
-int _wl2868c_set_en_ldo(EXT_SELECT ldonum,unsigned int en)
+int wl2868c_set_en_ldo(EXT_SELECT ldonum,unsigned int en)
 {
     int ret= 0;
     unsigned int value =0;
@@ -78,7 +78,7 @@ int _wl2868c_set_en_ldo(EXT_SELECT ldonum,unsigned int en)
     ret = i2c_smbus_read_byte_data(wl2868c_i2c_client, which_ldo_chip[ldo_id].enable_addr);
     if (ret <0)
     {
-        WL2868C_PRINT("[wl2868c] _wl2868c_set_en_ldo read error!\n");
+        WL2868C_PRINT("[wl2868c] wl2868c_set_en_ldo read error!\n");
         goto out;
     }
 
@@ -104,15 +104,15 @@ int _wl2868c_set_en_ldo(EXT_SELECT ldonum,unsigned int en)
     if (ret < 0) {
         goto out;
     }
-    WL2868C_PRINT("[wl2868c] _wl2868c_set_en_ldo enable before:%x after set :%x\n",ret,value);
+    WL2868C_PRINT("[wl2868c] wl2868c_set_en_ldo enable before:%x after set :%x\n",ret,value);
     return 0;
 
 out:
 
-    WL2868C_PRINT("[wl2868c] _wl2868c_set_en_ldo enable error!\n");
+    WL2868C_PRINT("[wl2868c] wl2868c_set_en_ldo enable error!\n");
     return ret;
 }
-EXPORT_SYMBOL_GPL(_wl2868c_set_en_ldo);
+EXPORT_SYMBOL_GPL(wl2868c_set_en_ldo);
 /** wl2868c
    Voutx=0.496v+LDOX_OUT[6:0]*0.008V LDO1/LDO2
    Voutx=1.504v+LDOX_OUT[7:0]*0.008V LDO3~LDO7
@@ -120,7 +120,7 @@ EXPORT_SYMBOL_GPL(_wl2868c_set_en_ldo);
    Voutx=0.800v+(LDOX_OUT[6:0]-99)*0.008V LDO1/LDO2
    Voutx=1.500v+()LDOX_OUT[7:0]-16)*0.008V LDO3~LDO7
 */
-int _wl2868c_set_ldo_value(EXT_SELECT ldonum,unsigned int value)
+int wl2868c_set_ldo_value(EXT_SELECT ldonum,unsigned int value)
 {
     int ret = 0;
     unsigned int  Ldo_out =0;
@@ -222,130 +222,66 @@ out:
 
     return ret;
 }
-EXPORT_SYMBOL_GPL(_wl2868c_set_ldo_value);
+EXPORT_SYMBOL_GPL(wl2868c_set_ldo_value);
 
-static struct wl2868c_ldomap ldolist[] = {
-    {CAMERA_INDEX_MAIN, SENSOR_EXTLDO_VANA, EXT_LDO3},     //BackMain AVDD
-    {CAMERA_INDEX_MAIN, SENSOR_EXTLDO_VANA1, EXT_LDO5},    //add for pikachu 2nd AVDD
-    {CAMERA_INDEX_MAIN, SENSOR_EXTLDO_VDIG, EXT_LDO1},     //BackMain DVDD
-    {CAMERA_INDEX_MAIN, SENSOR_EXTLDO_VIO,  EXT_LDO6},     //BackMain IOVDD
-    {CAMERA_INDEX_MAIN, SENSOR_EXTLDO_VAF,  EXT_LDO7},     //BackMain AFVDD
-
-    {CAMERA_INDEX_MONO, SENSOR_EXTLDO_VIO,  EXT_LDO6},     //BackMono IOVDD
-    {CAMERA_INDEX_MONO, SENSOR_EXTLDO_VANA, EXT_LDO4},     //BackMono AVDD
-
-    {CAMERA_INDEX_FRONT, SENSOR_EXTLDO_VANA, EXT_LDO4},    //FrontMain AVDD
-    {CAMERA_INDEX_FRONT, SENSOR_EXTLDO_VDIG, EXT_LDO2},    //FrontMain DVDD
-    {CAMERA_INDEX_FRONT, SENSOR_EXTLDO_VIO,  EXT_LDO6},    //FrontMain IOVDD
-
-    {CAMERA_INDEX_MACRO, SENSOR_EXTLDO_VIO,  EXT_LDO6},    //BackMacro IOVDD
-    {CAMERA_INDEX_MACRO, SENSOR_EXTLDO_VANA, EXT_LDO4},    //BackMacro VADD
-
-};
-
-int _wl2868c_set_ldo_enable(uint32_t sensor_index, enum msm_camera_power_seq_type seq_type, uint32_t min_voltage, uint32_t max_voltage)
+int wl2868c_ldo_enable(EXT_SELECT ldonum,unsigned int value)
 {
     int ret = 0;
-    EXT_SELECT ldonum = EXT_NONE;
-    unsigned int ldo_vol_value = 0;
-    unsigned int i = 0;
-
-    if(sensor_index >= CAMERA_INDEX_MAX_NUM ||
-            seq_type >= SENSOR_SEQ_TYPE_MAX ||
-            min_voltage < 600000 ||
-            max_voltage < 600000 ||
-            min_voltage > max_voltage){
-        WL2868C_PRINT("[wl2868c] %s invalid parameters!!!\n",__FUNCTION__);
-        return -1;
-    }
 
     mutex_lock(&i2c_control_mutex);
-    for(i = 0;i < (sizeof(ldolist) / sizeof(ldolist[0]));i++) {
-        if(sensor_index == ldolist[i].sensor_index && seq_type == ldolist[i].seq_type) {
-            ldonum = ldolist[i].ldo_selected;
-            break;
-        }
-    }
-
-    if(ldonum == EXT_NONE) {
-        WL2868C_PRINT("[wl2868c] %s ldo setting not found in ldolist!!!\n",__FUNCTION__);
-        return -2;
-    }
-
-    ldo_vol_value = min_voltage / 1000;
-
-    WL2868C_PRINT("%s ldonum:%d set_mv:%d\n", __FUNCTION__, ldonum, ldo_vol_value);
+    WL2868C_PRINT("%s ldonum:%d set_mv:%d\n", __FUNCTION__, ldonum+1, value);
     if (ldonum >= EXT_LDO1 && ldonum < EXT_MAX) {
         ++which_ldo_chip[ldo_id].enable_count[ldonum];
         WL2868C_PRINT("[wl2868c] %s LDO %d ref count %u", __FUNCTION__, ldonum+1,
                     which_ldo_chip[ldo_id].enable_count[ldonum]);
     }
 
-    ret = _wl2868c_set_ldo_value(ldonum, ldo_vol_value);
-    if (ret < 0) {
+    ret = wl2868c_set_ldo_value(ldonum, value);
+    ret |= wl2868c_set_en_ldo(ldonum, 1);
+    if (ret)
+    {
+        WL2868C_PRINT("[wl2868c] wl2868c_ldo_enable fail!\n");
         goto out;
     }
 
-    ret = _wl2868c_set_en_ldo(ldonum, 1);
-    if (ret < 0) {
-        goto out;
-    }
     mutex_unlock(&i2c_control_mutex);
 
     return 0;
-
 out:
-    WL2868C_PRINT("_wl2868c_set_ldo_enable error!\n");
+    WL2868C_PRINT("wl2868c_ldo_enable error!\n");
     if (ldonum >= EXT_LDO1 && ldonum < EXT_MAX) {
         --which_ldo_chip[ldo_id].enable_count[ldonum];
     }
     mutex_unlock(&i2c_control_mutex);
+
     return ret;
 }
-EXPORT_SYMBOL_GPL(_wl2868c_set_ldo_enable);
+EXPORT_SYMBOL_GPL(wl2868c_ldo_enable);
 
-int _wl2868c_set_ldo_disable(uint32_t sensor_index, enum msm_camera_power_seq_type seq_type)
+int wl2868c_ldo_disable(EXT_SELECT ldonum,unsigned int value)
 {
     int ret = 0;
-    EXT_SELECT ldonum = EXT_NONE;
-    unsigned int i = 0;
-
-    if(sensor_index >= CAMERA_INDEX_MAX_NUM ||
-                    seq_type >= SENSOR_SEQ_TYPE_MAX) {
-        WL2868C_PRINT("[wl2868c] %s invalid parameters!!!\n",__FUNCTION__);
-        return -1;
-    }
 
     mutex_lock(&i2c_control_mutex);
-    for(i = 0;i < (sizeof(ldolist) / sizeof(ldolist[0]));i++) {
-        if(sensor_index == ldolist[i].sensor_index && seq_type == ldolist[i].seq_type) {
-            ldonum = ldolist[i].ldo_selected;
-            break;
-        }
-    }
-
-    if(ldonum == EXT_NONE) {
-        WL2868C_PRINT("[wl2868c] %s ldo setting not found in ldolist!!!\n",__FUNCTION__);
-        return -2;
-    }
-
-    WL2868C_PRINT("[wl2868c] %s LDO %d ref count %u", __FUNCTION__, ldonum+1,
+    if (ldonum >= EXT_LDO1 && ldonum < EXT_MAX) {
+        WL2868C_PRINT("[wl2868c] %s LDO %d ref count %u", __FUNCTION__, ldonum+1,
                     which_ldo_chip[ldo_id].enable_count[ldonum]);
 
-    if ((ldonum >= EXT_LDO1 && ldonum < EXT_MAX) && (which_ldo_chip[ldo_id].enable_count[ldonum] > 0)) {
-        --which_ldo_chip[ldo_id].enable_count[ldonum];
-        if (which_ldo_chip[ldo_id].enable_count[ldonum] == 0) {
-            ret = _wl2868c_set_en_ldo(ldonum, 0);
-            if (ret < 0) {
-                ++which_ldo_chip[ldo_id].enable_count[ldonum];
+        if (which_ldo_chip[ldo_id].enable_count[ldonum] > 0) {
+                --which_ldo_chip[ldo_id].enable_count[ldonum];
+            if (which_ldo_chip[ldo_id].enable_count[ldonum] == 0) {
+                ret = wl2868c_set_en_ldo(ldonum, 0);
+                if (ret < 0) {
+                    ++which_ldo_chip[ldo_id].enable_count[ldonum];
+                }
             }
         }
     }
 
     mutex_unlock(&i2c_control_mutex);
-    return 0;
+    return ret;
 }
-EXPORT_SYMBOL_GPL(_wl2868c_set_ldo_disable);
+EXPORT_SYMBOL_GPL(wl2868c_ldo_disable);
 
 /*****************************************************************************
  * Data Structure
@@ -421,7 +357,7 @@ exit:
     return ret; /* Good! */
 }
 
-void _wl2868c_gpio_select_state(WL2868C_GPIO_STATE s)
+void wl2868c_gpio_select_state(WL2868C_GPIO_STATE s)
 {
     WL2868C_PRINT("[wl2868c]%s,%d\n",__FUNCTION__,s);
 
@@ -485,7 +421,7 @@ static int wl2868c_i2c_probe(struct i2c_client *client, const struct i2c_device_
     for(i = 0; i < (sizeof(which_ldo_chip) / sizeof(which_ldo_chip[0])); i++) {
         client->addr = which_ldo_chip[i].i2c_addr;
         wl2868c_i2c_client = client;
-        _wl2868c_gpio_select_state(WL2868C_GPIO_STATE_ENP0);
+        wl2868c_gpio_select_state(WL2868C_GPIO_STATE_ENP0);
 
         chipid = i2c_smbus_read_byte_data(wl2868c_i2c_client, which_ldo_chip[i].chip_addr) & 0xff;
         WL2868C_PRINT("[wl2868c]camera_ldo_i2c_probe addr = 0x%x,chipid:vendorid = 0x%x\n", client->addr, chipid);

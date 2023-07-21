@@ -318,9 +318,10 @@ static int cam_tfe_hw_mgr_get_clock_rate(
 			continue;
 
 		hw_intf = isp_hw_res->hw_res[i]->hw_intf;
-		CAM_DBG(CAM_ISP, "hw type %d hw index:%d",
-			hw_intf->hw_type, hw_intf->hw_idx);
 		if (hw_intf && hw_intf->hw_ops.process_cmd) {
+			CAM_DBG(CAM_ISP, "hw type %d hw index:%d",
+				hw_intf->hw_type, hw_intf->hw_idx);
+
 			rc = hw_intf->hw_ops.process_cmd(
 				hw_intf->hw_priv,
 				CAM_ISP_HW_CMD_GET_CLOCK_RATE,
@@ -350,10 +351,11 @@ static int cam_tfe_hw_mgr_update_clock_rate(
 			continue;
 
 		hw_intf = isp_hw_res->hw_res[i]->hw_intf;
-		CAM_DBG(CAM_ISP, "hw type %d hw index:%d",
-			hw_intf->hw_type, hw_intf->hw_idx);
 
 		if (hw_intf && hw_intf->hw_ops.process_cmd) {
+			CAM_DBG(CAM_ISP, "hw type %d hw index:%d",
+				hw_intf->hw_type, hw_intf->hw_idx);
+
 			rc = hw_intf->hw_ops.process_cmd(
 				hw_intf->hw_priv,
 				CAM_ISP_HW_CMD_DYNAMIC_CLOCK_UPDATE,
@@ -368,6 +370,7 @@ static int cam_tfe_hw_mgr_update_clock_rate(
 		if (hw_intf && hw_intf->hw_ops.process_cmd) {
 			CAM_DBG(CAM_ISP, "hw type %d hw index:%d",
 				hw_intf->hw_type, hw_intf->hw_idx);
+
 			rc = hw_intf->hw_ops.process_cmd(
 				hw_intf->hw_priv,
 				CAM_ISP_HW_CMD_GET_CLOCK_RATE,

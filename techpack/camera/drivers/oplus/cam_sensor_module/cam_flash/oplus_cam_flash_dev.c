@@ -3,7 +3,6 @@
  * Copyright (c) 2017-2019, The Linux Foundation. All rights reserved.
  */
 #include <linux/module.h>
-/*Add by Zhengrong.Zhang@Camera 20160630 for flash*/
 #include <linux/proc_fs.h>
 #include <linux/time.h>
 #include <linux/rtc.h>
@@ -11,24 +10,22 @@
 #include "cam_flash_soc.h"
 #include "cam_flash_core.h"
 #include "cam_common_util.h"
-/*Add by hongbo.dai@Camera 20180319 for flash*/
 #include "cam_res_mgr_api.h"
 #include "oplus_cam_flash_dev.h"
 
-#ifndef OPLUS_FEATURE_CAMERA_COMMON
-extern void wl2868c_set_ldo_value(WL2868C_SELECT ldonum,unsigned int value);
-extern void wl2868c_set_en_ldo(WL2868C_SELECT ldonum,unsigned int en);
-#endif
 static struct notifier_block flash_shutdown;
+
 struct cam_flash_settings flash_ftm_data = {
 	.total_flash_dev = TOTAL_FLASH_NUM,
 	.flash_type = 0,
-	.valid_setting_index = 0,
+	.valid_setting_index = -1,
 	.cur_flash_status = IIC_FLASH_INVALID,
 	{
 		#include "CAM_FLASH_SETTINGS.h"
 	}
 };
+
+struct cam_flash_ctrl *vendor_flash_ctrl = NULL;
 
 static int cam_ftm_i2c_flash_off(struct cam_flash_ctrl *flash_ctrl, struct cam_flash_ftm_settings *flash_ftm_data)
 {
@@ -42,16 +39,16 @@ static int cam_ftm_i2c_flash_off(struct cam_flash_ctrl *flash_ctrl, struct cam_f
 		CAM_ERR(CAM_FLASH,"Ftm flash off failed, Empty setting");
 		return -ENOMEM;
 	}
+
 	memset(&write_setting, 0, sizeof(write_setting));
 
-	if (flash_ctrl->io_master_info.master_type == I2C_MASTER)
+	if (flash_ctrl->io_master_info.master_type == I2C_MASTER) {
 		flash_ctrl->io_master_info.client->addr = flash_ftm_data->flashprobeinfo.slave_write_address;
-	else {
+	} else if(flash_ctrl->io_master_info.master_type == CCI_MASTER) {
 		flash_ctrl->io_master_info.cci_client->cci_i2c_master = flash_ftm_data->cci_client.cci_i2c_master;
 		flash_ctrl->io_master_info.cci_client->i2c_freq_mode = flash_ftm_data->cci_client.i2c_freq_mode;
-		flash_ctrl->io_master_info.cci_client->sid = flash_ftm_data->cci_client.sid ;
+		flash_ctrl->io_master_info.cci_client->sid = flash_ftm_data->cci_client.sid;
 	}
-
 
 	flash_ctrl->power_info.power_down_setting_size = 0;
 	flash_ctrl->power_info.power_down_setting = kzalloc(sizeof(struct cam_sensor_power_setting) * MAX_POWER_CONFIG, GFP_KERNEL);
@@ -68,7 +65,7 @@ static int cam_ftm_i2c_flash_off(struct cam_flash_ctrl *flash_ctrl, struct cam_f
 		write_setting.size = flash_off_setting->size;
 		write_setting.delay = flash_off_setting->delay;
 		for (retry = 0; retry < 5; retry++) {
-		rc = camera_io_dev_write(&(flash_ctrl->io_master_info), &write_setting);
+			rc = camera_io_dev_write(&(flash_ctrl->io_master_info), &write_setting);
 			if (rc < 0) {
 				msleep(1);
 			}
@@ -85,10 +82,8 @@ static int cam_ftm_i2c_flash_off(struct cam_flash_ctrl *flash_ctrl, struct cam_f
 	//2.power off
 	if (power_off_setting != NULL) {
 		flash_ctrl->power_info.power_down_setting->config_val = power_off_setting->config_val;
-		//*(flash_ctrl->power_info.power_down_setting->data) = {0};
 		flash_ctrl->power_info.power_down_setting->delay = power_off_setting->delay;
 		flash_ctrl->power_info.power_down_setting->seq_type = power_off_setting->seq_type;
-		//flash_ctrl.power_info->power_down_setting->seq_val = 0;
 		flash_ctrl->power_info.power_down_setting_size = power_off_setting->size;
 		rc = flash_ctrl->func_tbl.power_ops(flash_ctrl, false);
 		if (rc) {
@@ -98,6 +93,7 @@ static int cam_ftm_i2c_flash_off(struct cam_flash_ctrl *flash_ctrl, struct cam_f
 	}
 
 	CAM_INFO(CAM_FLASH, "FTM success to poweroff i2c flash");
+
 free_power_settings:
 	kfree(flash_ctrl->power_info.power_down_setting);
 	flash_ctrl->power_info.power_down_setting = NULL;
@@ -112,24 +108,21 @@ static int cam_ftm_i2c_torch_on(struct cam_flash_ctrl *flash_ctrl, struct cam_fl
 	struct cam_flash_ftm_reg_setting *torch_on_setting = &(flash_ftm_data->flashlowsettings);
 	struct cam_flash_ftm_reg_setting *init_setting = &(flash_ftm_data->flashinitsettings);
 	struct cam_sensor_i2c_reg_setting write_setting;
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
-	uint32_t data = 0;
-#endif
 
 	if (!power_on_setting || !init_setting || !torch_on_setting) {
 		CAM_ERR(CAM_FLASH,"Ftm torch on failed, Empty setting");
 		return -ENOMEM;
 	}
+
 	memset(&write_setting, 0, sizeof(write_setting));
 
-	if (flash_ctrl->io_master_info.master_type == I2C_MASTER)
+	if (flash_ctrl->io_master_info.master_type == I2C_MASTER) {
 		flash_ctrl->io_master_info.client->addr = flash_ftm_data->flashprobeinfo.slave_write_address;
-	else {
+	} else if (flash_ctrl->io_master_info.master_type == CCI_MASTER) {
 		flash_ctrl->io_master_info.cci_client->cci_i2c_master = flash_ftm_data->cci_client.cci_i2c_master;
 		flash_ctrl->io_master_info.cci_client->i2c_freq_mode = flash_ftm_data->cci_client.i2c_freq_mode;
 		flash_ctrl->io_master_info.cci_client->sid = flash_ftm_data->cci_client.sid;
 	}
-
 
 	flash_ctrl->power_info.power_setting_size = 0;
 	flash_ctrl->power_info.power_setting = kzalloc(sizeof(struct cam_sensor_power_setting) * MAX_POWER_CONFIG, GFP_KERNEL);
@@ -141,10 +134,8 @@ static int cam_ftm_i2c_torch_on(struct cam_flash_ctrl *flash_ctrl, struct cam_fl
 	//1.power on
 	if (power_on_setting != NULL) {
 		flash_ctrl->power_info.power_setting->config_val = power_on_setting->config_val;
-		//*(flash_ctrl->power_info.power_setting->data) = {0};
 		flash_ctrl->power_info.power_setting->delay = power_on_setting->delay;
 		flash_ctrl->power_info.power_setting->seq_type = power_on_setting->seq_type;
-		//flash_ctrl->power_info.power_setting->seq_val = 0;
 		flash_ctrl->power_info.power_setting_size = power_on_setting->size;
 		rc = flash_ctrl->func_tbl.power_ops(flash_ctrl, true);
 		if (rc) {
@@ -153,14 +144,6 @@ static int cam_ftm_i2c_torch_on(struct cam_flash_ctrl *flash_ctrl, struct cam_fl
 		}
 	}
 
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
-	if(!strcmp(flash_ctrl->flash_name, "i2c_flash")) {
-		rc = camera_io_dev_read(&(flash_ctrl->io_master_info),
-			0x0A, &data, 1, 1);
-		rc = camera_io_dev_read(&(flash_ctrl->io_master_info),
-			0x0B, &data, 1, 1);
-	}
-#endif
 	//2.init setting
 	if (init_setting != NULL) {
 		write_setting.reg_setting = init_setting->reg_setting;
@@ -190,6 +173,7 @@ static int cam_ftm_i2c_torch_on(struct cam_flash_ctrl *flash_ctrl, struct cam_fl
 	}
 
 	CAM_INFO(CAM_FLASH, "FTM success set torch on");
+
 free_power_settings:
 	kfree(flash_ctrl->power_info.power_setting);
 	flash_ctrl->power_info.power_setting = NULL;
@@ -204,19 +188,17 @@ static int cam_ftm_i2c_flash_on(struct cam_flash_ctrl *flash_ctrl, struct cam_fl
 	struct cam_flash_ftm_reg_setting *flash_on_setting = &(flash_ftm_data->flashhighsettings);
 	struct cam_flash_ftm_reg_setting *init_setting = &(flash_ftm_data->flashinitsettings);
 	struct cam_sensor_i2c_reg_setting write_setting;
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
-	uint32_t data = 0;
-#endif
 
 	if (!power_on_setting || !init_setting || !flash_on_setting) {
 		CAM_ERR(CAM_FLASH,"Ftm flash on failed, Empty setting");
 		return -ENOMEM;
 	}
+
 	memset(&write_setting, 0, sizeof(write_setting));
 
-	if (flash_ctrl->io_master_info.master_type == I2C_MASTER)
+	if (flash_ctrl->io_master_info.master_type == I2C_MASTER) {
 		flash_ctrl->io_master_info.client->addr = flash_ftm_data->flashprobeinfo.slave_write_address;
-	else {
+	} else if(flash_ctrl->io_master_info.master_type == CCI_MASTER) {
 		flash_ctrl->io_master_info.cci_client->cci_i2c_master = flash_ftm_data->cci_client.cci_i2c_master;
 		flash_ctrl->io_master_info.cci_client->i2c_freq_mode = flash_ftm_data->cci_client.i2c_freq_mode;
 		flash_ctrl->io_master_info.cci_client->sid = flash_ftm_data->cci_client.sid;
@@ -232,10 +214,8 @@ static int cam_ftm_i2c_flash_on(struct cam_flash_ctrl *flash_ctrl, struct cam_fl
 	//1.power on
 	if (power_on_setting != NULL) {
 		flash_ctrl->power_info.power_setting->config_val = power_on_setting->config_val;
-		//*(flash_ctrl->power_info.power_setting->data) = {0};
 		flash_ctrl->power_info.power_setting->delay = power_on_setting->delay;
 		flash_ctrl->power_info.power_setting->seq_type = power_on_setting->seq_type;
-		//flash_ctrl->power_info.power_setting->seq_val = 0;
 		flash_ctrl->power_info.power_setting_size = power_on_setting->size;
 		rc = flash_ctrl->func_tbl.power_ops(flash_ctrl, true);
 		if (rc) {
@@ -244,14 +224,6 @@ static int cam_ftm_i2c_flash_on(struct cam_flash_ctrl *flash_ctrl, struct cam_fl
 		}
 	}
 
-#ifdef OPLUS_FEATURE_CAMERA_COMMON
-	if(!strcmp(flash_ctrl->flash_name, "i2c_flash")) {
-		rc = camera_io_dev_read(&(flash_ctrl->io_master_info),
-			0x0A, &data, 1, 1);
-		rc = camera_io_dev_read(&(flash_ctrl->io_master_info),
-			0x0B, &data, 1, 1);
-	}
-#endif
 	//2.init setting
 	if (init_setting != NULL) {
 		write_setting.reg_setting = init_setting->reg_setting;
@@ -279,11 +251,88 @@ static int cam_ftm_i2c_flash_on(struct cam_flash_ctrl *flash_ctrl, struct cam_fl
 			goto free_power_settings;
 		}
 	}
+
 	CAM_INFO(CAM_FLASH, "FTM success set flash on");
+
 free_power_settings:
 	kfree(flash_ctrl->power_info.power_setting);
 	flash_ctrl->power_info.power_setting = NULL;
+
 	return rc;
+}
+
+int cam_flash_match_id(uint32_t except_id, struct cam_flash_ctrl *flash_ctrl, struct cam_flash_ftm_settings *flash_ftm_data)
+{
+	int rc = 0, match_flag = 0;
+	uint32_t readid = 0;
+	struct cam_flash_ftm_power_setting *power_on_setting = &(flash_ftm_data->flashpowerupsetting);
+	struct cam_flash_ftm_power_setting *power_off_setting = &(flash_ftm_data->flashpowerdownsetting);
+
+	if (!power_on_setting || !power_off_setting) {
+		CAM_ERR(CAM_FLASH,"Ftm flash on failed, Empty setting");
+		return -ENOMEM;
+	}
+
+	if (flash_ctrl->io_master_info.master_type == I2C_MASTER) {
+		flash_ctrl->io_master_info.client->addr = flash_ftm_data->flashprobeinfo.slave_write_address;
+	} else if(flash_ctrl->io_master_info.master_type == CCI_MASTER) {
+		flash_ctrl->io_master_info.cci_client->cci_i2c_master = flash_ftm_data->cci_client.cci_i2c_master;
+		flash_ctrl->io_master_info.cci_client->i2c_freq_mode = flash_ftm_data->cci_client.i2c_freq_mode;
+		flash_ctrl->io_master_info.cci_client->sid = flash_ftm_data->cci_client.sid;
+	}
+
+	flash_ctrl->power_info.power_setting_size = 0;
+	flash_ctrl->power_info.power_setting = kzalloc(sizeof(struct cam_sensor_power_setting) * MAX_POWER_CONFIG, GFP_KERNEL);
+	if (!flash_ctrl->power_info.power_setting) {
+		CAM_ERR(CAM_FLASH,"kzalloc failed!\n");
+		return -ENOMEM;
+	}
+	flash_ctrl->power_info.power_down_setting_size = 0;
+	flash_ctrl->power_info.power_down_setting = kzalloc(sizeof(struct cam_sensor_power_setting) * MAX_POWER_CONFIG, GFP_KERNEL);
+	if (!flash_ctrl->power_info.power_down_setting) {
+		CAM_ERR(CAM_FLASH,"kzalloc failed!\n");
+		return -ENOMEM;
+	}
+
+	//1.power on
+	flash_ctrl->power_info.power_setting->config_val = power_on_setting->config_val;
+	flash_ctrl->power_info.power_setting->delay = power_on_setting->delay;
+	flash_ctrl->power_info.power_setting->seq_type = power_on_setting->seq_type;
+	flash_ctrl->power_info.power_setting_size = power_on_setting->size;
+	rc = flash_ctrl->func_tbl.power_ops(flash_ctrl, true);
+	if (rc) {
+		CAM_ERR(CAM_FLASH,"ftm flash powerup Failed rc = %d", rc);
+		goto free_power_settings;
+	}
+
+	//2.match id
+	rc = camera_io_dev_read(&(flash_ctrl->io_master_info),flash_ftm_data->flashprobeinfo.flash_id_address,
+							&readid, flash_ftm_data->flashprobeinfo.addr_type, flash_ftm_data->flashprobeinfo.data_type);
+
+	if (readid != except_id) {
+		match_flag = 0;
+	} else {
+		match_flag = 1;
+		CAM_INFO(CAM_FLASH, "read id: 0x%x, expected id: 0x%x", readid, except_id);
+	}
+
+	//3.power off
+	flash_ctrl->power_info.power_down_setting->config_val = power_off_setting->config_val;
+	flash_ctrl->power_info.power_down_setting->delay = power_off_setting->delay;
+	flash_ctrl->power_info.power_down_setting->seq_type = power_off_setting->seq_type;
+	flash_ctrl->power_info.power_down_setting_size = power_off_setting->size;
+	rc = flash_ctrl->func_tbl.power_ops(flash_ctrl, false);
+	if (rc) {
+		CAM_ERR(CAM_FLASH,"FTM flash powerdown Failed rc = %d", rc);
+		goto free_power_settings;
+	}
+
+free_power_settings:
+	kfree(flash_ctrl->power_info.power_setting);
+	kfree(flash_ctrl->power_info.power_down_setting);
+	flash_ctrl->power_info.power_setting = NULL;
+	flash_ctrl->power_info.power_down_setting = NULL;
+	return match_flag;
 }
 
 int cam_ftm_i2c_set_standby(struct cam_flash_ctrl *flash_ctrl, struct cam_flash_ftm_settings *flash_ftm_data)
@@ -296,19 +345,15 @@ int cam_ftm_i2c_set_standby(struct cam_flash_ctrl *flash_ctrl, struct cam_flash_
 		CAM_ERR(CAM_FLASH,"Ftm set standby mode failed, Empty setting");
 		return -ENOMEM;
 	}
+
 	memset(&write_setting, 0, sizeof(write_setting));
 
-	if (flash_ctrl->io_master_info.master_type == I2C_MASTER)
+	if (flash_ctrl->io_master_info.master_type == I2C_MASTER) {
 		flash_ctrl->io_master_info.client->addr = flash_ftm_data->flashprobeinfo.slave_write_address;
-	else {
+	} else if(flash_ctrl->io_master_info.master_type == CCI_MASTER) {
 		flash_ctrl->io_master_info.cci_client->cci_i2c_master = flash_ftm_data->cci_client.cci_i2c_master;
 		flash_ctrl->io_master_info.cci_client->i2c_freq_mode = flash_ftm_data->cci_client.i2c_freq_mode;
 		flash_ctrl->io_master_info.cci_client->sid = flash_ftm_data->cci_client.sid;
-	}
-
-	if (!flash_off_setting) {
-		CAM_ERR(CAM_FLASH,"Ftm set standby mode failed, Empty setting");
-		return rc;
 	}
 
 	//1.flash off setting
@@ -327,10 +372,6 @@ int cam_ftm_i2c_set_standby(struct cam_flash_ctrl *flash_ctrl, struct cam_flash_
 	return rc;
 }
 
-
-struct cam_flash_ctrl *vendor_flash_ctrl = NULL;
-struct cam_flash_ctrl *front_flash_ctrl = NULL;
-/*add by hongbo.dai@camera 20180319, suitable proc dev for flash as same as SDM660*/
 volatile static int flash_mode;
 volatile static int pre_flash_mode;
 
@@ -339,6 +380,11 @@ static ssize_t ftm_i2c_flash_on_off(struct cam_flash_ctrl *flash_ctrl)
 	int rc = 1;
 	struct timespec ts;
 	struct rtc_time tm;
+
+	if (flash_ftm_data.valid_setting_index < 0 || flash_ftm_data.valid_setting_index >= flash_ftm_data.total_flash_dev) {
+		CAM_ERR(CAM_FLASH, "No match flash ftm setting!");
+		return -1;
+	}
 
 	getnstimeofday(&ts);
 	rtc_time_to_tm(ts.tv_sec, &tm);
@@ -349,21 +395,22 @@ static ssize_t ftm_i2c_flash_on_off(struct cam_flash_ctrl *flash_ctrl)
 	if(pre_flash_mode == flash_mode)
 		return rc;
 
-	if(pre_flash_mode == 5 && flash_mode == 0){
+	if(pre_flash_mode == 5 && flash_mode == 0) {
 		CAM_ERR(CAM_FLASH, "camera is opened,not to set flashlight off");
 		return rc;
 	}
+
 	pre_flash_mode = flash_mode;
 	switch (flash_mode)
 	{
 		CAM_INFO(CAM_FLASH, "FTM set cur flash state:%d", flash_mode);
-	    // flash off
+	    // ftm & status_bar flash off
 		case 0:
 			cam_ftm_i2c_flash_off(flash_ctrl, &(flash_ftm_data.flash_ftm_settings[flash_ftm_data.valid_setting_index]));
 			flash_ctrl->flash_state = CAM_FLASH_STATE_INIT;
 			flash_ftm_data.cur_flash_status = IIC_FLASH_OFF;
 			break;
-		// torch on ?
+		// status_bar torch on
 		case 1:
 			cam_ftm_i2c_torch_on(flash_ctrl, &(flash_ftm_data.flash_ftm_settings[flash_ftm_data.valid_setting_index]));
 			flash_ftm_data.cur_flash_status = IIC_FLASH_ON;
@@ -373,13 +420,100 @@ static ssize_t ftm_i2c_flash_on_off(struct cam_flash_ctrl *flash_ctrl)
 			cam_ftm_i2c_flash_on(flash_ctrl, &(flash_ftm_data.flash_ftm_settings[flash_ftm_data.valid_setting_index]));
 			flash_ftm_data.cur_flash_status = IIC_FLASH_HIGH;
 			break;
-		// torch on ?
+		// ftm torch on
 		case 3:
 			cam_ftm_i2c_torch_on(flash_ctrl, &(flash_ftm_data.flash_ftm_settings[flash_ftm_data.valid_setting_index]));
 			flash_ftm_data.cur_flash_status = IIC_FLASH_ON;
 			break;
 		default:
 			break;
+	}
+	return rc;
+}
+
+// register flashoff operation to reboot_notifier_list
+int shutdown_flash_notify(struct notifier_block *nb, unsigned long action, void *data)
+{
+	int rc = NOTIFY_DONE;
+	struct cam_flash_ftm_settings *cur_flash_ftm_data = NULL;
+	struct cam_flash_ftm_reg_setting *flash_off_setting = NULL;
+	struct cam_sensor_i2c_reg_setting write_setting;
+
+	if (flash_ftm_data.valid_setting_index >= TOTAL_FLASH_NUM || flash_ftm_data.valid_setting_index < 0) {
+		CAM_ERR(CAM_FLASH,"Empty flash off setting!");
+		return NOTIFY_BAD;
+	}
+
+	cur_flash_ftm_data = &(flash_ftm_data.flash_ftm_settings[flash_ftm_data.valid_setting_index]);
+	flash_off_setting = &(cur_flash_ftm_data->flashoffsettings);
+	memset(&write_setting, 0, sizeof(write_setting));
+
+	if (!flash_off_setting || !cur_flash_ftm_data || !vendor_flash_ctrl) {
+		CAM_ERR(CAM_FLASH,"Empty flash off setting!");
+		return NOTIFY_BAD;
+	}
+
+	if (vendor_flash_ctrl->io_master_info.master_type == I2C_MASTER) {
+		if (!vendor_flash_ctrl->io_master_info.client) {
+			return NOTIFY_BAD;
+		}
+		vendor_flash_ctrl->io_master_info.client->addr = cur_flash_ftm_data->flashprobeinfo.slave_write_address;
+	} else if (vendor_flash_ctrl->io_master_info.master_type == CCI_MASTER) {
+		if (!vendor_flash_ctrl->io_master_info.cci_client) {
+			return NOTIFY_BAD;
+		}
+
+		vendor_flash_ctrl->io_master_info.cci_client->cci_i2c_master = cur_flash_ftm_data->cci_client.cci_i2c_master;
+		vendor_flash_ctrl->io_master_info.cci_client->i2c_freq_mode = cur_flash_ftm_data->cci_client.i2c_freq_mode;
+		vendor_flash_ctrl->io_master_info.cci_client->sid = cur_flash_ftm_data->cci_client.sid;
+	}
+
+	CAM_INFO(CAM_FLASH, "shutdown_flash_notify excute power on for cci success!");
+
+	//1.flash off setting
+	write_setting.reg_setting = flash_off_setting->reg_setting;
+	write_setting.addr_type = flash_off_setting->addr_type;
+	write_setting.data_type = flash_off_setting->data_type;
+	write_setting.size = flash_off_setting->size;
+	write_setting.delay = flash_off_setting->delay;
+
+	if((cur_flash_ftm_data->flashprobeinfo.flash_id == 0x02) && (flash_ftm_data.cur_flash_status == IIC_FLASH_ON)) {
+		rc = camera_io_dev_write(&(vendor_flash_ctrl->io_master_info), &write_setting);
+		if (rc) {
+			CAM_ERR(CAM_FLASH, "Set flash off in shutdown failed!");
+			rc = NOTIFY_BAD;
+		} else {
+			CAM_ERR(CAM_FLASH, "Set flash off in shutdown successful, cur action:%lu", action);
+			rc = NOTIFY_OK;
+		}
+	}
+
+	return rc;
+}
+
+int reigster_flash_shutdown_notifier()
+{
+
+	int rc = 0;
+	flash_shutdown.notifier_call = shutdown_flash_notify;
+	flash_shutdown.priority = 0;
+
+	if (register_reboot_notifier(&flash_shutdown)) {
+		CAM_ERR(CAM_FLASH, "Register shutdown flash operation failed!");
+		rc = -EINVAL;
+	}
+	return rc;
+}
+
+int unreigster_flash_shutdown_notifier()
+{
+	int rc = 0;
+	flash_shutdown.notifier_call = shutdown_flash_notify;
+	flash_shutdown.priority = 0;
+
+	if (unregister_reboot_notifier(&flash_shutdown)) {
+		CAM_ERR(CAM_FLASH, "Unregister shutdown flash operation failed!");
+		rc = -EINVAL;
 	}
 	return rc;
 }
@@ -401,7 +535,6 @@ static ssize_t flash_on_off(struct cam_flash_ctrl *flash_ctrl)
 	if(pre_flash_mode == flash_mode)
 		return rc;
 
-	/*Add by Jindian.Guan@Camera 20170426 not use flashlight when use camera*/
 	if(pre_flash_mode == 5 && flash_mode == 0){
 		pr_err("camera is opened,not to set flashlight off");
 		return rc;
@@ -480,14 +613,14 @@ static const struct file_operations led_fops = {
     .write		= flash_proc_write,
 };
 
-static int flash_proc_init(struct cam_flash_ctrl *flash_ctl)
+static int flash_proc_init(struct cam_flash_ctrl *flash_ctrl)
 {
 	int ret = 0;
 	char proc_flash[16] = "qcom_flash";
 	char strtmp[] = "0";
 	struct proc_dir_entry *proc_entry;
 
-	CAM_INFO(CAM_FLASH, "flash_name", flash_ctl->flash_name);
+	CAM_INFO(CAM_FLASH, "flash_name", flash_ctrl->flash_name);
 	/*
 	if (flash_ctl->flash_name == NULL) {
 		pr_err("%s get flash name is NULL %d\n", __func__, __LINE__);
@@ -499,8 +632,8 @@ static int flash_proc_init(struct cam_flash_ctrl *flash_ctl)
 		}
 	}
 	*/
-	if (flash_ctl->soc_info.index > 0) {
-		sprintf(strtmp, "%d", flash_ctl->soc_info.index);
+	if (flash_ctrl->soc_info.index > 0) {
+		sprintf(strtmp, "%d", flash_ctrl->soc_info.index);
 		strcat(proc_flash, strtmp);
 	}
 	proc_entry = proc_create_data(proc_flash, 0666, NULL,&led_fops, NULL);
@@ -508,11 +641,10 @@ static int flash_proc_init(struct cam_flash_ctrl *flash_ctl)
 		ret = -ENOMEM;
 		pr_err("[%s]: Error! Couldn't create qcom_flash proc entry\n", __func__);
 	}
-	vendor_flash_ctrl = flash_ctl;
+	vendor_flash_ctrl = flash_ctrl;
 	return ret;
 }
 
-/*add by hongbo.dai@camera 20181126, for front flashlight*/
 static ssize_t cam_flash_switch_store(struct device *dev,
 				struct device_attribute *attr, const char *buf,
 				size_t count)
@@ -529,7 +661,8 @@ static ssize_t cam_flash_switch_store(struct device *dev,
 	CAM_INFO(CAM_FLASH, "echo data = %d ", enable);
 
 	flash_mode = enable;
-	if (vendor_flash_ctrl->io_master_info.master_type == I2C_MASTER) {
+	if (vendor_flash_ctrl->io_master_info.master_type == I2C_MASTER ||
+		vendor_flash_ctrl->io_master_info.master_type == CCI_MASTER) {
 		rc = ftm_i2c_flash_on_off(data);
 	}
 	else {
@@ -547,75 +680,48 @@ static ssize_t cam_flash_switch_show(struct device *dev,
 }
 
 static DEVICE_ATTR(fswitch, 0660, cam_flash_switch_show,cam_flash_switch_store);
-// register flashoff operation to reboot_notifier_list
-int shutdown_flash_notify(struct notifier_block *nb, unsigned long action, void *data)
-{
-	int rc = NOTIFY_DONE;
-	struct cam_flash_ftm_settings *cur_flash_ftm_data = NULL;
-	struct cam_flash_ftm_reg_setting *flash_off_setting = NULL;
-	cur_flash_ftm_data = &(flash_ftm_data.flash_ftm_settings[flash_ftm_data.valid_setting_index]);
-	flash_off_setting = &(cur_flash_ftm_data->flashoffsettings);
 
-	if (!flash_off_setting || !cur_flash_ftm_data || !vendor_flash_ctrl) {
-		CAM_ERR(CAM_FLASH,"Empty flash off setting!");
-		return NOTIFY_BAD;
-	}
-	rc = cam_ftm_i2c_flash_off(vendor_flash_ctrl, cur_flash_ftm_data);
-	if (rc) {
-		CAM_ERR(CAM_FLASH, "Set flash off in shutdown failed!");
-		rc = NOTIFY_BAD;
-	} else {
-		CAM_ERR(CAM_FLASH, "Set flash off in shutdown successful, cur action:%lu", action);
-		rc = NOTIFY_OK;
-	}
-	return rc;
-}
-
-int reigster_flash_shutdown_notifier()
-{
-
-	int rc = 0;
-	flash_shutdown.notifier_call = shutdown_flash_notify;
-	flash_shutdown.priority = 0;
-    CAM_INFO(CAM_FLASH, "enter reigster_flash_shutdown_notifier");
-	if (register_reboot_notifier(&flash_shutdown)) {
-	    CAM_ERR(CAM_FLASH, "Register shutdown flash operation failed!");
-		rc = -EINVAL;
-	}
-	return rc;
-}
-
-int unreigster_flash_shutdown_notifier()
-{
-	int rc = 0;
-	flash_shutdown.notifier_call = shutdown_flash_notify;
-	flash_shutdown.priority = 0;
-
-	if (unregister_reboot_notifier(&flash_shutdown)) {
-		CAM_ERR(CAM_FLASH, "Unregister shutdown flash operation failed!");
-		rc = -EINVAL;
-	}
-	return rc;
-}
-
-void oplus_cam_flash_proc_init(struct cam_flash_ctrl *flash_ctl,
+int oplus_cam_flash_proc_init(struct cam_flash_ctrl *flash_ctl,
     struct platform_device *pdev)
 {
-    /*Add by hongbo.dai@Camera 20181126 for flash*/
-    if (flash_proc_init(flash_ctl) < 0) {
-        device_create_file(&pdev->dev, &dev_attr_fswitch);
-    }
+	int rc = 0, retry_count = 0, i;
+	if (flash_proc_init(flash_ctl) < 0) {
+		rc = device_create_file(&pdev->dev, &dev_attr_fswitch);
+		if (rc < 0) return rc;
+	}
+
 	//set cur flash type
 	if (vendor_flash_ctrl->io_master_info.master_type == I2C_MASTER || vendor_flash_ctrl->io_master_info.master_type == CCI_MASTER)
 		flash_ftm_data.flash_type = 1;
+
+
+	//set exist i2c flash device setting status to true
+	for (i = 0; i < flash_ftm_data.total_flash_dev; i++) {
+		for (retry_count = 0; retry_count < 3; retry_count++) {
+			if (cam_flash_match_id(flash_ftm_data.flash_ftm_settings[i].flashprobeinfo.flash_id,
+								flash_ctl,
+								&(flash_ftm_data.flash_ftm_settings[i]))) {
+				flash_ftm_data.valid_setting_index = i;
+				CAM_INFO(CAM_FLASH, "find exist flash name:%s, retry_count:%d",
+						flash_ftm_data.flash_ftm_settings[flash_ftm_data.valid_setting_index].flashprobeinfo.flash_name, retry_count);
+				return rc;
+			}
+		}
+	}
+
+	return rc;
 }
 
-void oplus_cam_i2c_flash_proc_init(struct cam_flash_ctrl *flash_ctl,
+int oplus_cam_i2c_flash_proc_init(struct cam_flash_ctrl *flash_ctl,
     struct i2c_client *client)
 {
-    if (flash_proc_init(flash_ctl) < 0) {
-        device_create_file(&client->dev, &dev_attr_fswitch);
-    }
+	int rc = 0;
+	if (flash_proc_init(flash_ctl) < 0) {
+		rc = device_create_file(&client->dev, &dev_attr_fswitch);
+		if (rc < 0) return rc;
+	}
+
+	return rc;
 }
 
 
