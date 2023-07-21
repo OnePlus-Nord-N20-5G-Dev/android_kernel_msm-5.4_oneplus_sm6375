@@ -8,3 +8,4 @@
 #define CONFIG_SPECTRA_OPE         1
 #define CONFIG_SPECTRA_TFE         1
 #define CONFIG_SPECTRA_SENSOR      1
+#define CONFIG_CAMERA_EXTLDO_WL2868C 1
