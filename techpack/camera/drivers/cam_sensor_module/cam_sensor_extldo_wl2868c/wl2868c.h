@@ -71,7 +71,7 @@ struct wl2868c {
 /*****************************************************************************
  * Function Prototype
  *****************************************************************************/
-extern void wl2868c_gpio_select_state(WL2868C_GPIO_STATE s);
+//extern void wl2868c_gpio_select_state(WL2868C_GPIO_STATE s);
 extern void wl2868c_set_ldo_value(WL2868C_SELECT ldonum,unsigned int value);
 extern void wl2868c_set_en_ldo(WL2868C_SELECT ldonum,unsigned int en);
 extern int wl2868c_set_ldo_enable(uint32_t sensor_index, enum msm_camera_power_seq_type seq_type, uint32_t min_voltage, uint32_t max_voltage);
