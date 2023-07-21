@@ -476,7 +476,7 @@ static int sy6970_disable_otg(struct sy6970 *bq)
 				  SY6970_OTG_CONFIG_MASK, val);
 }
 
-static int sy6970_enable_hvdcp(struct sy6970 *bq)
+int sy6970_enable_hvdcp(struct sy6970 *bq)
 {
 	int ret;
 	u8 val = SY6970_HVDCP_ENABLE << SY6970_HVDCPEN_SHIFT;
@@ -487,7 +487,7 @@ static int sy6970_enable_hvdcp(struct sy6970 *bq)
 }
 EXPORT_SYMBOL_GPL(sy6970_enable_hvdcp);
 
-static int sy6970_disable_hvdcp(struct sy6970 *bq)
+int sy6970_disable_hvdcp(struct sy6970 *bq)
 {
 	int ret;
 	u8 val = SY6970_HVDCP_DISABLE << SY6970_HVDCPEN_SHIFT;
@@ -1010,7 +1010,7 @@ int sy6970_get_hiz_mode(struct sy6970 *bq, u8 *state)
 }
 EXPORT_SYMBOL_GPL(sy6970_get_hiz_mode);
 
-static int sy6970_enable_term(struct sy6970 *bq, bool enable)
+int sy6970_enable_term(struct sy6970 *bq, bool enable)
 {
 	u8 val = 0;
 	int ret = 0;
@@ -1074,7 +1074,7 @@ static int sy6970_vmin_limit(struct sy6970 *bq)
 				  SY6970_SYS_MINV_MASK, val);
 }
 
-static int sy6970_enable_auto_dpdm(struct sy6970 *bq, bool enable)
+int sy6970_enable_auto_dpdm(struct sy6970 *bq, bool enable)
 {
 	u8 val = 0;
 	int ret = 0;
@@ -1114,7 +1114,7 @@ int sy6970_set_boost_voltage(struct sy6970 *bq, int volt)
 }
 EXPORT_SYMBOL_GPL(sy6970_set_boost_voltage);
 
-static int sy6970_enable_ico(struct sy6970 *bq, bool enable)
+int sy6970_enable_ico(struct sy6970 *bq, bool enable)
 {
 	u8 val = 0;
 	int ret = 0;
@@ -1131,7 +1131,7 @@ static int sy6970_enable_ico(struct sy6970 *bq, bool enable)
 }
 EXPORT_SYMBOL_GPL(sy6970_enable_ico);
 
-static int sy6970_read_idpm_limit(struct sy6970 *bq, int *icl)
+int sy6970_read_idpm_limit(struct sy6970 *bq, int *icl)
 {
 	uint8_t val = 0;
 	int ret = 0;
@@ -1150,7 +1150,7 @@ static int sy6970_read_idpm_limit(struct sy6970 *bq, int *icl)
 }
 EXPORT_SYMBOL_GPL(sy6970_read_idpm_limit);
 
-static int sy6970_enable_safety_timer(struct sy6970 *bq)
+int sy6970_enable_safety_timer(struct sy6970 *bq)
 {
 	const u8 val = SY6970_CHG_TIMER_ENABLE << SY6970_EN_TIMER_SHIFT;
 
@@ -1159,7 +1159,7 @@ static int sy6970_enable_safety_timer(struct sy6970 *bq)
 }
 EXPORT_SYMBOL_GPL(sy6970_enable_safety_timer);
 
-static int sy6970_disable_safety_timer(struct sy6970 *bq)
+int sy6970_disable_safety_timer(struct sy6970 *bq)
 {
 	const u8 val = SY6970_CHG_TIMER_DISABLE << SY6970_EN_TIMER_SHIFT;
 
