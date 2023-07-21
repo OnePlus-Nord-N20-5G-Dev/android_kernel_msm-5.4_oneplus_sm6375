@@ -90,11 +90,11 @@ struct wl2868c_ldomap {
 /*****************************************************************************
  * Function Prototype
  *****************************************************************************/
-// extern void wl2868c_gpio_select_state(WL2868C_GPIO_STATE s);
-// extern void wl2868c_set_ldo_value(EXT_SELECT ldonum,unsigned int value);
-// extern void wl2868c_set_en_ldo(EXT_SELECT ldonum,unsigned int en);
-// extern int wl2868c_set_ldo_enable(uint32_t sensor_index, enum msm_camera_power_seq_type seq_type, uint32_t min_voltage, uint32_t max_voltage);
-// extern int wl2868c_set_ldo_disable(uint32_t sensor_index, enum msm_camera_power_seq_type seq_type);
+// extern void _wl2868c_gpio_select_state(WL2868C_GPIO_STATE s);
+// extern void _wl2868c_set_ldo_value(EXT_SELECT ldonum,unsigned int value);
+// extern void _wl2868c_set_en_ldo(EXT_SELECT ldonum,unsigned int en);
+// extern int _wl2868c_set_ldo_enable(uint32_t sensor_index, enum msm_camera_power_seq_type seq_type, uint32_t min_voltage, uint32_t max_voltage);
+// extern int _wl2868c_set_ldo_disable(uint32_t sensor_index, enum msm_camera_power_seq_type seq_type);
 // int wl2868c_init_module(void);
 // void wl2868c_exit_module(void);
 
