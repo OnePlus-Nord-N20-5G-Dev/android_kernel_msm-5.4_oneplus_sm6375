@@ -22,9 +22,6 @@
 #ifdef CONFIG_PROCESS_RECLAIM_ENHANCE
 #include <linux/process_mm_reclaim.h>
 #endif
-#ifdef CONFIG_KSWAPD_DEBUG_STATISTICS
-#include <soc/oplus/lowmem_dbg.h>
-#endif
 #include <linux/version.h>
 #include <linux/time64.h>
 #include <linux/timekeeping.h>

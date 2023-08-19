@@ -13,7 +13,6 @@ obj-$(CONFIG_OPLUS_FEATURE_PHOENIX)     += oplus_phoenix/
 obj-$(CONFIG_OPLUS_FEATURE_PMIC_MONITOR)     += oplus_pmic_monitor/
 obj-$(CONFIG_OPLUS_FEATURE_DUMP_DEVICE_INFO)	+=  dump_device_info/
 obj-$(CONFIG_OPLUS_FEATURE_RECORD_MDMRST)     += mdmrst/
-obj-$(CONFIG_OPLUS_FEATURE_CMDLINE)     += cmdline_parser/
 #ifdef OPLUS_FEATURE_DUMP_REASON
 obj-$(CONFIG_OPLUS_FEATURE_DUMP_REASON)	+=  dump_reason/
 #endif /* OPLUS_FEATURE_DUMP_REASON */

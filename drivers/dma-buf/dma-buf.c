@@ -38,10 +38,6 @@
 #include <linux/proc_fs.h>
 #endif
 
-#ifdef CONFIG_OPLUS_FEATURE_LOWMEM_DBG
-#include <soc/oplus/lowmem_dbg.h>
-#endif /* CONFIG_OPLUS_FEATURE_LOWMEM_DBG */
-
 static inline int is_dma_buf_file(struct file *);
 
 struct dma_buf_list {
@@ -504,16 +500,6 @@ static inline int is_dma_buf_file(struct file *file)
 {
 	return file->f_op == &dma_buf_fops;
 }
-
-#ifdef CONFIG_OPLUS_FEATURE_LOWMEM_DBG
-/**
- * Add for dump memory usage when lowmmem occurs.
- */
-inline int oplus_is_dma_buf_file(struct file *file)
-{
-	return is_dma_buf_file(file);
-}
-#endif /* CONFIG_OPLUS_FEATURE_LOWMEM_DBG */
 
 static struct file *dma_buf_getfile(struct dma_buf *dmabuf, int flags)
 {
