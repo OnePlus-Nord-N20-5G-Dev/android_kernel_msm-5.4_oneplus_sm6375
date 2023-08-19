@@ -28,8 +28,8 @@
 			qcom,system-reset;
 			qcom,store-hard-reset-reason;
 			//#ifdef CONFIG_OPLUS_FEATURE_QCOM_PMICWD
-			// Add for qcom pmic watchdog
 			qcom,pmicwd;
+			//#endif
 
 			qcom,pon_1 {
 				qcom,pon-type = <PON_POWER_ON_TYPE_KPDPWR>;

@@ -12,6 +12,9 @@ blair-mulan-21296-overlay.dtbo-base := blair-mulan.dtb
 blair-mulan-22042-overlay.dtbo-base := blair-mulan.dtb
 blair-gunnar-20826-overlay.dtbo-base := blair-mulan.dtb
 blair-gunnar-20825-overlay.dtbo-base := blair-mulan.dtb
+else
+dtb-$(CONFIG_ARCH_HOLI) += \
+	blair-mulan.dtb
 endif
 
 always := $(dtb-y)

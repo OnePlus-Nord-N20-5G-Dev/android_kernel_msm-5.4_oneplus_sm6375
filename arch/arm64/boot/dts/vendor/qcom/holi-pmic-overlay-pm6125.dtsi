@@ -18,6 +18,7 @@
 			power-source = <1>;
 		};
 	};
+
 	pmr735a_cam_therm {
 		pmr735a_cam_therm_default: pmr735a_cam_therm_default {
 			pins = "gpio2";
@@ -342,7 +343,7 @@
 		polling-delay-passive = <0>;
 		polling-delay = <0>;
 		thermal-governor = "user_space";
-		thermal-sensors = <&pm6125_adc_tm ADC5_AMUX_THM2_100K_PU>;
+		thermal-sensors = <&pm6125_adc_tm ADC5_XO_THERM_100K_PU>;
 		wake-capable-sensor;
 		trips {
 			active-config0 {
