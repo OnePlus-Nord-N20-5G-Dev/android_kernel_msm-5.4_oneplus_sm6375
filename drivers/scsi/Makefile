@@ -17,10 +17,6 @@
 
 CFLAGS_aha152x.o =   -DAHA152X_STAT -DAUTOCONF
 CFLAGS_gdth.o    = # -DDEBUG_GDTH=2 -D__SERIAL__ -D__COM2__ -DGDTH_STATISTICS
-CFLAGS_scsi.o    = -fPIC
-CFLAGS_scsi_logging.o    = -fPIC
-CFLAGS_scsi_pm.o    = -fPIC
-CFLAGS_scsi_common.o    = -fPIC
 
 obj-$(CONFIG_PCMCIA)		+= pcmcia/
 

@@ -427,10 +427,6 @@ int oplus_chg_backup_soc(int backup_soc)
 	return rc;
 }
 
-#ifdef CONFIG_OPLUS_FEATURE_CHG_MISC
-extern bool ext_boot_with_console(void);
-#endif
-
 extern int oplus_usbtemp_monitor_common(void *data);
 extern void oplus_usbtemp_recover_func(struct oplus_chg_chip *chip);
 
@@ -495,11 +491,6 @@ static int oplus_chg_2uart_pinctrl_init(struct oplus_chg_chip *chip)
 		chg_err("get chg_2uart_sleep fail\n");
 		return -EINVAL;
 	}
-
-#ifdef CONFIG_OPLUS_FEATURE_CHG_MISC
-	if (!ext_boot_with_console())
-		pinctrl_select_state(chg->chg_2uart_pinctrl, chg->chg_2uart_sleep);
-#endif
 
 	return 0;
 }

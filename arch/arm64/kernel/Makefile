@@ -75,6 +75,3 @@ ifeq ($(CONFIG_DEBUG_EFI),y)
 AFLAGS_head.o += -DVMLINUX_PATH="\"$(realpath $(objtree)/vmlinux)\""
 endif
 
-#ifdef CONFIG_OPLUS_SECURE_GUARD
-obj-$(CONFIG_OPLUS_KERNEL_SECURE_FEATURE)    +=  secureguard/
-#endif /* CONFIG_OPLUS_SECURE_GUARD */

@@ -48,9 +48,6 @@ source "drivers/soc/oplus/system/oplus_pmic_monitor/Kconfig"
 source "drivers/soc/oplus/system/project_info/Kconfig"
 source "drivers/soc/oplus/system/dump_device_info/Kconfig"
 source "drivers/soc/oplus/system/mdmrst/Kconfig"
-#ifdef OPLUS_FEATURE_QCOM_PMICWD
-source "drivers/soc/oplus/system/qcom_pmicwd/Kconfig"
-#endif /* OPLUS_FEATURE_QCOM_PMICWD */
 
 #ifdef OPLUS_FEATURE_DUMP_REASON
 source "drivers/soc/oplus/system/dump_reason/Kconfig"

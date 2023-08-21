@@ -73,5 +73,4 @@ config OPLUS_SHORT_USERSPACE
 	help
 	  Say Y to include support
 source "drivers/power/oplus/Kconfig"
-source "drivers/power/oplus_util/Kconfig"
 #endif
