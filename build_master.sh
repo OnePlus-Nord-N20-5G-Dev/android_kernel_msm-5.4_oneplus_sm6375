@@ -1,9 +1,6 @@
 #!/bin/bash
 
-if [[ "${1}" != "skip" ]] ; then
-	git clean -fdx
-	./build_kernel.sh "$@" || exit 1
-fi
+./build_kernel.sh "skip" || exit 1
 
 VERSION="$(cat version)-$(date +%F | sed s@-@@g)"
 

@@ -47,7 +47,7 @@ cd $KERNELDIR
 
 echo "Making new boot image"
 mkbootimg \
-    --kernel $KERNELDIR/arch/arm64/boot/Image.gz \
+    --kernel $KERNELDIR/out/arch/arm64/boot/Image \
     --ramdisk $RAMFS_TMP.cpio.gz \
     --pagesize 4096 \
     --os_version     $OS \
