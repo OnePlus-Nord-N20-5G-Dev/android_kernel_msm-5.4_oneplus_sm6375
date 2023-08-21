@@ -1,182 +1,3 @@
-#line 1 "vendor/oneplus/sepolicy/system_ext/private/property_contexts"
-# All the vendor property need to follow the below naming rule
-
-# tomcheng@core, 2020/05/05, Security Black Box
-vendor.oem.enroll.index                 u:object_r:boottime_prop:s0
-vendor.oem.verify.pass.index            u:object_r:boottime_prop:s0
-vendor.oem.verify.fail.index            u:object_r:boottime_prop:s0
-
-# lynn.guo@Display, add for hdr detect
-vendor.display.hdr.mode           u:object_r:system_prop:s0
-
-# add for customized ringtone mms_notification
-ro.config.mms_notification        u:object_r:exported2_config_prop:s0 exact string
-
-# add for reaboot cmdline
-persist.sys.reboot.cmdline u:object_r:last_boot_reason_prop:s0
-sys.reboot.cmdline         u:object_r:system_boot_reason_prop:s0
-
-# brandon.zeng@CONN, add for oem rf config
-persist.vendor.oem.nfc.           u:object_r:boottime_prop:s0
-
-## oscar.wei@SYSTEM, 2020/03/30, [AN-604] add for opdiagnose
-copy.opdiag.data.status           u:object_r:boottime_prop:s0
-## Danny.Xiao@SYSTEM, 2019/12/15, [AN-918] add for opdiagnose
-copy.qxdm.log                     u:object_r:boottime_prop:s0
-copyall.done                      u:object_r:boottime_prop:s0
-copy.qxdmlog.status               u:object_r:boottime_prop:s0
-opdiagnose.qxdm.mask              u:object_r:boottime_prop:s0
-
-# OEM dump property
-persist.vendor.oem.dump                  u:object_r:boottime_prop:s0
-persist.vendor.oem.ssrdump               u:object_r:boottime_prop:s0
-persist.vendor.oem.defaultdump           u:object_r:boottime_prop:s0
-persist.vendor.oem.twice.modemdump       u:object_r:boottime_prop:s0
-persist.vendor.enable.powerkey.dump      u:object_r:boottime_prop:s0
-
-# george.yi@optimization, 2020/05/22, [OSP-2789] record reboot reason in MDM
-persist.vendor.lastboot                  u:object_r:boottime_prop:s0
-
-# narci.gu@system, 2020/07/17, added for [AVICII-1]
-vendor.oppo.engineer.adb.flag           u:object_r:ctl_default_prop:s0
-
-# matt.yu@SYSTEM, 2020/08/25, allow o test app to set prop oppo.autotest.monitor.reboot
-oppo.autotest.monitor.reboot             u:object_r:system_prop:s0
-
-# roger.li@display, 2019/07/10, add for dc
-persist.vendor.dc.enable                u:object_r:boottime_prop:s0
-
-# network add for ims
-vendor.oem.net.volte.entitled            u:object_r:boottime_prop:s0
-vendor.oem.net.volte.entitled0           u:object_r:boottime_prop:s0
-vendor.oem.net.volte.entitled1           u:object_r:boottime_prop:s0
-vendor.oem.net.wfc.entitled              u:object_r:boottime_prop:s0
-vendor.oem.net.wfc.entitled0             u:object_r:boottime_prop:s0
-vendor.oem.net.wfc.entitled1             u:object_r:boottime_prop:s0
-persist.vendor.oem.dbg.volte_avail       u:object_r:boottime_prop:s0
-persist.vendor.oem.dbg.vt_avail          u:object_r:boottime_prop:s0
-persist.vendor.oem.dbg.wfc_avail         u:object_r:boottime_prop:s0
-
-# johnny @Network, 2020/08/22 add for sar test
-vendor.sartest.enable                   u:object_r:boottime_prop:s0
-
-# bruce.chenyc @Network, 2020/08/21 add for QXDM log, qmi log and radio.rtt
-persist.vendor.qxdm.copymask             u:object_r:boottime_prop:s0
-persist.vendor.qxdm.copylog              u:object_r:boottime_prop:s0
-persist.vendor.diag.max.                 u:object_r:exported_system_prop:s0
-persist.vendor.qmi_log_on                u:object_r:boottime_prop:s0
-persist.vendor.radio.rtt.operval         u:object_r:boottime_prop:s0
-
-# rich.yu@MM.Audio, 2020/07/21, add for audio feature:OP_FEATURE_MM_RECODER_CH_SWITCH
-vendor.audio.media.stereo.control        u:object_r:powerctl_prop:s0
-
-# kala.li@power 2020/5/19 add for game affinity
-vendor.sys.op.game u:object_r:exported_system_prop:s0
-
-# dujie@MM.Audio, 2020/06/08, Add for Speaker calibration EngineerMode
-persist.vendor.enggmode.                 u:object_r:system_prop:s0
-
-# yewenliang@MM.Audio, 2020/02/17, add for adjust dtmf volume
-vendor.audio.dtmf.volume                 u:object_r:exported3_default_prop:s0 exact int
-
-# heilay.he@media, 2020/05/20, [ITN-50148], Add for pcm dump
-persist.vendor.oneplus.mm.pcmdump        u:object_r:boottime_prop:s0
-persist.vendor.audiodump.copylog         u:object_r:boottime_prop:s0
-
-# webber.yan@media, 2020/09/01, Add a online switch to control wechat's image quality
-vendor.config.image.improve.enable  u:object_r:exported_system_prop:s0
-
-# bin.zhong@ASTI, 2019/05/28, add for memory+
-persist.vendor.memplus.              u:object_r:exported_system_prop:s0
-
-# bin.zhong@ASTI, 2019/08/06, Add for ORM
-persist.vendor.orm.  u:object_r:system_prop:s0
-persist.vendor.omm.  u:object_r:system_prop:s0
-
-# danny.xiao@system, 2020/06/19, added for [AN-1225]
-ddr.compatible         u:object_r:system_prop:s0
-
-# brandon.zeng@conn,2020/08/20, add for IKR-23890 vts_treble_sys_prop_tes
-vendor.oem.nfc.rf.card.productline u:object_r:boottime_prop:s0
-
-# henry.cao@system,2020/1/23, for adb authorization
-persist.vendor.allcommode                       u:object_r:boottime_prop:s0
-persist.vendor.sys.allcommode                   u:object_r:boottime_prop:s0
-
-# neil.nie@system, 2020/08/22, added for [IKR-27811]
-vendor.oem.                              u:object_r:boottime_prop:s0
-
-#sam.li@SYSTEM,add for AN-1107
-ro.vendor.op.target.version.ota           u:object_r:system_prop:s0
-ro.vendor.op.wipe.data                    u:object_r:system_prop:s0
-persist.vendor.op.last.slot_suffix        u:object_r:system_prop:s0
-persist.vendor.op.last.version.ota        u:object_r:system_prop:s0
-ro.vendor.op.update.completed             u:object_r:system_prop:s0
-vendor.op.gota                         u:object_r:system_prop:s0
-
-# v-takey.zheng@SYSTEM, 2020/05/27, add for camera OPTODO-30
-persist.vendor.camera.overrideLogLevels   u:object_r:ctl_default_prop:s0
-persist.vendor.camera.logInfoMask         u:object_r:ctl_default_prop:s0
-persist.vendor.camera.logWarningMask      u:object_r:ctl_default_prop:s0
-persist.vendor.camera.logVerboseMask      u:object_r:ctl_default_prop:s0
-persist.vendor.camera.dumpSensorEEPROMData  u:object_r:ctl_default_prop:s0
-persist.vendor.camera.pdaf_logging        u:object_r:ctl_default_prop:s0
-persist.vendor.camera.pdaf_dump           u:object_r:ctl_default_prop:s0
-persist.vendor.camera.exif3a.opxcompress  u:object_r:ctl_default_prop:s0
-persist.vendor.camera.debugdata.enable3A  u:object_r:ctl_default_prop:s0
-persist.vendor.camera.debugdata.enableTuningMetadata  u:object_r:ctl_default_prop:s0
-persist.camera.ashdr.debug                u:object_r:ctl_default_prop:s0
-persist.camera.asllhdr.debug              u:object_r:ctl_default_prop:s0
-persist.camera.bokeh.debugcap             u:object_r:ctl_default_prop:s0
-persist.vendor.supernight.dump            u:object_r:ctl_default_prop:s0
-persist.vendor.oppo.rawhdr.dump           u:object_r:ctl_default_prop:s0
-persist.vendor.camera.reprocessDump       u:object_r:ctl_default_prop:s0
-persist.vendor.camera.dumpDebugDataEveryProcessResult  u:object_r:ctl_default_prop:s0
-persist.vendor.camera.dump.formatmask     u:object_r:ctl_default_prop:s0
-persist.camera.antibanding.debug          u:object_r:ctl_default_prop:s0
-persist.camera.supersensor.debug          u:object_r:ctl_default_prop:s0
-persist.vendor.camera.swmf.debug          u:object_r:ctl_default_prop:s0
-persist.vendor.facebeauty.dump            u:object_r:ctl_default_prop:s0
-persist.camera.singleblur.debug           u:object_r:ctl_default_prop:s0
-persist.camera.mfsrfrt.debug              u:object_r:ctl_default_prop:s0
-persist.camera.superportrait.debug        u:object_r:ctl_default_prop:s0
-persist.camera.opxfilter.dumpframe        u:object_r:ctl_default_prop:s0
-persist.vendor.camera.logEntryExitMask    u:object_r:ctl_default_prop:s0
-persist.vendor.camera.systemLogEnable     u:object_r:ctl_default_prop:s0
-persist.vendor.camera.traceGroupsEnable   u:object_r:ctl_default_prop:s0
-vendor.debug.camera.af.fullsweep          u:object_r:ctl_default_prop:s0
-persist.camera.cfr.disable                u:object_r:ctl_default_prop:s0
-
-# robert.zhang@IMAGE, 2020/12/04, add for camera prop
-persist.sys.assert.panic                  u:object_r:exported_system_prop:s0
-persist.sys.log.af                        u:object_r:ctl_default_prop:s0
-persist.sys.log.ae                        u:object_r:ctl_default_prop:s0
-persist.sys.log.awb                       u:object_r:ctl_default_prop:s0
-persist.camera.OverrideLogLevels          u:object_r:ctl_default_prop:s0
-ro.camera.req.fmq.size                    u:object_r:ctl_default_prop:s0
-ro.camera.res.fmq.size                    u:object_r:ctl_default_prop:s0
-persist.camera.draw.roi                   u:object_r:ctl_default_prop:s0
-persist.camera.set.nodetype               u:object_r:ctl_default_prop:s0
-persist.sys.log.debugexif                 u:object_r:ctl_default_prop:s0
-persist.camera.draw.aec.info              u:object_r:ctl_default_prop:s0
-persist.camera.assert.panic               u:object_r:ctl_default_prop:s0
-persist.camera.logVerboseMask             u:object_r:ctl_default_prop:s0
-persist.camera.logInfoMask                u:object_r:ctl_default_prop:s0
-persist.camera.logWarningMask             u:object_r:ctl_default_prop:s0
-persist.ife.debug                         u:object_r:ctl_default_prop:s0
-
-# rad.yeh@NETWORK, 2020/10/12, add for USV system clock feature
-persist.vendor.radio.utcReceiveTime      u:object_r:boottime_prop:s0
-persist.vendor.radio.currentUtc          u:object_r:boottime_prop:s0
-persist.vendor.radio.localTimeOffset     u:object_r:boottime_prop:s0
-# rad.yeh@NETWORK, 2020/10/12, add for warranty property
-persist.vendor.radio.warranty            u:object_r:boottime_prop:s0
-
-# huangwen.chen@OPTI, 2020/07/15, add for zram writeback
-persist.vendor.zwriteback.               u:object_r:exported_system_prop:s0
-
-# vinay.rijhwani@power 2020/11/09 add for ufs TW
-vendor.sys.op.disable_ufstw              u:object_r:boottime_prop:s0
 #line 1 "device/qcom/sepolicy/generic/private/property_contexts"
 # Copyright (c) 2019, The Linux Foundation. All rights reserved.
 #
@@ -213,8 +34,12 @@ ro.netflix.bsp_rev                 u:object_r:vendor_exported_system_prop:s0 exa
 
 # Beluga
 ro.vendor.beluga.                         u:object_r:vendor_exported_system_prop:s0
+
+# KEYSTONE(I1e43e4fdff3df409e28a60b6940af8834774c927,b/185406969)
+ro.board.api_level u:object_r:exported_default_prop:s0 exact int
+ro.board.first_api_level u:object_r:exported_default_prop:s0 exact int
 #line 1 "device/qcom/sepolicy/qva/private/property_contexts"
-# Copyright (c) 2017, 2019 The Linux Foundation. All rights reserved.
+# Copyright (c) 2017, 2019, 2021, The Linux Foundation. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -258,12 +83,7 @@ persist.vendor.camera.privapp.list         u:object_r:vendor_persist_camera_prop
 vendor.mm.enable.qcom_parser       u:object_r:vendor_mm_parser_prop:s0
 vendor.qcom_parser.                u:object_r:vendor_mm_parser_prop:s0
 #mm-osal
-#ifndef VENDOR_EDIT
-#neil.sun@Connectivity, 2020/05/21, [porting]fix WFD verbose log cannot enable/disable dynamically
-#vendor.debug.mmosal.config         u:object_r:vendor_mm_osal_prop:s0
-#else
-vendor.debug.mmosal.config         u:object_r:debug_prop:s0
-#endif /* VENDOR_EDIT */
+vendor.debug.mmosal.config         u:object_r:vendor_mm_osal_prop:s0
 
 #perf
 vendor.perf.workloadclassifier.enable      u:object_r:vendor_wlc_prop:s0
@@ -277,6 +97,7 @@ persist.vendor.sys.media.rtp-ports        u:object_r:vendor_mm_video_prop:s0
 vendor.encoder.video.profile              u:object_r:vendor_mm_video_prop:s0
 vendor.sys.media.target.version           u:object_r:vendor_sys_video_prop:s0
 vendor.sys.video.disable.ubwc             u:object_r:vendor_sys_video_prop:s0
+vendor.sys.media.target.qssi              u:object_r:vendor_sys_video_prop:s0
 
 #Wifi Display
 vendor.wfdservice                         u:object_r:vendor_wfd_service_prop:s0
@@ -286,6 +107,7 @@ persist.vendor.debug.wfdcdbgv             u:object_r:vendor_wfd_sys_debug_prop:s
 persist.vendor.sys.debug.mux.             u:object_r:vendor_wfd_sys_debug_prop:s0
 persist.vendor.sys.debug.rtp.             u:object_r:vendor_wfd_sys_debug_prop:s0
 persist.vendor.sys.debug.wfd.             u:object_r:vendor_wfd_sys_debug_prop:s0
+vendor.sys.debug.wfd.                     u:object_r:vendor_wfd_sys_debug_prop:s0
 
 # WIGIG
 persist.vendor.wigig.                      u:object_r:vendor_wigig_core_prop:s0
@@ -298,3 +120,756 @@ ro.vendor.beluga.p                         u:object_r:vendor_exported_system_pro
 ro.vendor.beluga.c                         u:object_r:vendor_exported_system_prop:s0
 ro.vendor.beluga.s                         u:object_r:vendor_exported_system_prop:s0
 ro.vendor.beluga.t                         u:object_r:vendor_exported_system_prop:s0
+
+vendor.runtime.cvp2.dynamiclogen           u:object_r:vendor_runtime_prop:s0
+#line 1 "vendor/oplus/system/sepolicy/private/property_contexts"
+# ==============================================
+# OPLUS Policy Rule
+# ==============================================
+
+#Jiemin.Zhu@Swdp.Android.SELinux, 2015/11/27, create this file for cherrying pick from external/sepolicy/property_contexts
+
+#ifdef COLOROS_EDIT
+#Yaohong.Guo@ANDROID.PMS, 2020-04-24, add for allow app set oplus property_service
+# OPLUS properties
+oppo.bootsound.file      u:object_r:exported_system_prop:s0
+oppo.wifi.driver.insmod  u:object_r:exported_system_prop:s0
+oppo.eng.factory.no      u:object_r:exported_system_prop:s0
+oppo.softap.band         u:object_r:exported_system_prop:s0
+
+oplus.apps_monitor_enable    u:object_r:exported_system_prop:s0
+oplus.aps.algo.asd.enablehdr    u:object_r:exported_system_prop:s0
+oplus.aps.bokeh.nree.enable    u:object_r:exported_system_prop:s0
+oplus.aps.decision.algolist    u:object_r:exported_system_prop:s0
+oplus.aps.decision.evlist    u:object_r:exported_system_prop:s0
+oplus.aps.decision.others    u:object_r:exported_system_prop:s0
+oplus.aps.forcealgo    u:object_r:exported_system_prop:s0
+oplus.aps.forcelight    u:object_r:exported_system_prop:s0
+oplus.aps.forcemode    u:object_r:exported_system_prop:s0
+oplus.aps.hdrev0    u:object_r:exported_system_prop:s0
+oplus.aps.hdrev1    u:object_r:exported_system_prop:s0
+oplus.aps.hdrev2    u:object_r:exported_system_prop:s0
+oplus.aps.hdrev3    u:object_r:exported_system_prop:s0
+oplus.aps.hdrev4    u:object_r:exported_system_prop:s0
+oplus.aps.logic.bokeh.mode    u:object_r:exported_system_prop:s0
+oplus.camera.adjexptime.ev    u:object_r:exported_system_prop:s0
+oplus.camera.adjexptime.ev1    u:object_r:exported_system_prop:s0
+oplus.camera.device.state    u:object_r:exported_system_prop:s0
+oplus.camera.adjexptime.flag    u:object_r:exported_system_prop:s0
+oplus.camera.adjMemValue.value    u:object_r:exported_system_prop:s0
+oplus.camera.ainrToMfllIndexLimit.value    u:object_r:exported_system_prop:s0
+oplus.camera.aps3.pfbdump    u:object_r:exported_system_prop:s0
+oplus.camera.cali.dump_img    u:object_r:exported_system_prop:s0
+oplus.camera.dualLEDCalibrationMode    u:object_r:exported_system_prop:s0
+oplus.camera.pfb.platform    u:object_r:exported_system_prop:s0
+oplus.camera.pfdLog.enable    u:object_r:exported_system_prop:s0
+oplus.camera.sattele.enablegyrodata    u:object_r:exported_system_prop:s0
+oplus.camera.softentype    u:object_r:exported_system_prop:s0
+oplus.camera.vd.fbenable    u:object_r:exported_system_prop:s0
+oplus.portrait.center.com.google.android.apps.tachyon    u:object_r:exported_system_prop:s0
+oplus.portrait.center.com.google.android.apps.meetings    u:object_r:exported_system_prop:s0
+oplus.debug.night.ev.offset    u:object_r:exported_system_prop:s0
+oplus.debug.night.state    u:object_r:exported_system_prop:s0
+oplus.device.firstboot    u:object_r:exported_system_prop:s0
+oplus.dex.tempcontrol    u:object_r:exported_system_prop:s0
+oplus.dex.thread.number    u:object_r:exported_system_prop:s0
+oplus.fingerprint.algo.version    u:object_r:exported_system_prop:s0
+oplus.fpc.sw.version    u:object_r:exported_system_prop:s0
+oplus.goodix.fp    u:object_r:exported_system_prop:s0
+oplus.joystick.config    u:object_r:exported_system_prop:s0
+oplus.optical.goodix.fp    u:object_r:exported_system_prop:s0
+oplus.service.datafree.enable    u:object_r:exported_system_prop:s0
+oplus.software.radio.init_tmobile_property    u:object_r:exported_system_prop:s0
+oplus.thirdparty.cmpt.logs.appender    u:object_r:exported_system_prop:s0
+oplus.thirdparty.cmpt.logs.formatter    u:object_r:exported_system_prop:s0
+oplus.thirdparty.cmpt.logs.switcher    u:object_r:exported_system_prop:s0
+oplus.vendor.camera.sethdrDebugMode    u:object_r:exported_system_prop:s0
+oplus.vendor.camera.setremosaicDebugMode    u:object_r:exported_system_prop:s0
+oplus.wfd.perf    u:object_r:exported_system_prop:s0
+oplus.wfd.video-format    u:object_r:exported_system_prop:s0
+oplus.wfd.video-resolution    u:object_r:exported_system_prop:s0
+oplus.wifi.bouygue_wifi_added    u:object_r:exported_system_prop:s0
+oplus.wifi.ftm    u:object_r:exported_system_prop:s0
+oplus.wifi.passpoint_feature_enable    u:object_r:exported_system_prop:s0
+oplus.wifi.passpoint_logic_control_test    u:object_r:exported_system_prop:s0
+oplus.wifi.privatedns_status    u:object_r:exported_system_prop:s0
+oplus.wifi.rakuten_wifi_added    u:object_r:exported_system_prop:s0
+oplus.wifi.singtel_wifi_added    u:object_r:exported_system_prop:s0
+oplus.wifi.swisscom_wifi_added    u:object_r:exported_system_prop:s0
+oplus.wifi.thailand_true_wifi_added    u:object_r:exported_system_prop:s0
+oplus.wifi.thailand_truemove_wifi_added    u:object_r:exported_system_prop:s0
+oplus.wifi.thailand_wifi_added    u:object_r:exported_system_prop:s0
+oplus.wifi.turkcell_wifi_added    u:object_r:exported_system_prop:s0
+#endif 
+
+#ifdef VENDOR_EDIT
+#liangkun@Swdp.shanghai, 2016/02/23, add for restrict sdcardfs prop's permission
+#sdcardfs properties
+#sys.sdcardfs.           u:object_r:sdcardfs_prop:s0
+#endif VENDOR_EDIT
+
+#ifdef VENDOR_EDIT
+#Jiemin.Zhu@PSW.AD.SELinux, 2017/10/22, Add for oplus property
+#rom property
+
+#android property
+ro.oppo.mtk_gps_mpe    u:object_r:exported_default_prop:s0
+ro.oppo.version    u:object_r:exported_default_prop:s0
+ro.oppo.ad_test_sys    u:object_r:exported_system_prop:s0
+ro.oppo.build.exp    u:object_r:exported_system_prop:s0
+ro.oppo.disable_ct_app_path    u:object_r:exported_system_prop:s0
+ro.oppo.engineering.beta.buildinfo_test    u:object_r:exported_system_prop:s0
+ro.oppo.engineering.factory.Android_prop_test    u:object_r:exported_system_prop:s0
+ro.oppo.engineering.factory.buildinfo_test    u:object_r:exported_system_prop:s0
+ro.oppo.market.enname    u:object_r:exported_system_prop:s0
+ro.oppo.market.name    u:object_r:exported_system_prop:s0
+ro.oppo.nw.singlecard    u:object_r:exported_system_prop:s0
+ro.oppo.operator    u:object_r:exported_system_prop:s0
+ro.oppo.region.netlock    u:object_r:exported_system_prop:s0
+ro.oppo.regionmark    u:object_r:exported_system_prop:s0
+ro.oppo.screen.heteromorphism    u:object_r:exported_system_prop:s0
+ro.oppo.screenhole.positon    u:object_r:exported_system_prop:s0
+ro.oppo.theme.version    u:object_r:exported_system_prop:s0
+ro.oppo.opt_enabled    u:object_r:exported_system_prop:s0
+ro.oppo.euex.country    u:object_r:exported_system_prop:s0
+
+ro.oplus.adb.secure    u:object_r:exported_system_prop:s0
+ro.oplus.apollo.platform_8250    u:object_r:exported_system_prop:s0
+ro.oplus.audio.camerasound.forced    u:object_r:exported_system_prop:s0
+ro.oplus.audio.custom.media_vol_default    u:object_r:exported_system_prop:s0
+ro.oplus.audio.dolby.offload    u:object_r:exported_system_prop:s0
+ro.oplus.audio.dolby.type    u:object_r:exported_system_prop:s0
+ro.oplus.audio.dualheadphone.patchdevices    u:object_r:exported_system_prop:s0
+ro.oplus.audio.effect.type    u:object_r:exported_system_prop:s0
+ro.oplus.audio.effects.offload    u:object_r:exported_system_prop:s0
+ro.oplus.audio.low_volume_for_engineering    u:object_r:exported_system_prop:s0
+ro.oplus.audio.notsupport.audioscence    u:object_r:exported_system_prop:s0
+ro.oplus.audio.voip.enhancement    u:object_r:exported_system_prop:s0
+ro.oplus.camera.video.beauty.switch    u:object_r:exported_system_prop:s0
+ro.oplus.camera.video_beauty.prefix    u:object_r:exported_system_prop:s0
+ro.oplus.connectivity.oversea    u:object_r:exported_system_prop:s0
+ro.oplus.connectivity.prevision_build    u:object_r:exported_system_prop:s0
+ro.oplus.display.brightness.default_brightness    u:object_r:exported_system_prop:s0
+ro.oplus.display.brightness.hbm_ys    u:object_r:exported_system_prop:s0
+ro.oplus.display.brightness.max_brightness    u:object_r:exported_system_prop:s0
+ro.oplus.display.brightness.min_light_in_dnm    u:object_r:exported_system_prop:s0
+ro.oplus.display.brightness.normal_max_brightness    u:object_r:exported_system_prop:s0
+ro.oplus.display.brightness.normal_min_brightness    u:object_r:exported_system_prop:s0
+ro.oplus.display.brightness.panel_num    u:object_r:exported_system_prop:s0
+ro.oplus.display.brightness.smooth    u:object_r:exported_system_prop:s0
+ro.oplus.display.brightness.xs    u:object_r:exported_system_prop:s0
+ro.oplus.display.brightness.ys    u:object_r:exported_system_prop:s0
+ro.oplus.display.colormode.cinema    u:object_r:exported_system_prop:s0
+ro.oplus.display.colormode.colorful    u:object_r:exported_system_prop:s0
+ro.oplus.display.colormode.soft    u:object_r:exported_system_prop:s0
+ro.oplus.display.colormode.soft.renderintent    u:object_r:exported_system_prop:s0
+ro.oplus.display.colormode.vivid    u:object_r:exported_system_prop:s0
+ro.oplus.display.colormode.vivid.renderintent    u:object_r:exported_system_prop:s0
+ro.oplus.display.density.screenzoom.fdh    u:object_r:exported_system_prop:s0
+ro.oplus.display.density.screenzoom.qdh    u:object_r:exported_system_prop:s0
+ro.oplus.display.osie.hqv    u:object_r:exported_system_prop:s0
+ro.oplus.display.OSIE.special    u:object_r:exported_system_prop:s0
+ro.oplus.display.rc.size    u:object_r:exported_system_prop:s0
+ro.oplus.display.screen.heteromorphism    u:object_r:exported_system_prop:s0
+ro.oplus.display.screenhole.positon    u:object_r:exported_system_prop:s0
+ro.oplus.display.sensortype    u:object_r:exported_system_prop:s0
+ro.oplus.display.support.renderIntent    u:object_r:exported_system_prop:s0
+ro.oplus.flashlight.rio.switch    u:object_r:exported_system_prop:s0
+ro.oplus.fusionlight    u:object_r:exported_system_prop:s0
+ro.oplus.gnss.del_aiding_data.switch    u:object_r:exported_system_prop:s0
+ro.oplus.gnss.nmea_filter.switch    u:object_r:exported_system_prop:s0
+ro.oplus.gnss.nmea_thread.switch    u:object_r:exported_system_prop:s0
+ro.oplus.gnss.power_save.switch    u:object_r:exported_system_prop:s0
+ro.oplus.image.my_carrier.date    u:object_r:exported_system_prop:s0
+ro.oplus.image.my_carrier.date.utc    u:object_r:exported_system_prop:s0
+ro.oplus.image.my_carrier.version    u:object_r:exported_system_prop:s0
+ro.oplus.image.my_company.date    u:object_r:exported_system_prop:s0
+ro.oplus.image.my_country.date    u:object_r:exported_system_prop:s0
+ro.oplus.image.my_engineering.type    u:object_r:exported_system_prop:s0
+ro.oplus.image.my_product.date    u:object_r:exported_system_prop:s0
+ro.oplus.image.my_region.type    u:object_r:exported_system_prop:s0
+ro.oplus.lcd.display.screen.underlightsensor.region    u:object_r:exported_system_prop:s0
+ro.oplus.nfc.gpfelica.support    u:object_r:exported_system_prop:s0
+ro.oplus.nfc.support_japan_felica    u:object_r:exported_system_prop:s0
+ro.oplus.normal_boot_mode    u:object_r:exported_system_prop:s0
+ro.oplus.oiface.gcp.extmode    u:object_r:exported_system_prop:s0
+ro.oplus.platform.audio.bitrate    u:object_r:exported_system_prop:s0
+ro.oplus.platform.hqv.support.app    u:object_r:exported_system_prop:s0
+ro.oplus.rsa3.support    u:object_r:exported_system_prop:s0
+ro.oplus.sf.primary.display.orientation    u:object_r:exported_system_prop:s0
+ro.oplus.support_gota    u:object_r:exported_system_prop:s0
+ro.oplus.system.camera.flashlight    u:object_r:exported_system_prop:s0
+ro.oplus.system.gallery.name    u:object_r:exported_system_prop:s0
+
+#Sai.Mukkundan@SYSTEM.SERVICES,2022/04/20,Add for Barcelona market name property
+ro.product.oplus.custom.Barce u:object_r:exported_default_prop:s0
+
+#bsp property
+sys.oppo.bsp.           u:object_r:oplus_bsp_prop:s0
+persist.oplus.bsp.       u:object_r:oplus_bsp_prop:s0
+
+#network property
+persist.sys.oplus.radio. u:object_r:oplus_network_prop:s0
+ro.oplus.radio.          u:object_r:oplus_network_prop:s0
+sys.oplus.radio.         u:object_r:oplus_network_prop:s0
+#ifdef OPLUS_FEATURE_FACTORY_UDID
+ro.vendor.oplus.radio.serialno         u:object_r:oplus_nw_exported_system_prop:s0
+persist.vendor.oplus.need_rescue_pa_damage         u:object_r:oplus_nw_exported_system_prop:s0
+#endif /* OPLUS_FEATURE_FACTORY_UDID */
+
+#ifdef OPLUS_FEATURE_MODEM_MINIDUMP
+persist.vendor.oplus.radio.de_modemdump_cnt u:object_r:oplus_nw_exported_system_prop:s0
+#endif /*OPLUS_FEATURE_MODEM_MINIDUMP*/
+
+persist.vendor.ssr.enable_ramdumps           u:object_r:system_prop:s0
+
+#BSP property
+persist.report.       u:object_r:oplus_bsp_prop:s0
+
+#endif /* VENDOR_EDIT */
+
+#mashaolong@Apps.InputMethod, 2018/02/02, add for gboard input method
+ro.com.google.ime.       u:object_r:gboard_prop:s0
+#endif /* VENDOR_EDIT */
+
+#ifdef COLOROS_EDIT
+#ChenYong@Rom.Framework,2019/01/15, modify for odex restrict property to pms
+persist.kevent    u:object_r:oplus_kevents_prop:s0
+#endif /*COLOROS_EDIT*/
+
+#ifdef OPLUS_FEATURE_DEXOPT_STRATEGY
+#Taolicheng@ANDROID.PMS, 2020/09/03, add for collect dex2oat info
+persist.sys.dex2oat     u:object_r:exported_system_prop:s0
+#endif /*OPLUS_FEATURE_DEXOPT_STRATEGY*/
+
+#JianRong.Zheng@ANDROID.ENGINEERTOOLS, 2018/09/27, Add for set partion property type
+ro.sys.reserve.integrate          u:object_r:exported_system_prop:s0
+
+#ifdef VENDOR_EDIT
+#Yugang.Ma@PSW.MM.MediaServer.Player, 2018/12/20, add for hqv feature
+vendor.media.vpp.osie.enable           u:object_r:exported_system_prop:s0
+vendor.media.vpp.sr.enable             u:object_r:exported_system_prop:s0
+vendor.media.vpp.oplus.bypass          u:object_r:exported_system_prop:s0
+vendor.media.vpp.oplus.version         u:object_r:exported_system_prop:s0
+vendor.media.vpp.oplus.platform        u:object_r:exported_system_prop:s0
+vendor.media.vpp.enable                u:object_r:exported_system_prop:s0
+#endif /* VENDOR_EDIT */
+
+#ifdef OPLUS_FEATURE_LOGKIT
+#Junhao.Liang@ANDROID.DEBUG.1080426, 2018/12/04, Add for persist.vendor.enable_ramdumps
+persist.vendor.enable_ramdumps u:object_r:exported_system_prop:s0
+#endif /*OPLUS_FEATURE_LOGKIT*/
+#ifdef VENDOR_EDIT
+#Qiao.Hu@BSP.CHG.basic, 2019/01/03, Add for charger cmcctest
+ro.vendor.charging_time_limit  u:object_r:oplus_charger_prop:s0
+#endif /*VENDOR_EDIT*/
+
+#ifdef OPLUS_FEATURE_THEME_FR
+#HongWu.Yang@ANDROID.UIFramework,2019/08/07, add for themeflag selinux
+persist.sys.themeflag      u:object_r:exported_system_prop:s0
+#endif /*OPLUS_FEATURE_THEME_FR*/
+
+#ifdef VENDOR_EDIT
+#Qianyou.Chen@PSW.AD.Performance.1192470, 2018/01/09, Add for improve performance of Top app
+pm.dexopt.core-app u:object_r:exported_pm_prop:s0 exact string
+#endif
+
+ro.separate.soft u:object_r:exported_default_prop:s0
+ro.rom.featrue u:object_r:exported_default_prop:s0
+ro.product.authentication u:object_r:exported_default_prop:s0
+ro.product.hw u:object_r:exported_default_prop:s0
+ro.product.sar u:object_r:exported_default_prop:s0
+ro.build.date.Ymd u:object_r:exported_default_prop:s0
+ro.build.date.ymd u:object_r:exported_default_prop:s0
+ro.build.date.YmdHM u:object_r:exported_default_prop:s0
+ro.build.date.utc u:object_r:exported_default_prop:s0
+ro.build.version.incremental u:object_r:exported_default_prop:s0
+ro.build.date u:object_r:exported_default_prop:s0
+ro.xxversion u:object_r:exported_default_prop:s0
+ro.product.brand u:object_r:exported_default_prop:s0
+ro.product.model u:object_r:exported_default_prop:s0
+ro.build.product u:object_r:exported_default_prop:s0
+ro.product.device u:object_r:exported_default_prop:s0
+ro.product.name u:object_r:exported_default_prop:s0
+ro.bootimage.build.fingerprint u:object_r:exported_default_prop:s0
+ro.build.version.base_os u:object_r:exported_default_prop:s0
+ro.build.version.ota u:object_r:exported_default_prop:s0
+ro.build.display.id u:object_r:exported_default_prop:s0
+ro.build.display.full_id u:object_r:exported_default_prop:s0
+ro.build.kernel.id u:object_r:exported_default_prop:s0
+ro.mediatek.version.release u:object_r:exported_default_prop:s0
+ro.build.version.oplusrom u:object_r:exported_default_prop:s0
+ro.build.master.date u:object_r:exported_default_prop:s0
+ro.aee.enforcing u:object_r:exported_default_prop:s0
+ro.build.release_type u:object_r:exported_default_prop:s0
+gr.use.leader u:object_r:exported_default_prop:s0
+gr.apk.number u:object_r:exported_default_prop:s0
+gr.download.url u:object_r:exported_default_prop:s0
+ro.reserve1.get u:object_r:exported_default_prop:s0
+ro.script.version u:object_r:exported_default_prop:s0
+ro.lcd.backlight.config_boe u:object_r:exported_default_prop:s0
+ro.lcd.backlight.config_truly u:object_r:exported_default_prop:s0
+ro.lcd.backlight.config_tianma u:object_r:exported_default_prop:s0
+ro.lcd.backlight.config_dsjm u:object_r:exported_default_prop:s0
+ro.lcd.backlight.config_jdi u:object_r:exported_default_prop:s0
+ro.lcd.backlight.samsung_tenbit u:object_r:exported_default_prop:s0
+ro.display.rc.size u:object_r:exported_default_prop:s0
+persist.oplus.display.resolution u:object_r:debug_prop:s0
+ro.vendor.display.svi u:object_r:exported_default_prop:s0
+ro.oplus.vendor.display.notsupport_wcg u:object_r:exported_default_prop:s0
+ro.camera.hfr.enable u:object_r:exported_default_prop:s0
+ro.camera.videoeis.enable u:object_r:exported_default_prop:s0
+ro.camera.temperature.limit u:object_r:exported_default_prop:s0
+ro.mount.fs u:object_r:exported_default_prop:s0
+persist.bluetooth.disableabsvol u:object_r:exported_bluetooth_prop:s0
+persist.bluetooth.avrcpversion u:object_r:exported_bluetooth_prop:s0
+persist.bluetooth.fwloglevel u:object_r:exported_bluetooth_prop:s0
+persist.bluetooth.hostloglevel u:object_r:exported_bluetooth_prop:s0
+persist.bluetooth.iot.on u:object_r:exported_bluetooth_prop:s0
+#ifdef VENDOR_EDIT
+#Liangwen.Ke@PSW.CN.BT.Basic.Customize.2120948, 2019/06/26,
+#Add for supporting QC firmware update by sau_res
+persist.bluetooth.soc.alwayson u:object_r:exported_bluetooth_prop:s0
+persist.bluetooth.firmware.update u:object_r:exported_bluetooth_prop:s0
+# endif /* VENDOR_EDIT */
+persist.version.confidential u:object_r:exported_system_prop:s0
+persist.sys.oppo.region u:object_r:exported_system_prop:s0
+persist.sys.oplus.region u:object_r:exported_system_prop:s0
+persist.power.useautobrightadj u:object_r:exported_system_prop:s0
+persist.sys.oplusdebug.tpcatcher  u:object_r:exported_system_prop:s0
+persist.sys.debuglog.config u:object_r:exported_system_prop:s0
+#ifdef OPLUS_FEATURE_DEVICE_LOG
+#ZhuYan@NETWORK.RF, 2020/12/22, Add for mdmlog config prop
+persist.sys.mdmlog.config u:object_r:exported_system_prop:s0
+#endif
+persist.anr.dumpthr u:object_r:exported_system_prop:s0
+persist.sys.assert.enable u:object_r:exported_system_prop:s0
+persist.sys.assert.panic u:object_r:exported_system_prop:s0
+persist.sys.assert.state u:object_r:exported_system_prop:s0
+persist.sys.assert.enabletip u:object_r:exported_system_prop:s0
+persist.sys.mtk.pwkdump u:object_r:exported_system_prop:s0
+persist.anr.enhancement u:object_r:exported_system_prop:s0
+persist.sys.disable_rescue u:object_r:exported_system_prop:s0
+persist.bluetooth.enableinbandringing u:object_r:exported_system_prop:s0
+sys.oppo.gift u:object_r:exported_system_prop:s0
+persist.sys.oem_smooth u:object_r:exported_system_prop:s0
+persist.sys.nw_lab_test u:object_r:exported_system_prop:s0
+persist.sys.cfu_auto u:object_r:exported_system_prop:s0
+persist.sys.nw_mbn_icon u:object_r:exported_system_prop:s0
+persist.service.acm.enable u:object_r:exported_system_prop:s0
+persist.sys.enable.kneuron u:object_r:exported_system_prop:s0
+persist.sys.enable.neo u:object_r:exported_system_prop:s0
+persist.sys.elsa.enable u:object_r:exported_system_prop:s0
+persist.sys.elsa.kernel_enable u:object_r:exported_system_prop:s0
+#ifdef VENDOR_EDIT
+#Pingping.Yang@swdp, 20181204. Add for omedia
+persist.sys.omedia.enable u:object_r:exported_system_prop:s0
+#endif /* VENDOR_EDIT */
+
+#ifdef VENDOR_EDIT
+#mashuze@ANDROID.Thermal.horae, 2020/5/19. Add for horae
+persist.sys.horae.enable u:object_r:exported_system_prop:s0
+#endif /* VENDOR_EDIT */
+
+#ifdef
+#YaJun.Li@PSW.MM.AudioServer.FrameWork, 2021/07/27, add for record and playback audio scene
+sys.oplus.mm.record.type u:object_r:exported_system_prop:s0
+sys.oplus.mm.voice.record u:object_r:exported_system_prop:s0
+#endif /*  */
+
+#Multi-Media property
+persist.oplus.mm.log.at        u:object_r:exported_system_prop:s0
+persist.oplus.mm.log.af        u:object_r:exported_system_prop:s0
+persist.oplus.mm.log.apm        u:object_r:exported_system_prop:s0
+persist.oplus.mm.log.hal        u:object_r:exported_system_prop:s0
+persist.oplus.mm.log.tag        u:object_r:exported_system_prop:s0
+persist.oplus.mm.pcmdump        u:object_r:exported_system_prop:s0
+#ifdef VENDOR_EDIT
+#Ming.Liu@PSW.MM.AudioDriver, 2017/10/26, Add for audio hal set property
+#Multi-Media property
+persist.sys.record.forbid     u:object_r:exported_system_prop:s0
+#endif /* VENDOR_EDIT */
+
+#ifdef VENDOR_EDIT
+#Xiao.Liang@PSW.CN.WiFi.Basic.Log.1072015, 2018/10/22, Modify for collecting wifi driver log
+persist.sys.com.oplus.debug.time  u:object_r:exported_system_prop:s0
+oppo.wifi.ftm                    u:object_r:exported_system_prop:s0
+persist.sys.wifipacketlog.state  u:object_r:exported_system_prop:s0
+persist.sys.wifipktlog.buffsize  u:object_r:exported_system_prop:s0
+#endif /* VENDOR_EDIT */
+
+#ifdef VENDOR_EDIT
+#Xiao.Liang@PSW.CN.WiFi.Basic.SoftAP.1610391, 2018/10/30, Modify for reading client devices name from /data/misc/dhcp/dnsmasq.leases
+oppo.wifi.softap.readleases             u:object_r:exported_system_prop:s0
+#endif /* VENDOR_EDIT */
+#ifdef VENDOR_EDIT
+#Natao.Lin@Camera, 2018/11/01, Add for camera hal set property
+persist.oppo.memleak.enable               u:object_r:exported_system_prop:s0
+persist.sys.oppo.displaymetrics           u:object_r:exported_system_prop:s0
+persist.aec.manual.mode                   u:object_r:exported_system_prop:s0
+persist.iris.skip.frame                   u:object_r:exported_system_prop:s0
+persist.iris.lunch.frame                  u:object_r:exported_system_prop:s0
+persist.skip.frame.app                    u:object_r:exported_system_prop:s0
+persist.watermark.dumpimg                 u:object_r:exported_system_prop:s0
+persist.ipe.debug                         u:object_r:exported_system_prop:s0
+persist.debug.camera.overrideLogLevels    u:object_r:exported_system_prop:s0
+persist.ois.servoOn.enable                u:object_r:exported_system_prop:s0
+persist.qcom.camera.log_level             u:object_r:exported_system_prop:s0
+persist.sys.log.ae                        u:object_r:exported_system_prop:s0
+persist.sys.log.af                        u:object_r:exported_system_prop:s0
+persist.sys.log.awb                       u:object_r:exported_system_prop:s0
+persist.sys.log.offline                   u:object_r:exported_system_prop:s0
+#Di.Wang@Camera, 2020/7/29, Add for camera hal set property debugexif
+persist.sys.log.debugexif                 u:object_r:exported_system_prop:s0
+#jiangyi1@Camera, 2021/6/28, Add for new logkit tools set camera scene
+persist.sys.camera.log.scene              u:object_r:exported_system_prop:s0
+persist.front.skipdisplay.enable          u:object_r:exported_system_prop:s0
+
+oppo.debug.night.ev.offset                u:object_r:exported_system_prop:s0
+oppo.camera.slogan.yuvpath                u:object_r:exported_system_prop:s0
+oplus.camera.packname                      u:object_r:exported_system_prop:s0
+#Zhangqun.Xu@Camera, 2021/6/24, Add for camera set property
+persist.camera.assert.panic               u:object_r:exported_system_prop:s0
+ro.oplus.system.camera.name               u:object_r:exported_system_prop:s0
+persist.camera.OverrideLogLevels          u:object_r:exported_system_prop:s0
+persist.camera.logVerboseMask             u:object_r:exported_system_prop:s0
+persist.camera.logInfoMask                u:object_r:exported_system_prop:s0
+persist.camera.logWarningMask             u:object_r:exported_system_prop:s0
+persist.camera.dumpimg                    u:object_r:exported_system_prop:s0
+persist.camera.stats.aec.debug            u:object_r:exported_system_prop:s0
+persist.camera.stats.awb.debug            u:object_r:exported_system_prop:s0
+persist.camera.stats.af.debug             u:object_r:exported_system_prop:s0
+persist.camera.hal.debug                  u:object_r:exported_system_prop:s0
+persist.camera.mci.debug                  u:object_r:exported_system_prop:s0
+persist.camera.mmstill.logs               u:object_r:exported_system_prop:s0
+persist.camera.iface.logs                 u:object_r:exported_system_prop:s0
+persist.camera.cpp.debug.mask             u:object_r:exported_system_prop:s0
+persist.camera.spdebug                    u:object_r:exported_system_prop:s0
+persist.camera.sensor.debug               u:object_r:exported_system_prop:s0
+persist.camera.acpp.debug                 u:object_r:exported_system_prop:s0
+persist.camera.fbdump                     u:object_r:exported_system_prop:s0
+persist.camera.blurless.log               u:object_r:exported_system_prop:s0
+persist.camera.bokeh.debugcap             u:object_r:exported_system_prop:s0
+persist.camera.upscale.dump               u:object_r:exported_system_prop:s0
+persist.camera.face.blur                  u:object_r:exported_system_prop:s0
+persist.camera.ocam.dump                  u:object_r:exported_system_prop:s0
+persist.camera.ashdr.debug                u:object_r:exported_system_prop:s0
+persist.camera.asllhdr.debug              u:object_r:exported_system_prop:s0
+persist.camera.picbest.debug              u:object_r:exported_system_prop:s0
+persist.camera.stats.haf.debug            u:object_r:exported_system_prop:s0
+persist.camera.                           u:object_r:exported_system_prop:s0
+vendor.camera.                            u:object_r:exported_system_prop:s0
+camera.                                   u:object_r:exported_system_prop:s0
+
+oppo.camera.pid                           u:object_r:exported_system_prop:s0
+
+oppo.front.switch.res                     u:object_r:exported_system_prop:s0
+oppo.open.camera.name                     u:object_r:exported_system_prop:s0
+ro.build.flavor                           u:object_r:exported_system_prop:s0
+ro.camera.attr.detect.enable              u:object_r:exported_system_prop:s0
+
+camera.disable_zsl_mode                   u:object_r:exported_system_prop:s0
+#cause phone crash
+#gsm.operator.numeric                     u:object_r:exported_system_prop:s0
+adrc.gain                                 u:object_r:exported_system_prop:s0
+darkboost.gain                            u:object_r:exported_system_prop:s0
+#endif /* VENDOR_EDIT */
+
+#ifdef VENDOR_EDIT
+#Weican.Zhao@PSW.NW.EM, 2018/11/20, add for minidump selinux policy
+persist.sys.enable_modem_dump u:object_r:exported_system_prop:s0
+persist.sys.modem.path        u:object_r:exported_system_prop:s0
+persist.sys.dump              u:object_r:exported_system_prop:s0
+#endif
+
+#ifdef VENDOR_EDIT
+#weiwei.Deng@CN.NFC.Basic.Hardware.1182186 ,2018/11/11
+#Add for : NFC properties
+persist.nfc.            u:object_r:nfc_prop:s0
+
+#ifdef OPLUS_FEATURE_RINGTONES
+#Xiaokang.Feng@ANDROID.UIFramework ,2018/12/6
+#Add for : ringone properties
+ro.config.notification_sms u:object_r:exported_default_prop:s0
+ro.config.ringtone_sim2 u:object_r:exported_default_prop:s0
+ro.config.notification_sim2 u:object_r:exported_default_prop:s0
+ro.config.calendar_sound u:object_r:exported_default_prop:s0
+#endif /* OPLUS_FEATURE_RINGTONES */
+
+#ifdef VENDOR_EDIT
+#Xiao.Liang@CN.WiFi.Basic.1568258, 2018/11/30, Add for wifi sniffer service on Android P
+oppo.wifi.sniffer.copysnifferlog  u:object_r:exported_system_prop:s0
+#endif /* VENDOR_EDIT */
+
+#ifdef OPLUS_FEATURE_WIFI_SAR
+#Lei.Zhang@CONNECTIVITY.WIFI.HARDWARE.SAR.1785313, 2021/06/07, Modify for Android S compatible
+sys.oplus.wlan.sar_idx  u:object_r:exported_system_prop:s0
+#endif /* OPLUS_FEATURE_WIFI_SAR */
+
+#ifdef VENDOR_EDIT
+#Yugang.Ma@PSW.MultiMedia.MediaServer, 2019/03/16, Add for dynamic collect venus/adsp ramdump
+persist.sys.enable_venus_dump  u:object_r:exported_system_prop:s0
+persist.sys.enable_adsp_dump  u:object_r:exported_system_prop:s0
+#endif /* VENDOR_EDIT */
+#ifdef OPLUS_FEATURE_SENSOR
+#tangjh@PSW.BSP.SENSOR, 2020/07/29, add for uploader slpi subsystem ramdump
+persist.sys.enable_slpi_dump  u:object_r:exported_system_prop:s0
+#endif
+
+#ifdef VENDOR_EDIT
+#Haiping.Zhong@ANDROID.BUILD, 2019/11/07, Add for set logd prop
+persist.oplus.logd.kernel    u:object_r:exported_system_prop:s0
+#endif
+
+#ifdef VENDOR_EDIT
+#qiukangwen@ANDROID.BUILD, 2019/12/24, Add for self-init
+ro.system.build.fingerprint u:object_r:exported_default_prop:s0
+#endif
+#ifdef COLOROS_EDIT
+#linzhangru@PSW 20191113, add for Theia logdump
+dbg.tia.dumping    u:object_r:dumpstate_prop:s0
+#endif /*COLOROS_EDIT*/
+#
+
+#linzhangru@PSW.TECH, 2019/11/30, add for sau power key detection
+sys.bootfinish.timestamp    u:object_r:exported_system_prop:s0
+sys.sr.reboot_reason        u:object_r:exported_system_prop:s0
+persist.sys.sr_start        u:object_r:exported_system_prop:s0
+persist.sys.sr_end          u:object_r:exported_system_prop:s0
+persist.sys.sau_from_ver    u:object_r:exported_system_prop:s0
+persist.sys.sau_to_ver      u:object_r:exported_system_prop:s0
+persist.sys.rbsreason       u:object_r:exported_system_prop:s0
+
+#ifdef OPLUS_FEATURE_ENGINEERTOOLS
+vendor.oplus.eng.nonsignal         u:object_r:engineer_system_prop:s0
+vendor.oplus.engineermode.chargeswitch       u:object_r:exported_system_prop:s0
+#vendor.oplus.engineer.usb.config        u:object_r:system_radio_prop:s0
+persist.sys.oplus.usbactive       u:object_r:exported_system_prop:s0
+#endif /* OPLUS_FEATURE_ENGINEERTOOLS */
+
+#ifdef OPLUS_FEATURE_WIFI_DUMP
+#JiaoBo@CONNECTIVITY.WIFI.HARDWARE.CRASH.1162003, 2018/7/02
+#add for wifi dump related log collection and DCS handle, dynamic enable/disable wifi core dump, offer trigger wifi dump API.
+sys.oplus.wifi.dump.mode u:object_r:exported_system_prop:s0
+sys.oplus.wifi.dump.enable u:object_r:exported_system_prop:s0
+sys.oplus.wifi.dump.trigger u:object_r:exported_system_prop:s0
+sys.oplus.wifi.dump.logcollect u:object_r:exported_system_prop:s0
+sys.oplus.wifi.dump.nameheader u:object_r:exported_system_prop:s0
+sys.oplus.wifi.dump.needupload u:object_r:exported_system_prop:s0
+sys.oplus.wifi.dump.failureDesc u:object_r:exported_system_prop:s0
+persist.sys.oplus.wifi.fulldump.enable u:object_r:exported_system_prop:s0
+#endif  /* OPLUS_FEATURE_WIFI_DUMP */
+
+#ifdef OPLUS_FEATURE_WIFI_RUSUPGRADE
+#JiaoBo@CONNECTIVITY.WIFI.BASIC.HARDWARE.2795386, 2020/02/20
+#add for: support auto update function, include mtk fw, mtk wifi.cfg, qcom fw, qcom bdf, qcom ini
+sys.oplus.wifi.rus.upgrade.ctl u:object_r:exported_system_prop:s0
+sys.oplus.wifi.rus.objs.type u:object_r:exported_system_prop:s0
+sys.oplus.wifi.rus.objs.upgrade.status u:object_r:exported_system_prop:s0
+#endif  /* OPLUS_FEATURE_WIFI_RUSUPGRADE */
+
+#ifdef OPLUS_BUG_STABILITY
+#Tian.Pan@ANDROID.STABILITY, 2021/08/04,1826735, add for add selinux to disallow app get system_server pid
+persist.sys.systemserver.pid u:object_r:oplus_sspid_prop:s0
+#endif /*OPLUS_BUG_STABILITY*/
+
+#ifdef OPLUS_FEATURE_WIFI_SILENCERECOVERY
+#JiaoBo@CONNECTIVITY.WIFI.BASIC.SWITCH.200809, 2020/07/20
+#Add for: wifi driver recovery
+sys.oplus.wifi.reloaddriver  u:object_r:exported_system_prop:s0
+#endif /* OPLUS_FEATURE_WIFI_SILENCERECOVERY */
+
+#ifdef OPLUS_FEATURE_WIFI_SWITCH
+#JiaoBo@CONNECTIVITY.WIFI.BASIC.SWITCH.1069763, 2020/02/20
+#add for: collect wifi switch log
+sys.oplus.wifi.switch.log.ctl u:object_r:exported_system_prop:s0
+sys.oplus.wifi.switch.log.fid u:object_r:exported_system_prop:s0
+sys.oplus.wifi.switch.log.reason u:object_r:exported_system_prop:s0
+#endif  /* OPLUS_FEATURE_WIFI_SWITCH */
+
+#ifdef OPLUS_BUG_DEBUG
+#GaoShangxiu@CONNECTIVITY.BT.A2DP, 2021/02/25, notify pending time base on property
+persist.sys.bt.a2dp.pendingtime     u:object_r:exported_system_prop:s0
+#endif  /* OPLUS_BUG_DEBUG */
+
+#ifdef OPLUS_FEATURE_WIFI_CONNECTFAILED
+sys.oplus.wifi.connect.     u:object_r:exported_system_prop:s0
+#endif  /* OPLUS_FEATURE_WIFI_CONNECTFAILED */
+
+#ifdef OPLUS_FEATURE_AGINGTEST
+#Hong.Zhang@TECH.BSP.Stability.Agingtest, 2020/07/28, Add for agingtest CPU fix test
+vendor.oplus.freqtest.process      u:object_r:exported_system_prop:s0
+persist.vendor.oplus.freqtest.info      u:object_r:exported_system_prop:s0
+#endif /* OPLUS_FEATURE_AGINGTEST */
+gf.debug.dump_data       u:object_r:oppo_fingerprint_prop:s0
+gf.debug.dump_talog_data u:object_r:oppo_fingerprint_prop:s0
+persist.vendor.fingerprint.optical.iconlocation u:object_r:oppo_fingerprint_prop:s0
+persist.vendor.fingerprint.optical.iconsize u:object_r:oppo_fingerprint_prop:s0
+persist.vendor.fingerprint.optical.iconnumber u:object_r:oppo_fingerprint_prop:s0
+persist.vendor.fingerprint.optical.support u:object_r:oppo_fingerprint_prop:s0
+vendor.fingerprint.optical.goodix.hal.retry u:object_r:oppo_fingerprint_prop:s0
+vendor.fingerprint.optical.goodix.ta.retry u:object_r:oppo_fingerprint_prop:s0
+oplus.fingerprint.factory u:object_r:oppo_fingerprint_prop:s0
+persist.vendor.fingerprint.optical.goodix.reboot.times u:object_r:oppo_fingerprint_prop:s0
+persist.vendor.silead_newalgo.support u:object_r:oppo_fingerprint_prop:s0
+oplus.fingerprint.gf.package.version u:object_r:oppo_fingerprint_prop:s0
+oplus.fingerprint.qrcode.support u:object_r:oppo_fingerprint_prop:s0
+oplus.fingerprint.qrcode.value u:object_r:oppo_fingerprint_prop:s0
+persist.vendor.fingerprint.optical.sensorlocation u:object_r:oppo_fingerprint_prop:s0
+persist.vendor.fingerprint.optical.lcdtype u:object_r:oppo_fingerprint_prop:s0
+persist.vendor.fingerprint.optical.sensorrotation u:object_r:oppo_fingerprint_prop:s0
+persist.vendor.fingerprint.fp_id u:object_r:oppo_fingerprint_prop:s0
+vendor.fingerprint.cali u:object_r:oppo_fingerprint_prop:s0
+persist.vendor.fingerprint.optical.circlenumber u:object_r:oppo_fingerprint_prop:s0
+persist.vendor.fingerprint.sensor_type u:object_r:oppo_fingerprint_prop:s0
+persist.vendor.fingerprint.version u:object_r:oppo_fingerprint_prop:s0
+persist.vendor.side.fp.near.feature.support u:object_r:oppo_fingerprint_prop:s0
+#Fengxiong.Wu@BSP.Security.basic 2021/12/21, Add for cdfinger Fingerprint
+property.cdfinger.enablesave    u:object_r:oppo_fingerprint_prop:s0
+property.cdfinger.fakerFinger   u:object_r:oppo_fingerprint_prop:s0
+#endif
+
+#ifdef OPLUS_FEATURE_SECURITY_COMMON
+#Dongnan.Wu@BSP.Security.Basic, add for get rpmb enable state
+persist.vendor.rpmb.enable.state u:object_r:powerctl_prop:s0
+#endif /* OPLUS_FEATURE_SECURITY_COMMON */
+
+#ifdef OPLUS_FEATURE_SYSTEM_CONFIG
+#LiLeYang@ANDROID.CUSTOMIZE,2020/08/21, Add for oplus native feature
+ro.vendor.feature.test_native      u:object_r:exported_system_prop:s0
+persist.vendor.feature.test_native        u:object_r:exported_system_prop:s0
+vendor.feature.test_native    u:object_r:exported_system_prop:s0
+#endif OPLUS_FEATURE_SYSTEM_CONFIG
+
+#ifdef OPLUS_FEATURE_SYSTEM_CONFIG
+#LiLeYang@ANDROID.CUSTOMIZE,2020/05/27, Add for oplus feature cache
+cache_key.has_feature_memory              u:object_r:binder_cache_system_server_prop:s0
+cache_key.has_feature_persist             u:object_r:binder_cache_system_server_prop:s0
+cache_key.has_feature_readonly            u:object_r:binder_cache_system_server_prop:s0
+#endif OPLUS_FEATURE_SYSTEM_CONFIG
+
+#ifdef OPLUS_FEATURE_GAMEECO_COOLEFFECT
+#ZhangJunhui@GAMEECO.COOLEFFECT.COOLEX,2020/08/07, Add for CoolEx
+vendor.oplus.jedi.whiteList			u:object_r:exported_system_prop:s0
+vendor.oplus.jedi.mode				u:object_r:exported_system_prop:s0
+vendor.oplus.coolex.effect			u:object_r:exported_system_prop:s0
+vendor.oplus.coolex.effect.renderMode		u:object_r:exported_system_prop:s0
+vendor.oplus.coolex.effect.pass			u:object_r:exported_system_prop:s0
+vendor.oplus.coolex.gameProxy			u:object_r:exported_system_prop:s0
+#endif /* OPLUS_FEATURE_GAMEECO_COOLEFFECT */
+
+#ifdef OPLUS_FEATURE_HEALTHINFO
+#Zhiwen.Li@TECH.Framework.Performance, 2021/01/25,
+#add for qualityprotect
+sys.oplus.healthinfo.fore.      u:object_r:oplus_health_prop:s0
+#endif /* OPLUS_FEATURE_HEALTHINFO */
+
+#ifdef VENDOR_EDIT
+#zhangliqun@PSW.CN.WiFi.Production.NA, 2018/11/14,
+#add for factory set property
+vendor.wifi.hwtest      u:object_r:exported_system_prop:s0
+vendor.wifi.ftmtest     u:object_r:exported_system_prop:s0
+#endif /* VENDOR_EDIT */
+
+#ifdef OPLUS_FEATURE_HANS_FREEZE
+#Mengya.Zhao@@ANDROID.RESCONTROL, 2019/11/11, add for hans freeze manager
+persist.vendor.enable.hans u:object_r:exported_system_prop:s0
+#endif /* OPLUS_FEATURE_HANS_FREEZE */
+
+#ifdef OPLUS_FEATURE_RES_PRELOAD
+#chao.zhu@ANDROID.RESCONTROL, 2019/04/13, add for Resource Preload Manager
+persist.vendor.enable.preload u:object_r:exported_system_prop:s0
+#endif /* OPLUS_FEATURE_RES_PRELOAD */
+
+#ifdef OPLUS_FEATURE_VFX_SCREENEFFECT
+#WangKaiWen@MULTIMEDIA.Display.VFX, 2020/08/04, Add for vfx scrren effect
+persist.vendor.vfx.screeneffect    u:object_r:exported_system_prop:s0
+persist.vendor.vfx.screeneffect.pro    u:object_r:exported_system_prop:s0
+#endif /* OPLUS_FEATURE_VFX_SCREENEFFECT */
+
+#ifdef OPLUS_FEATURE_DEXOPT_STRATEGY
+#Taolicheng@ANDOIRD.PMS, 2020/09/03, add for collect dex2oat info
+pms.dex.duration u:object_r:exported_system_prop:s0
+#endif OPLUS_FEATURE_DEXOPT_STRATEGY
+
+#ifdef OPLUS_FEATURE_ZRAM_WRITEBACK
+#Huangwen.Chen@OPTIMIZATION, 2021/02/18, Add for zram writeback
+persist.vendor.zwriteback.enable              u:object_r:exported_system_prop:s0
+persist.vendor.zwriteback.disksize            u:object_r:exported_system_prop:s0
+persist.vendor.zwriteback.backing_dev_size    u:object_r:exported_system_prop:s0
+persist.vendor.zwriteback.mem_limit           u:object_r:exported_system_prop:s0
+#endif /* OPLUS_FEATURE_ZRAM_WRITEBACK */
+
+#ifdef OPLUS_FEATURE_VAB_VERIFY_PROGRESS
+#Shuangquan.Du@ANDROID.UPDATABILITY.0, 2020/12/02, add for update status
+persist.vendor.oplus.update_status     u:object_r:exported_system_prop:s0
+persist.vendor.oplus.verify_result     u:object_r:exported_system_prop:s0
+persist.vendor.oplus.verify_progress   u:object_r:exported_system_prop:s0
+#endif /* OPLUS_FEATURE_VAB_VERIFY_PROGRESS */
+
+#ifdef OPLUS_FEATURE_VAB_LOG
+#sam.li@ANDROID.UPDATABILITY,add for update_engine log
+sys.oplus.update_engine.log   u:object_r:exported_system_prop:s0
+#endif /* OPLUS_FEATURE_VAB_LOG */
+
+# Jerome.deng add for Sprint Chameleon properties
+ro.home.operator.carrierid              u:object_r:system_prop:s0
+ro.cdma.home.operator.numeric           u:object_r:system_prop:s0
+ro.cdma.home.operator.alpha             u:object_r:system_prop:s0
+op.carrierid                            u:object_r:system_prop:s0
+
+#ifdef OPLUS_FEATURE_POWER_MONITOR
+#WenlongHe@BSP.POWER ,2021/05/15, Add for power monitor feature control
+sys.opluspm.enable    u:object_r:exported_system_prop:s0
+sys.opluspcm.enable     u:object_r:exported_system_prop:s0
+persist.sys.opluspm.enable    u:object_r:exported_system_prop:s0
+persist.sys.opluspcm.enable     u:object_r:exported_system_prop:s0
+sys.oplus.rpmh.trigger_dump     u:object_r:exported_system_prop:s0
+#endif /* OPLUS_FEATURE_POWER_MONITOR */
+
+#ifdef OPLUS_FEATURE_OTASAU_UPDATE
+#Changchang.Liu@ANDROID.UPDATABILITY, 2021/07/05, Add for ota/sau update
+oplus.sau.setuptime                     u:object_r:exported_system_prop:s0
+oplus.sau.install.zip                   u:object_r:exported_system_prop:s0
+oplus.vab.update.type                   u:object_r:exported_system_prop:s0
+oplus.vab.update.dialog                 u:object_r:exported_system_prop:s0
+oplus.vab.update.dialog.reboot          u:object_r:exported_system_prop:s0
+oplus.ota.autoinstall.time              u:object_r:exported_system_prop:s0
+oplus.sau.hephaestus                    u:object_r:exported_system_prop:s0
+oplus.sau.hephaestus_install            u:object_r:exported_system_prop:s0
+oplus.sau.vndhephaestus                 u:object_r:exported_system_prop:s0
+oplus.sau.install.reboot                u:object_r:exported_system_prop:s0
+#Xinqi.Liu@ANDROID.UPDATABILITY, 2021/08/10, Add for sau-opex update
+oplus.opex.hotupdate                    u:object_r:exported_system_prop:s0
+oplus.opex.hotres                       u:object_r:exported_system_prop:s0
+oplus.opex.done                         u:object_r:exported_system_prop:s0
+oplus.opex.finish                       u:object_r:exported_system_prop:s0
+oplus.opex.merge                        u:object_r:exported_system_prop:s0
+oplus.opex.updatedone                   u:object_r:exported_system_prop:s0
+
+oplus.sau.debug                         u:object_r:exported_system_prop:s0
+oplus.sau.debug.zip                     u:object_r:exported_system_prop:s0
+oplus.sau.skip.wait                     u:object_r:exported_system_prop:s0
+oplus.sau.debug.boot                    u:object_r:exported_system_prop:s0
+oplus.sau.quick.check                   u:object_r:exported_system_prop:s0
+#endif /* OPLUS_FEATURE_OTASAU_UPDATE */
+
+#huihuan@Apps, 2021/07/28, add for set sys.oplus.gesturewakeup
+sys.oplus.gesturewakeup                 u:object_r:exported_system_prop:s0
+
+#ifdef OPLUS_BUG_STABILITY
+#fangweisen@CONNECTIVITY.BT.Basic.1078242 2021/08/06, Add for selinux permission
+oplus.bt.conn.count u:object_r:exported_system_prop:s0
+#endif /* OPLUS_BUG_STABILITY */
+
+#wangalei@APP.SYSTEMUI.2378778 2021/10/18, Add for selinux permission
+oplus.battery.warning.allow      u:object_r:exported_system_prop:s0
+
+#ifdef OPLUS_FEATURE_SECURITY_COMMON
+#Ping.Liu@Bsp.Security.Basic, 2021/10/14, add for prop for gk error catch.
+sys.oplus.gke.catch   u:object_r:exported_system_prop:s0
+#endif /* OPLUS_FEATURE_SECURITY_COMMON */
+
+#Shangjin.Tang@NETWORK.REG, 2021/05/27, fix IMEISV not enough issue [OCR.661400.1.VDF]
+ro.build.version.svn.c u:object_r:exported_default_prop:s0
+ro.build.version.svn u:object_r:exported_default_prop:s0

@@ -1,5 +1,3 @@
-#line 1 "vendor/oneplus/sepolicy/product/private/property_contexts"
-# All the vendor property need to follow the below naming rule
 #line 1 "device/qcom/sepolicy/generic/product/private/property_contexts"
 # Copyright (c) 2019-2020 The Linux Foundation. All rights reserved.
 #
