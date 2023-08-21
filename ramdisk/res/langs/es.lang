@@ -1,0 +1,280 @@
+﻿### LICENSE:
+#--- COMMON SYSTEM STRING RESOURCE
+#
+text_ok=Aceptar
+text_next=Siguiente > 
+text_back=< Atrás
+text_yes=Aceptar
+text_no=Cancelar
+text_about=Acerca de
+text_calibrating=Calibración de la pantalla
+text_quit=Salir
+text_quit_msg=¿Seguro que deseas salir?
+text_done=Hecho
+global_done=Hecho
+wipe_no=Cancelar
+wipe_yes=Borrar
+format_no=Cancelar
+format_yes=Formato
+
+#
+#-- CUSTOM STRING RESOURCE
+#
+lang.name=
+lang.title_name=Seleccionar idioma
+lang.desc=
+default_name=Opción
+default_title=Descripción de la opción
+default_desc=El teléfono se reiniciará
+
+mainmenu.name=RECUPERAR
+mainmenu.title_name=Menú principal
+mainmenu.install.name=Instalar desde tarjeta SD
+mainmenu.tools.name=Herramientas
+
+back.name=Atrás
+back.title_name=Atrás al menú anterior
+
+sd.back.name=Atrás
+sd.back.desc=Atrás al directorio anterior
+sd.log.save=Guardar registros
+
+sd.name=Archivo de instalación
+sd.title_name=Instalar desde tarjeta SD
+sd.desc=Instalar desde tarjeta SD
+
+batt.name=Batería
+time.name=Hora
+
+sd.install.name=Seleccionar paquete ZIP desde tarjeta SD
+sd.update.name=Instalar update.zip
+sd.internal.name=Desde el almacenamiento
+sd.external.name=Desde tarjeta SD
+sd.usb_otg.name=Desde USB OTG
+sd.install.confirm.name=Instalar
+sd.install.confirm.desc=Esta acción es irreversible. ¿Instalar el paquete de instalación?
+sd.install.success.name=Instalación correcta
+sd.install.failed.name=Error de instalación
+sd.install.failed.keylog=41:Error de instalación:1
+sd.install.notice=Aviso
+sd.install.success.desc=Instalación correcta
+sd.install.stress.success=Prueba de estrés OTA correcta
+sd.install.stress.fail=Error de prueba de estrés OTA
+sd.install.failed.desc=Error de instalación
+sd.install.downgrade.failed=La versión de la instalación es anterior a la versión actual.
+sd.install.caplow.desc=Queda menos de un 20 % de batería. Cárgala como mínimo hasta el 20 %.
+install.package.name=Actualizando...
+install.package.desc=Cargando... Espera.
+install.package.attention=No hagas ninguna operación.
+install.package.knowmore=Visita WWW.OPPO.COM para obtener más información.
+install.package.line=/
+install.package.stage=
+install.package.remaingtimesingle=Tiempo restante estimado:
+install.package.minute=minuto
+install.package.minutesin=minuto
+sd.install.success.leftbutton=Reiniciar
+
+ums.name=Modo de almacenamiento masivo USB
+ums.btn.name=Salir del modo UMS
+ums.notice.name=Modo UMS
+ums.notice.desc=El Modo UMS está habilitado
+
+power.name=Energía
+power.title=Operaciones relacionadas con la energía
+reboot.null=Reiniciar
+reboot.null.title=Reiniciar ahora
+reboot.recovery=Reiniciar para recuperar
+reboot.bootloader=Reiniciar para cargar la partición de arranque
+reboot.poweroff=Apagar
+poweroff.desc=El teléfono se apagará
+
+alert.result=Error
+alert.desc=Error de funcionamiento
+
+mount.name=Montar
+mount.title=Montar y habilitar almacenamiento USB
+mount.cache.name=Montar caché
+mount.data.name=Montar datos
+mount.system.name=Montar sistema
+mount.sdcard.name=Montar tarjeta SD
+mount.toggle.name=Montar almacenamiento USB
+
+wipe.name=Borrar datos
+wipe.title=Operaciones de borrado de datos y formateo de partición
+wipe.cache.name=Borrar caché
+wipe.cache.desc=La caché se borrará y no se podrá recuperar.
+wipe.content.name=Borrar todo el contenido y los ajustes
+wipe.factory.name=Borrar todos los datos de aplicaciones y aplicaciones desinstalables
+wipe.factory.desc=Todos tus datos se borrarán y no se podrán recuperar.
+wipe.data.name=Borrar datos
+wipe.data.desc=Tus datos se borrarán y no se podrán recuperar.
+#add for new wipe items
+wipe.appdata.name=Borrar todos los datos de la aplicación
+wipe.appdata.desc=Los datos de la aplicación se restablecerán, pero las aplicaciones no se borrarán. Esta acción es irreversible.
+wipe.result.appdata.ok=Se han borrado todos los datos de la aplicación
+wipe.result.appdata.failed=No se han podido borrar todos los datos de la aplicación
+wipe.reserve.name=Borrar datos
+wipe.reserve.notice=Conservar contactos, mensajes y fotos
+wipe.reserve.desc=Los datos de aplicaciones (excepto contactos, mensajes, fotos y contraseña de la pantalla de bloqueo) se borrarán, pero las aplicaciones no se borrarán. Esta acción es irreversible.
+wipe.result.reserve.ok=Se han borrado todos los datos de la aplicación
+wipe.result.reserve.failed=No se han podido borrar todos los datos de la aplicación
+wipe.progress.namd=Borrando datos... Espera.
+wipe.progress.desc=No hagas ninguna operación.
+wipe.result.title=Aviso
+wipe.result.success.title=Borrado correcto
+wipe.result.failed.title=Error al borrar
+wipe.result.factory.ok=Se han borrado todos los datos y la caché
+wipe.result.factory.failed=Error al borrar todos los datos y la caché
+wipe.result.data.ok=Datos borrados
+wipe.result.data.failed=Error al borrar los datos
+wipe.result.cache.ok=Caché borrada
+wipe.result.cache.failed=Error al borrar la caché
+format.system.name=Formatear sistema
+format.data.name=Formatear datos
+format.data.desc.domestic=Todos los datos se borrarán
+format.data.desc.export=Se borrarán todos los datos. Si tu teléfono se ha restablecido, debes ingresar la información de la cuenta de Google (dirección de correo electrónico y contraseña) asociada con este teléfono antes de poder usarlo nuevamente
+format.result.data.ok=Datos formateados
+format.result.data.failed=Error al formatear los datos
+format.cache.name=Formatear caché
+format.boot.name=Formatear datos
+format.sdcard.name=Formatear tarjeta SD
+format.all.name=Formatear todo (excepto tarjeta SD y partición de arranque)
+
+memtest.name=Probar elemento 1
+memtest.title=Probar elemento 1
+memtest.warning.desc=Empieza la prueba del elemento 1. Durará aproximadamente media hora y no se puede interrumpir. ¿Continuar? (Asegúrate de que el nivel de la batería está por encima del 30 %)
+memtest.information.waiting=Probando... Esto durará aproximadamente media hora. Espera.
+memtest.result.pass=No se han encontrado excepciones
+memtest.result.failure=Error en la prueba
+
+resize.notice.all=Error al instalar todos los paquetes
+
+backup.name=Copia de seguridad y restauración
+backup.title=Copia de seguridad de tarjeta SD o restaurar desde tarjeta SD
+backup.backup.name=Copia de seguridad
+backup.restore.name=Restauración
+advanced_backup.name=Copia de seguridad avanzada
+advanced_backup.cache.name=Copia de seguridad de la caché
+advanced_backup.data.name=Copia de seguridad de los datos
+advanced_backup.system.name=Copia de seguridad del sistema
+advanced_backup.boot.name=Copia de seguridad de la partición de arranque
+advanced_backup.recovery.name=Copia de seguridad de recuperación
+advanced_restore.name=Restauración avanzada
+advanced_restore.cache.name=Copia de seguridad de la caché
+advanced_restore.data.name=Restaurar datos
+advanced_restore.system.name=Restaurar sistema
+advanced_restore.boot.name=Restaurar partición de arranque
+advanced_restore.recovery.name=Restaurar recuperación
+
+tool.name=Herramientas
+tool.title=Herramientas avanzadas
+tool.key.name=Prueba de botones
+tool.time.name=Ajustes de hora
+tool.battary.name=Inicializar información de la batería
+tool.log.name=Copiar registros en tarjeta SD
+tool.log.desc=Copiar registros en: 
+tool.permission.name=Fijar permisos
+
+#xiaofan.yang@PSW.TECH.AgingTest, 2019/02/14,Add for factory agingtest
+agingtest.name=
+agingtest.title=
+agingtest.process.title=
+agingtest.process.desc=
+agingtest.charging.warning=
+agingtest.charging.battwarning1=
+agingtest.charging.battwarning2=
+agingtest.charging.battwarning3=
+root.execute.name=Obtener el permiso de root
+root.cancel.name=Cancelar el permiso de root
+root.description=Ejecute adb disable-verity antes de la operación. ¿Continuar?
+root.verity.notice=""Rootear" dispositivo después de ejecutar ""adb disable-verity""."
+
+serial.open.name=
+serial.close.name=
+
+info.name.rooted=V1.2 (rooteado)
+info.name=V1.2
+rootdetect.rooted.desc=Teléfono rooteado
+rootdetect.noroot.desc=Teléfono no rooteado
+root.detect.title=Comprueba si la versión está rooteada
+info.title=Acerca de la recuperación
+info.mount.name=Información de almacenamiento
+info.log.name=Registros
+info.about.name=Acerca de la recuperación
+
+info.name.sys_verification=Comprobar disco
+info.name.sys_verification_title=Comprobando...
+info.name.sys_verification.pass=Los datos del disco están intactos
+info.name.sys_verification.fail=Se han encontrado excepciones en los datos del disco
+info.name.sys_verification.waiting=Comprobar datos del disco... Espera.
+about.device=Dispositivo:
+about.name=Nombre:
+about.version=Versión:
+about.date=Fecha:
+
+#
+#-- UNLOCK STRING RESOURCE
+#
+input.password=Introducir contraseña de desbloqueo de la pantalla
+input.drawpattern=Dibujar el patrón de desbloqueo de la pantalla
+input.password.install=Introducir contraseña de desbloqueo de la pantalla para actualizar
+input.password.wipe=Introducir contraseña de desbloqueo de la pantalla para borrar los datos
+input.password.wrong=Contraseña incorrecta
+keyboard.symbol=Símbolos
+input.verification.code=Introduce el código de verificación:
+input.verification.wrong=El código de verificación no es correcto
+
+#ifdef COLOROS_EDIT
+#Zhengkang.Ji@ROM.Framework, 2017.12.31 add for system repair
+repair.name=Actualización en línea
+repair.notice=Guardar datos
+repair.title=Actualización en línea
+searchap.name=Buscando red wifi...
+info.searchap.waiting=Buscando red wifi... Espera.
+info.search.noap=No se han encontrado redes disponibles
+query.name=Descargar y reparar el sistema (se recomienda conectar el cargador)
+query.name.title=Descargar y reparar el sistema
+query.noap=No se han encontrado redes disponibles
+info.notice=Es posible que no puedas conectarte a redes wifi que necesiten autenticación.
+connectap.name=Conectarse a una red wifi
+info.connectap.waiting=Conectándose a una red wifi... Espera.
+info.connect.success=Conectado a una red wifi
+info.connect.fail=Error al conectarse a una red wifi
+info.query.waiting=Comprobando... Espera.
+info.query.pass=Nueva versión disponible
+info.query.cancel=Descargar
+info.query.start=Cancelar
+info.query.fail=No hay actualizaciones disponibles
+info.query.net.fail=Error en la conexión de red
+input.appassword=Introducir contraseña para la red wifi
+input.ap.password.wrong=Contraseña incorrecta o error de la red. Toca para intentarlo de nuevo.
+info.download.resume=Reanudar
+info.download.fail=Error de descarga
+info.download.disconnect=Red wifi desconectada
+info.download.stop=Descarga pausada
+download.package.name=Comenzando la descarga
+download.package.attention=No hagas ninguna operación.
+button.download.stop=Pausa la descarga y retrocede
+sd.install.caplow.desc1=Queda menos de un 20 % de batería. Cárgala.
+sd.install.caplow.desc2=Queda menos de un 50 % de batería. Cárgala como mínimo hasta el 50 %.
+sd.download.noenough.space=Sin espacio de almacenamiento
+power.reboot.downmode=Acceder al Modo de descarga
+power.reboot.downmode.information=El Modo de descarga solo se utiliza para grabar en la memoria flash del teléfono. Si accedes al Modo de descarga por error, puedes mantener pulsados los botones de subir volumen y encendido para reiniciar el teléfono.
+
+#JianHui.Yu@ROM.SDK, 2019-01-03 : Add for Unlock Safety
+input.password.retry1=Inténtalo dentro de
+input.password.retry2=segundos.
+
+#endif /* COLOROS_EDIT */
+
+#Liang.Zhang@PSW.TECH.Stability.PHOENIX_PROJECT, 2018/12/29, Add for recovery hint when fatal error reboot to recovery
+fatal_error.recovery.title=Aviso
+fatal_error.recovery.hint=Error del sistema. Después de seleccionar un idioma, toca Actualización en línea (guardar datos) para restaurar el sistema. ¡Gracias!
+data_error.recovery.title=Aviso
+data_error.recovery.hint=Error de datos. Después de seleccionar un idioma, borra los datos para restaurar el sistema. ¡Gracias!
+
+#ifdef OPLUS_FEATURE_RECOVERY_BOOT_REASON
+# sam.li@ANDROID.UPDATABILITY, 2021/01/09, Add for recovery boot reason
+boot.reason.menu=motivo de arranque
+next.button.name=Próxima
+#endif /* OPLUS_FEATURE_RECOVERY_BOOT_REASON */

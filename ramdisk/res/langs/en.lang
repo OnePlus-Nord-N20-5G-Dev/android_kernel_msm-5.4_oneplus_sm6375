@@ -1,70 +1,76 @@
 ﻿### LICENSE:
 #--- COMMON SYSTEM STRING RESOURCE
 #
-text_ok=Ok
+text_ok=OK
 text_next=Next >
-text_back=Back
-text_yes=Yes
-text_no=No
+text_back=< Back
+text_yes=OK
+text_no=Cancel
 text_about=About
 text_calibrating=Calibrating Tools
 text_quit=Quit
-text_quit_msg=Are you sure you want to quit?
+text_quit_msg=Are you sure to quit?
 text_done=Done
 global_done=Done
+wipe_no=Cancel
+wipe_yes=Clear
+format_no=Cancel
+format_yes=Format
 
 #
 #-- CUSTOM STRING RESOURCE
 #
 lang.name=选择语言/Select Language
-lang.title_name=请选择语言/Select Language
+lang.title_name=Select Language
 lang.desc=lang selected
 default_name=default_name
 default_title=default_title
-default_desc=Your phone will reboot
+default_desc=Your phone will reboot.
 
-mainmenu.name= OxygenOS Recovery
+mainmenu.name=RECOVERY
 mainmenu.title_name=MAIN MENU
 mainmenu.install.name=install from SD
 mainmenu.tools.name=tools
 
-advance.name=Advanced
-
 back.name=Back
-back.title_name=Back to main menu
+back.title_name=Back to parent menu
 
 sd.back.name=Back
-sd.back.desc=back to previous
+sd.back.desc=back to upper
 
-sd.name=Install from internal storage
+sd.name=Install from storage
 sd.title_name=Install from storage
-externalsd.title_name=SD card
-sd.desc=Install from SD
+sd.desc=Install from storage device
 batt.name=BATTARY
 time.name=TIME
 
 sd.install.name=choose zip from sd
 sd.update.name=apply /sdcard/update.zip
-sd.internal.name=Internal storage
-sd.external.name=SD card
+sd.internal.name=From phone storage
+sd.external.name=From SD card
+sd.usb_otg.name=From USB OTG
 sd.install.confirm.name=Update
-sd.install.confirm.desc=Installing package
+sd.install.confirm.desc=Installation package, this operation can not be undone.
 sd.install.success.name=Prompt
-sd.install.failed.name=Install failed
+sd.install.failed.name=Installation failed
+sd.install.failed.keylog=41:OTA升级失败:1
 sd.install.notice=Prompt
-sd.install.success.desc=Install success
-sd.install.failed.desc=Installation failed
-sd.install.caplow.desc=Battery < 20%, please connect to power source
-sd.install.space.desc=Data space is less than 500MB
+sd.install.success.desc=Installation successful.
+sd.install.stress.success=OTA stress test success
+sd.install.stress.fail=OTA stress test fail
+sd.install.failed.desc=Installation failed.
+sd.install.downgrade.failed=The installed version is lower than current.
+sd.install.caplow.desc=Capacity is less than 20%, please charge the battery to 20%.
 install.package.name=Updating, please wait
-install.package.desc=Do not turn off your phone
+install.package.desc=No operation
+install.package.attention=Please don't do any other operations!
+install.package.knowmore=Visit WWW.OPPO.COM to learn more
+install.package.line=/
+install.package.stage=stage:Estimated time remaining in this stage is
+install.package.remaingtimesingle=About 
+install.package.minute=minutes
+install.package.minutesin=minute
 sd.install.success.leftbutton=Reboot
-
-adbd.confirm=Yes
-adbd.null=Install from ADB
-adbd.null.title=Upgrade Android from USB?
-sideload.package.name=You are in sideload mode
-sideload.package.desc=Load package with adb sideload <filename>
 
 ums.name=Usb mass storage mode
 ums.btn.name=Exit the UMS mode
@@ -74,57 +80,86 @@ ums.notice.desc=UMS mode is enabled
 power.name=power
 power.title=power operation
 reboot.null= Reboot
-reboot.null.title= Reboot now
-reboot.recovery= Reboot to recovery
-reboot.bootloader= Reboot to fastboot
+reboot.null.title= reboot now
+reboot.recovery= reboot to recovery
+reboot.bootloader= reboot to bootloader
 reboot.poweroff= Power off
-poweroff.desc=Your phone will power off
-poweroff.confirm=Power off
-reboot.confirm=Reboot
+poweroff.desc=Your phone will power off.
 
 alert.result=FAIL!
-alert.desc=Operation failed
+alert.desc=operation failed
 
 mount.name=mount
-mount.title=mount and toogle usb storage
+mount.title=mount and toggle usb storage
 mount.cache.name=mount cache
 mount.data.name=mount data
 mount.system.name=mount system
 mount.sdcard.name=mount sdcard
 mount.toggle.name=toggle usb storage
 
-wipe.name=Wipe data and cache
-wipe.title=Wipe data or format partition operation
+wipe.name=Wipe data
+wipe.title=wipe data or format partition operation
 wipe.cache.name=Wipe cache
-wipe.cache.desc=Cache will be wiped, continue?
-wipe.factory.name=Reset system setting
-wipe.factory.desc=System data & Cache will be reset, continue?
+wipe.cache.desc=Your cache will be wiped, this operation can not be restored.
+wipe.content.name=Clear all content and settings
+wipe.factory.name=Wipe all data and removable application
+wipe.factory.desc=Your data and application will be wiped, this operation can not be restored.
 wipe.data.name=Wipe data
-wipe.data.desc=Your data will be wiped, continue?
-wipe.progress.namd=Wiping, please wait
-wipe.progress.desc=Do not remove battery or turn off your phone
+wipe.data.desc=Your data will be wiped, this operation can not be restored.
+#add for new wipe items
+wipe.appdata.name=Wipe all application data
+wipe.appdata.desc=All of Your application data will be reset, this operation can not be restored.
+wipe.result.appdata.ok=Wipe all application data success.
+wipe.result.appdata.failed=Wipe application data failed.
+wipe.reserve.name=Wipe data
+wipe.reserve.notice=Retain contacts, messages, and photos.
+wipe.reserve.desc=App data (except contacts, messages, photos, and lock screen password) will be cleared, but the app will not be deleted. This operation can not be undone.
+wipe.result.reserve.ok=Wipe all application data success.
+wipe.result.reserve.failed=Wipe all application data failed.
+
+wipe.progress.namd=Wiping,please wait
+wipe.progress.desc=Do not perform any other operations
 wipe.result.title=Prompt
-wipe.result.success.title=Wipe success
+wipe.result.success.title=Wiped successfully
 wipe.result.failed.title=Wipe failed
-wipe.result.factory.ok=Wipe success
-wipe.result.factory.failed=Wipe failed
-wipe.result.data.ok=Wipe success
-wipe.result.data.failed=Wipe  failed
-wipe.result.cache.ok=Wipe success
-wipe.result.cache.failed=Wipe failed
+wipe.result.factory.ok=Data and cache wiped successfully.
+wipe.result.factory.failed=Failed to wipe data and cache.
+wipe.result.data.ok=Data wiped successfully.
+wipe.result.data.failed=Failed to wipe data.
+wipe.result.cache.ok=Cache wiped successfully.
+wipe.result.cache.failed=Failed to wipe cache.
 format.system.name=Format system
-format.data.name=Erase everything(Music, pics, etc)
+format.data.name=Format data
+format.data.desc.domestic=All user data will be reset
+format.data.desc.export=All user data will be reset, If your phone is reset, you will need to enter the Google account information(email address and password) associated with this phone to be able to use it again
+format.result.data.ok=Formatting the data partition success
+format.result.data.failed=Formatting the data partition failed
 format.cache.name=Format cache
 format.boot.name=Format boot
-format.sdcard.name=Format sdcard
-format.all.name=Format all(except sdcard and boot)
-format.data.desc=Userdata partition will be formatted
-format.data.confirm=This can not be undone, continue?
-format.result.success.title=Format success
-format.result.failed.title=Format failed
+format.sdcard.name=Format SD card
+format.all.name=Format all(except SD card and boot)
 
-backup.name=Backup and restore
-backup.title=Backup and restore from sdcard
+memtest.name=Test case 1
+memtest.title=Test case 1
+memtest.warning.desc=Start test case 1, this will cost about half an hour and can't be interrupted, continue?(Make sure that the battery level is above 30%)
+memtest.information.waiting=Testing, this will cost about half an hour, please wait……
+memtest.result.pass=Test pass
+memtest.result.failure=Test fail
+
+resize.notice.all=Installation failed of All update package
+#xiaofan.yang@PSW.TECH.AgingTest, 2019/02/14,Add for factory agingtest
+#ifdef OPLUS_FEATURE_AGINGTEST
+agingtest.name=Aging test
+agingtest.title=Aging test (pls don't power off...)
+agingtest.process.title=Storage aging test
+agingtest.process.desc=Start aging test (DRAM & FLASH) (recommended battery level is above 30% before test)
+agingtest.charging.warning=WARNING:
+agingtest.charging.battwarning1=Battery Level is below
+agingtest.charging.battwarning2=No Charger, please insert!!!
+agingtest.charging.battwarning3=Charging, note low battery level!!!
+#endif
+backup.name=backup and restore
+backup.title=backup to sdcard and restore from sdcard
 backup.backup.name=backup
 backup.restore.name=restore
 advanced_backup.name=advanced backup
@@ -144,52 +179,101 @@ tool.name=tool
 tool.title=advanced tools
 tool.key.name=key test
 tool.time.name=timer setting
-tool.battary.name=wipe battery stats
-tool.log.name=copy log to sdcard
-tool.log.desc=are you sure you want to copy log to
+tool.battary.name=wip battary
+tool.log.name=cope log to sdcard
+tool.log.desc=are you sure cope log to 
 tool.permission.name=fix permission
 
-info.name=Ver 2.0
-info.title=OEM recovery information
-info.mount.name=Storage info
-info.log.name=log
-info.about.name=About OEM recovery
+root.execute.name=Get root permission
+root.cancel.name=Cancel root permission
+root.description=Excute adb disable-verity before operation, please confirm continue?
+root.verity.notice=Please root device after executing adb disable-verity
 
+info.name.rooted=Ver 1.2(Rooted)
+info.name=Ver 1.2
+rootdetect.rooted.desc=Mobile phone has been rooted
+rootdetect.noroot.desc=Mobile phone is not rooted
+root.detect.title=check the version whether or not rooted
+info.title=information of recovery
+info.mount.name=storage info
+info.log.name=log
+info.about.name=about recovery
+
+info.name.sys_verification=Check disk
+info.name.sys_verification_title=Check disk...
+info.name.sys_verification.pass=Disk data is intact
+info.name.sys_verification.fail=Find some disk data exceptions
+info.name.sys_verification.waiting=Checking the exceptions of disk data, please wait...
 about.device=Device:
 about.name=Name:
 about.version=Version:
 about.date=Date:
 
-oemunlock.confirm.name=Unlock to use fastboot flash and erase
-oemunlock.confirm.desc=Unlock will erase user data, continue?
+#
+#-- UNLOCK STRING RESOURCE
+#
+input.password=Please enter lockscreen password
+input.drawpattern=Please draw lockscreen pattern
+input.password.install=Please enter lockscreen password to update
+input.password.wipe=Please enter lockscreen password to wipe data
+input.password.wrong=Wrong password
+keyboard.symbol=SYM
+input.verification.code=Please enter verification code:
+input.verification.wrong=Verification code wrong
 
-exit.recovery.name=Exit
-exit.recovery.title=Exit Recovery
+#ifdef OPLUS_FEATURE_RECOVERY_UI
+#Zhengkang.Ji@ROM.Framework, 2017.12.31 add for system repair
+repair.name=Online update
+repair.notice=Keep data
+repair.title=Online update
+searchap.name=Searching for Wi-Fi...
+info.searchap.waiting=Searching WiFi, please wait …
+info.search.noap=Can not find the available network!
+query.name=Download and repair the system (recommended to connect the charger)
+query.name.title=Download and repair the system
+query.noap=找不到可用网络
+info.notice=WiFi need web authentication may not be able to connect.
+connectap.name=Connect WiFi
+info.connectap.waiting=Connecting WiFi, please wait …
+info.connect.success=Succeed in connecting WiFi
+info.connect.fail=Failed to connect WiFi
+info.query.waiting=Searching, please wait …
+info.query.pass=Downloadable version detected.
+info.query.cancel=start download
+info.query.start=Cancel
+info.query.fail=No updates found.
+info.query.net.fail=The network connection is abnormal.
+input.appassword=Please enter WiFi password
+input.ap.password.wrong=Wrong password or abnormal network, Please try again
+info.download.resume=Continue to download
+info.download.fail=Download failed
+info.download.disconnect=The WiFi connection is down.
+info.download.stop=Download has been suspended
+download.package.name=Downloading
+download.package.attention=Please don't do any other operations
+button.download.stop=Pause download and return
+sd.install.caplow.desc1=Battery less than 20%, please connect the charger.
+sd.install.caplow.desc2=Capacity is less than 50%, please charge the battery to 50%.
+sd.download.noenough.space=Insufficient space left.
+power.reboot.downmode=Go to download mode
+power.reboot.downmode.information=Download mode is only used by after-sale. If user go into download mode by mistake, you can long press the volume key + and the power key to reboot the phone
 
-password.forget=Forgot Password
-delete.string=DEL
-keyboard.space=Space
-decrypt.process=Decrypting...
+#JianHui.Yu@ROM.SDK, 2019-01-03 : Add for Unlock Safety
+input.password.retry1=Please Retry in
+input.password.retry2=Second(s)
 
-forget.password.confirm1=You will LOSE everything(Music, pics, etc)
-forget.password.confirm2=This can not be undone, continue?
+#endif /* OPLUS_FEATURE_RECOVERY_UI */
 
-retry_timeout=Please try again after 30s
+#Liang.Zhang@PSW.TECH.Stability.PHOENIX_PROJECT, 2018/12/29, Add for recovery hint when fatal error reboot to recovery OPLUS_FEATURE_PHOENIX
+fatal_error.recovery.title=kindly reminder
+fatal_error.recovery.hint=system error, after select language, please select Online update(keep data) to reovery system, thanks!
+data_error.recovery.title=kindly reminder
+data_error.recovery.hint=data error, after select language, please select wipe data to reovery system, thanks!
 
-agingtest.name=Aging test
-agingtest.title=Aging test (pls don't power off...)
-agingtest.process.title=Storage aging test
-agingtest.process.desc=Start aging test (DRAM & FLASH) (recommended battery level is above 80% before test)
-factory.warning.desc=If your phone is reset, you will need to enter the Google account information(email address and password) associated with this phone to be able to use it again
+fastbootd.name=Fastbootd Mode
 
-# #ifdef VENDOR_EDIT
-# ajinath@SYSTEM, 2019/08/29, [OSP-2080] Recovery boot reason
-# #if OP_FEATURE_OPRECOVERY_BOOT_REASON == 1
+#ifdef OPLUS_FEATURE_RECOVERY_BOOT_REASON
+# sam.li@ANDROID.UPDATABILITY, 2021/01/09, Add for recovery boot reason
 boot.reason.menu=Boot reason
 next.button.name=Next
-# #endif
-# /* VENDOR_EDIT */
-
-# Danny.Xiao@System, 2020/05/21, added for showing fastbootd when booting into fastbootd mode
-boot.mode=fastbootd
-
+#endif /* OPLUS_FEATURE_RECOVERY_BOOT_REASON */

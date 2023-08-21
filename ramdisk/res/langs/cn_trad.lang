@@ -1,8 +1,9 @@
 ﻿### LICENSE:
+#--- COMMON SYSTEM STRING RESOURCE
 #
 text_ok=確定
 text_next=下一步 >
-text_back=返迴
+text_back=< 返迴
 text_yes=確定
 text_no=取消
 text_about=關於
@@ -11,23 +12,25 @@ text_quit=退出
 text_quit_msg=你確定要退出嗎？
 text_done=完成
 global_done=操作完成
+wipe_no=取消
+wipe_yes=清除
+format_no=取消
+format_yes=格式化
 
 #
 #-- CUSTOM STRING RESOURCE
 #
 lang.name=选择语言/Select Language
-lang.title_name=请选择语言/Select Language
+lang.title_name=选择语言
 lang.desc=lang selected
 default_name=選項
 default_title=選項標題
-default_desc=您的行動電話將重啟
+default_desc=您的行動電話將重啟。
 
-mainmenu.name= ColorOS恢復模式
+mainmenu.name=恢復模式
 mainmenu.title_name=主菜單
 mainmenu.install.name=從SD卡安裝
 mainmenu.tools.name=工具
-
-advance.name=高級
 
 back.name=返迴
 back.title_name=返迴到上一步
@@ -36,7 +39,7 @@ sd.back.name=返迴
 sd.back.desc=返迴到上一步
 sd.log.save=保存日誌
 
-sd.name=安裝本地升級文件
+sd.name=安裝升級文件
 sd.title_name=從SD卡安裝
 sd.desc=從SD卡安裝
 
@@ -45,26 +48,31 @@ time.name=時間
 
 sd.install.name=從SD卡選擇zip包安裝
 sd.update.name=安裝update.zip
-sd.internal.name=從手機存儲
+sd.internal.name=從手機存儲安裝
 sd.external.name=從SD卡
+sd.usb_otg.name=從USB OTG
 sd.install.confirm.name=安裝
-sd.install.confirm.desc=確定安裝昇級包，此操作不可恢復
+sd.install.confirm.desc=確定安裝昇級包，此操作不可恢復。
 sd.install.success.name=提示
 sd.install.failed.name=安裝失敗
+sd.install.failed.keylog=41:OTA升级失败:1
 sd.install.notice=提示
 sd.install.success.desc=安裝包昇級成功。
+sd.install.stress.success=OTA壓力測試成功
+sd.install.stress.fail=OTA壓力測試失敗
 sd.install.failed.desc=安裝包昇級失敗。
-sd.install.caplow.desc=電量低於20%，請接入USB電源供電
-sd.install.space.desc=手機可用存儲低於500MB，請清理空間
-install.package.name=正在更新，請稍候
-install.package.desc=請勿進行其他操作
+sd.install.downgrade.failed=安裝版本低於當前使用版本。
+sd.install.caplow.desc=電量低於20%，請將電量充至20%以上。
+install.package.name=正在升級
+install.package.desc=請勿拔掉電池與其他任何操作
+install.package.attention=請勿觸碰手機按鈕!
+install.package.knowmore=登陸WWW.OPPO.COM了解更多
+install.package.line=/
+install.package.stage=阶段：此阶段预计还需
+install.package.remaingtimesingle=還需要約
+install.package.minute=分鍾
+install.package.minutesin=分鍾
 sd.install.success.leftbutton=重啟
-
-adbd.confirm=確定
-adbd.null=從USB安裝升級文件
-adbd.null.title=進入USB升級模式
-sideload.package.name=您已經進入USB升級模式
-sideload.package.desc=請插上USB，使用adb sideload <filename>發送更新包至設備
 
 ums.name=U盤存儲模式
 ums.btn.name=退出U盤存儲模式
@@ -75,53 +83,82 @@ power.name=電源菜單
 power.title=電源相關操作
 reboot.null=重啟行動電話
 reboot.null.title=現在重啟
-reboot.recovery=重啟到恢復模式
-reboot.bootloader=進入刷機模式
+reboot.recovery=重啟到recovery
+reboot.bootloader=重啟到bootloader
 reboot.poweroff=關機
-poweroff.desc=您的行動電話將關機
-poweroff.confirm=關機
-reboot.confirm=重啟
+poweroff.desc=您的行動電話將關機。
 
 alert.result=錯誤
 alert.desc=錯誤的操作
 
 mount.name=掛載
-mount.title=掛載各分區和啟用USB存儲
+mount.title=掛載各分區與啟用USB存儲
 mount.cache.name=掛載cache分區
 mount.data.name=掛載data分區
 mount.system.name=掛載system分區
 mount.sdcard.name=掛載sdcard分區
 mount.toggle.name=USB 存儲
 
-wipe.name=清除數據和緩存
-wipe.title=擦除數據操作和格式化分區操作
+wipe.name=清除數據
+wipe.title=擦除數據操作與格式化分區操作
 wipe.cache.name=清除緩存
-wipe.cache.desc=您的緩存數據將被清除，此操作不可恢復
-wipe.factory.name=清除系統數據和緩存
-wipe.factory.desc=您的所有系統數據將被清除，此操作不可恢復
+wipe.cache.desc=您的緩存數據將被清除，此操作不可恢復。
+wipe.content.name=清除全部內容與設置
+wipe.factory.name=清除全部應用數據與可卸載程序
+wipe.factory.desc=您的所有數據將被清除，此操作不可恢復。
 wipe.data.name=清除用戶數據
-wipe.data.desc=您的用戶數據將被清除，此操作不可恢復
+wipe.data.desc=您的用戶數據將被清除，此操作不可恢復。
+#add for new wipe items
+wipe.appdata.name=清除全部應用數據
+wipe.appdata.desc=你的應用程序數據將被重置，應用本身不會被刪除，此操作不可恢復。
+wipe.result.appdata.ok=清除全部應用數據成功。
+wipe.result.appdata.failed=清除全部應用數據失敗。
+wipe.reserve.name=清除數據
+wipe.reserve.notice=保留連絡人、資訊、照片
+wipe.reserve.desc=應用數據將被清除（保留連絡人、資訊、照片、鎖屏密碼），應用不會被删除，此操作無法撤銷。
+wipe.result.reserve.ok=清除全部應用數據成功。
+wipe.result.reserve.failed=清除全部應用數據失敗。
+
 wipe.progress.namd=正在清除，請稍候
-wipe.progress.desc=請勿拔掉電池或進行其他操作
+wipe.progress.desc=請勿進行其它操作
 wipe.result.title=提示
 wipe.result.success.title=清除成功
 wipe.result.failed.title=清除失敗
-wipe.result.factory.ok=清除所有數據成功
-wipe.result.factory.failed=清除所有數據失敗
-wipe.result.data.ok=清除用戶數據成功
-wipe.result.data.failed=清除用戶數據失敗
-wipe.result.cache.ok=清除緩存數據成功
-wipe.result.cache.failed=清除緩存數據失敗
+wipe.result.factory.ok=清除所有數據成功。
+wipe.result.factory.failed=清除所有數據失敗。
+wipe.result.data.ok=清除用戶數據成功。
+wipe.result.data.failed=清除用戶數據失敗。
+wipe.result.cache.ok=清除緩存數據成功。
+wipe.result.cache.failed=清除緩存數據失敗。
 format.system.name=格式化system分區
-format.data.name=格式化設備
+format.data.name=格式化數據分區
+format.data.desc.domestic=所有數據將被清除
+format.data.desc.export=所有數據將被清除，如果您的手機已重置，則需要輸入與此手機關聯的Google帳戶信息(電子郵件地址和密碼)才能再次使用
+format.result.data.ok=格式化數據分區成功
+format.result.data.failed=格式化數據分區失敗
 format.cache.name=格式化cache分區
 format.boot.name=格式化boot分區
 format.sdcard.name=格式化sdcard
-format.all.name=全部格式化（不包括boot和sdcard）
-format.data.desc=您的設備將被格式化,此操作不可恢復
-format.data.confirm=我已了解風險，確定進行格式化
-format.result.success.title=格式化成功
-format.result.failed.title=格式化失敗
+format.all.name=全部格式化（不包括boot與sdcard）
+
+memtest.name=測試項1
+memtest.title=測試項1
+memtest.warning.desc=啟動測試項1，耗時半小時左右，不可中斷，是否繼續？(建議測試前電量高於30%)
+memtest.information.waiting=正在進行測試，大約需要半小時，請等待……
+memtest.result.pass=測試未發現異常
+memtest.result.failure=測試失敗
+#xiaofan.yang@PSW.TECH.AgingTest, 2019/02/14,Add for factory agingtest
+#ifdef OPLUS_FEATURE_AGINGTEST
+agingtest.name=老化測試中
+agingtest.title=老化測試中(請勿斷電...)
+agingtest.process.title=存儲老化測試
+agingtest.process.desc=開始進行老化測試(DRAM & FLASH)(建議測試前電量高於30%)
+agingtest.charging.warning=警告：
+agingtest.charging.battwarning1=電量低於
+agingtest.charging.battwarning2=未插充電器，請插入！！！
+agingtest.charging.battwarning3=已充電中，注意低電量！！！
+#endif
+resize.notice.all=全量包安装失败
 
 backup.name=備份與恢復
 backup.title=備份到SD卡或者從SD卡恢復
@@ -149,48 +186,96 @@ tool.log.name=拷貝LOG到SD卡
 tool.log.desc=是否將日誌拷貝到
 tool.permission.name=脩復權限
 
-info.name=版本2.0
-info.title=關於OEM RECOVERY的信息
+root.execute.name=獲取root權限
+root.cancel.name=取消root權限
+root.description=操作前請確認已執行（adb disable-verity），是否繼續？
+root.verity.notice=請執行adb disable-verity後再root手機
+
+info.name.rooted=版本1.2(當前已root)
+info.name=版本1.2
+rootdetect.rooted.desc=手機曾經被root過
+rootdetect.noroot.desc=手機未曾被root過
+root.detect.title=檢測版本是否被root過
+info.title=關於RECOVERY的信息
 info.mount.name=存儲信息
 info.log.name=運行日誌
-info.about.name=關於OEM RECOVERY
+info.about.name=關於RECOVERY
 
+info.name.sys_verification=磁盤檢測
+info.name.sys_verification_title=正在檢測…
+info.name.sys_verification.pass=磁盤數據完好無損
+info.name.sys_verification.fail=發現磁盤數據異常
+info.name.sys_verification.waiting=檢查磁盤有無數據異常，請稍候…
 about.device=設備：
 about.name=名稱：
 about.version=版本：
 about.date=日期：
 
-oemunlock.confirm.name=解鎖fastboot flash和erase
-oemunlock.confirm.desc=解鎖操作將會刪除用戶數據！是否繼續？
+#
+#-- UNLOCK STRING RESOURCE
+#
+input.password=請輸入鎖定畫面密碼
+input.drawpattern=請繪製鎖定畫面圖形
+input.password.install=請輸入鎖定畫面密碼來安裝升級文件
+input.password.wipe=請輸入鎖定畫面密碼來清除數據
+input.password.wrong=密碼錯誤
+keyboard.symbol=符
+input.verification.code=請輸入驗證碼:
+input.verification.wrong=驗證碼錯誤
 
-exit.recovery.name=退出
-exit.recovery.title=退出 Recovery
+#ifdef OPLUS_FEATURE_RECOVERY_UI
+#Zhengkang.Ji@ROM.Framework, 2017.12.31 add for system repair
+repair.name=線上更新
+repair.notice=保留數據
+repair.title=線上更新
+searchap.name=正在搜索WiFi...
+info.searchap.waiting=正在搜索 WiFi，請稍候...
+info.search.noap=找不到可用網絡！
+query.name=下載並修復系統（建議連接充電器）
+query.name.title=下載並修復系統
+query.noap=找不到可用网络
+info.notice=需要網頁認證的 WiFi 可能無法連接。
+connectap.name=連接 WiFi
+info.connectap.waiting=正在連接 WiFi，請稍候…
+info.connect.success=連接 WiFi 成功
+info.connect.fail=連接 WiFi 失敗
+info.query.waiting=正在査詢，請稍等…
+info.query.pass=檢測到可下載版本。
+info.query.cancel=開始下載
+info.query.start=取消
+info.query.fail=未檢測到可下載版本。
+info.query.net.fail=網絡連接異常。
+input.appassword=請輸入 WiFi 密碼
+input.ap.password.wrong=密碼錯誤或者網絡异常，請重試
+info.download.resume=繼續下載
+info.download.fail=下載失敗
+info.download.disconnect=WiFi 連接已斷開。
+info.download.stop=下載已暫停
+download.package.name=正在下載
+download.package.attention=請勿拔出手機電池或觸碰手機按鈕
+button.download.stop=暫停下載並返回
+sd.install.caplow.desc1=電量低於20%，請連接充電器。
+sd.install.caplow.desc2=電量低於50%，請將電量充至50%以上。
+sd.download.noenough.space=剩餘空間不足。
+power.reboot.downmode=進入下載模式
+power.reboot.downmode.information=下載模式僅用於售後刷機,普通用戶如果誤進入下載模式,可長按音量加鍵和電源鍵強制重啟手機
 
-password.forget=忘記密碼
+#JianHui.Yu@ROM.SDK, 2019-01-03 : Add for Unlock Safety
+input.password.retry1=請在
+input.password.retry2=秒後重試
 
-delete.string=刪除
-keyboard.space=空格
-decrypt.process=正在解密
+#endif /* OPLUS_FEATURE_RECOVERY_UI */
 
-forget.password.confirm1=忘記密碼后，需要格式化后才能繼續使用
-forget.password.confirm2=格式化會清除你的所有數據，要繼續么？
+#Liang.Zhang@PSW.TECH.Stability.PHOENIX_PROJECT, 2018/12/29, Add for recovery hint when fatal error reboot to recovery OPLUS_FEATURE_PHOENIX
+fatal_error.recovery.title=溫馨提示
+fatal_error.recovery.hint=系統出現故障，選擇語言后請嘗試在線更新（保留數據）進行系統修復，謝謝！
+data_error.recovery.title=溫馨提示
+data_error.recovery.hint=數據分區出現故障，選擇語言后請嘗試清除數據進行系統修復，謝謝！
 
-retry_timeout=錯誤次數過多，請30秒後再試
+fastbootd.name=Fastbootd 模式
 
-agingtest.name=老化測試中
-agingtest.title=老化測試中(請勿斷電...)
-agingtest.process.title=存儲老化測試
-agingtest.process.desc=開始進行老化測試(DRAM & FLASH)(建議測試前電量高於80%)
-factory.warning.desc=如果您的手機已重置，則需要輸入與此手機關聯的Google帳戶信息(電子郵件地址和密碼)才能再次使用
-
-# #ifdef VENDOR_EDIT
-# ajinath@SYSTEM, 2019/08/29, [OSP-2080] Recovery boot reason
-# #if OP_FEATURE_OPRECOVERY_BOOT_REASON == 1
+#ifdef OPLUS_FEATURE_RECOVERY_BOOT_REASON
+# sam.li@ANDROID.UPDATABILITY, 2021/01/09, Add for recovery boot reason
 boot.reason.menu=引導原因
 next.button.name=下一個
-# #endif
-# /* VENDOR_EDIT */
-
-# Danny.Xiao@System, 2020/05/21, added for showing fastbootd when booting into fastbootd mode
-boot.mode=fastbootd
-
+#endif /* OPLUS_FEATURE_RECOVERY_BOOT_REASON */

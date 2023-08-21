@@ -1,113 +1,255 @@
-#line 1 "vendor/oneplus/sepolicy/vendor/common/property_contexts"
-# All the vendor property need to follow the below naming rule
-#             "ctl.odm.",
-#             "ctl.vendor.",
-#             "ctl.start$odm.",
-#             "ctl.start$vendor.",
-#             "ctl.stop$odm.",
-#             "ctl.stop$vendor.",
-#             "init.svc.odm.",
-#             "init.svc.vendor.",
-#             "ro.boot.",
-#             "ro.hardware.",
-#             "ro.odm.",
-#             "ro.vendor.",
-#             "odm.",
-#             "persist.odm.",
-#             "persist.vendor.",
-#             "vendor.
+#line 1 "vendor/oplus/system/sepolicy/vendor/property_contexts"
+# ==============================================
+# OPLUS Policy Rule
+# ==============================================
 
-persist.vendor.oem.bt.debug              u:object_r:vendor_oem_bluetooth_prop:s0
-persist.vendor.oem.btenhanced.debug      u:object_r:vendor_oem_bluetooth_prop:s0
-persist.vendor.oem.btsnoop.debug         u:object_r:vendor_oem_bluetooth_prop:s0
 
-# lynn.guo@display, 2020/07/20, add for cwb debug
-persist.vendor.cwb.debug                 u:object_r:vendor_cwb_prop:s0
-persist.vendor.cwb.dump                  u:object_r:vendor_cwb_prop:s0
+vendor.oppo.camera.                       u:object_r:vendor_oplus_prop:s0
+vendor.camera.vm.parameters               u:object_r:vendor_oplus_prop:s0
 
-#add by connectivity team for Bluetooth log
-persist.vendor.bluetooth.bt.uart.log     u:object_r:vendor_oem_bluetooth_prop:s0
-persist.vendor.service.bdroid.soclog     u:object_r:vendor_bluetooth_prop:s0
-persist.vendor.service.bdroid.snooplog   u:object_r:vendor_bluetooth_prop:s0
+#ifdef VENDOR_EDIT
+#Guotian.Wu@PSW.CN.WiFi.Basic.Log.1162003, 2018/12/13, Add for dynamic collect wifi mini dump
+vendor.oplus.wifi.cnss_diag_pid   u:object_r:vendor_oplus_prop:s0
+#endif /* VENDOR_EDIT */
 
-#brandon.zeng@conn , 2020/04/16, add for nfc
-persist.vendor.nfc.                      u:object_r:vendor_nfc_prop:s0
-vendor.nfc.                              u:object_r:vendor_nfc_prop:s0
-persist.vendor.ese.                      u:object_r:vendor_nfc_prop:s0
+#ifdef
+#Guohaiyue@CONNECTIVITY.WIFI.HARDWARE.FTM, 2021/07/15, Add for engineermode setprop
+persist.vendor.oplus.engineer.test   u:object_r:vendor_oplus_prop:s0
+persist.vendor.oplus.engineer     u:object_r:vendor_oplus_prop:s0
+#endif
 
-# add for whether calibration data exist or not
-vendor.calibration.fingerprint           u:object_r:vendor_fingerprint_prop:s0
-#vendor.calibration.fingerprint           u:object_r:exported_system_prop:s0
 
-# bin.zhong@ASTI, 2019/05/28, add for memory+
-vendor.sys.memplus.postboot       u:object_r:vendor_memplus_prop:s0
+#ifdef OPLUS_FEATURE_DIRAC
+#Lin.shi@MULTIMEDIA.AUDIOSERVER.EFFECT, 2022/02/17, Add for ap dsp dirac property
+persist.odm.dirac.acs.controller      u:object_r:vendor_oplus_prop:s0
+persist.odm.dirac.afm.mode            u:object_r:vendor_oplus_prop:s0
+persist.odm.dirac.acs.startAtBoot     u:object_r:vendor_oplus_prop:s0
+persist.odm.dirac.acs.ignore_error    u:object_r:vendor_oplus_prop:s0
+ro.odm.dirac.acs.startAtBoot          u:object_r:vendor_oplus_prop:s0
+ro.odm.dirac.config                   u:object_r:vendor_oplus_prop:s0
+ro.odm.dirac.poolsize                 u:object_r:vendor_oplus_prop:s0
+ro.odm.dirac.max_active.headset       u:object_r:vendor_oplus_prop:s0
+ro.odm.dirac.acs.storeSettings        u:object_r:vendor_oplus_prop:s0
+ro.odm.dirac.max_active.powersound    u:object_r:vendor_oplus_prop:s0
+odm.dirac.acs.startAtBoot             u:object_r:vendor_oplus_prop:s0
+odm.dirac.path                        u:object_r:vendor_oplus_prop:s0
+#Lin.shi@MULTIMEDIA.AUDIOSERVER.EFFECT, 2022/02/17, Add for dsp dirac property
+persist.odm.dirac.config              u:object_r:vendor_oplus_prop:s0
+persist.odm.dirac.gef.exs.appt        u:object_r:vendor_oplus_prop:s0
+persist.odm.dirac.gef.exs.did         u:object_r:vendor_oplus_prop:s0
+persist.odm.dirac.gef.exs.mid         u:object_r:vendor_oplus_prop:s0
+persist.odm.dirac.gef.ext.appt        u:object_r:vendor_oplus_prop:s0
+persist.odm.dirac.gef.ext.did         u:object_r:vendor_oplus_prop:s0
+persist.odm.dirac.gef.ext.mid         u:object_r:vendor_oplus_prop:s0
+persist.odm.dirac.gef.ins.appt        u:object_r:vendor_oplus_prop:s0
+persist.odm.dirac.gef.ins.did         u:object_r:vendor_oplus_prop:s0
+persist.odm.dirac.gef.ins.mid         u:object_r:vendor_oplus_prop:s0
+persist.odm.dirac.gef.int.appt        u:object_r:vendor_oplus_prop:s0
+persist.odm.dirac.gef.int.did         u:object_r:vendor_oplus_prop:s0
+persist.odm.dirac.gef.int.mid         u:object_r:vendor_oplus_prop:s0
+persist.odm.dirac.gef.oppo.syss       u:object_r:vendor_oplus_prop:s0
+odm.dirac.acs.storeSettings           u:object_r:vendor_oplus_prop:s0
+persist.odm.dirac.acs.storeSettings   u:object_r:vendor_oplus_prop:s0
+#endif /* OPLUS_FEATURE_DIRAC */
 
-# yuquan.fei@connectivity, 2020/4/14, porting wlan log mechanism
-persist.vendor.oem.wifi.debug            u:object_r:vendor_oem_wifi_prop:s0
-persist.vendor.oem.wifi.cnssdiag         u:object_r:vendor_oem_wifi_prop:s0
-persist.vendor.oem.wifi.logpath          u:object_r:vendor_oem_wifi_prop:s0
-persist.vendor.oem.wifi.copytosd         u:object_r:vendor_oem_wifi_prop:s0
-persist.vendor.oem.wifi.chain            u:object_r:vendor_oem_wifi_prop:s0
-persist.vendor.tcpdump.copy              u:object_r:vendor_oem_wifi_prop:s0
-persist.vendor.tcpdump.dir               u:object_r:vendor_oem_wifi_prop:s0
-persist.vendor.tcpdump.mdpermission      u:object_r:vendor_oem_wifi_prop:s0
-persist.vendor.tcpdump.location          u:object_r:vendor_oem_wifi_prop:s0
-vendor.wlan.write.con_mode               u:object_r:vendor_set_wlan_prop:s0
-vendor.wlan.hotspot.forceChannel         u:object_r:vendor_oem_wifi_prop:s0
-vendor.wlan.sniffer.iface                u:object_r:vendor_oem_wifi_prop:s0
-vendor.wlan.sniffer.channel              u:object_r:vendor_oem_wifi_prop:s0
-vendor.wlan.sniffer.bandwidth            u:object_r:vendor_oem_wifi_prop:s0
-vendor.wlan.sniffer.output_dir           u:object_r:vendor_oem_wifi_prop:s0
-vendor.wlan.sniffer.vendor_dir           u:object_r:vendor_oem_wifi_prop:s0
-vendor.wlan.sniffer.file                 u:object_r:vendor_oem_wifi_prop:s0
-vendor.wlan.sniffer.status               u:object_r:vendor_oem_wifi_prop:s0
-vendor.wlan.sniffer.enabled              u:object_r:vendor_oem_wifi_prop:s0
-vendor.wlan.sniffer.dump                 u:object_r:vendor_oem_wifi_prop:s0
-vendor.wlan.ftm.up                       u:object_r:vendor_set_wlan_prop:s0
-vendor.wlan.ftm.daemon                   u:object_r:vendor_set_wlan_prop:s0
-vendor.wlan.driver.status                u:object_r:vendor_set_wlan_prop:s0
+#ifdef OPLUS_FEATURE_WIFI_DUMP
+#JiaoBo@CONNECTIVITY.WIFI.BASIC.LOG.1162003, 2018/7/02
+#add for wifi dump related log collection and DCS handle, dynamic enable/disable wifi core dump, offer trigger wifi dump API.
+vendor.oplus.wifi.dump.status        u:object_r:vendor_oplus_prop:s0
+vendor.oplus.wifi.dump.failureDesc        u:object_r:vendor_oplus_prop:s0
+#endif /* OPLUS_FEATURE_WIFI_DUMP */
 
-persist.vendor.oem.fp.version            u:object_r:vendor_fingerprint_prop:s0
+#ifdef OPLUS_FEATURE_WIFI_RUSUPGRADE
+#JiaoBo@CONNECTIVITY.WIFI.BASIC.HARDWARE.2795386, 2020/02/20
+#add for: support auto update function, include mtk fw, mtk wifi.cfg, qcom fw, qcom bdf, qcom ini
+vendor.oplus.wifi.rus.version u:object_r:vendor_oplus_prop:s0
+vendor.oplus.wifi.rus.upgrade.ctl u:object_r:vendor_oplus_prop:s0
+#endif /* OPLUS_FEATURE_WIFI_RUSUPGRADE */
 
-# alex.haung@connectivity, 2020/4/23, add for *#8019# system app set property
-vendor.oem.wifi.socket.quit              u:object_r:vendor_set_wlan_prop:s0
-vendor.service.wifi.socket.mdm.enable    u:object_r:vendor_oem_wifi_prop:s0
-vendor.service.wifi.socket.lahaina.enable    u:object_r:vendor_oem_wifi_prop:s0
-vendor.diag.pid                              u:object_r:vendor_set_wlan_prop:s0
-vendor.service.wifi.socket.enable        u:object_r:vendor_oem_wifi_prop:s0
+#ifdef OPLUS_FEATURE_WIFI_SILENCERECOVERY
+#JiaoBo@CONNECTIVITY.WIFI.BASIC.SWITCH.200809, 2020/07/20
+#Add for: wifi driver recovery
+vendor.oplus.wifi.reloaddriver  u:object_r:vendor_oplus_prop:s0
+#endif /* OPLUS_FEATURE_WIFI_SILENCERECOVERY */
 
-# alex.huang@connectivity, 2020/05/25, add for RF test
-persist.vendor.oem.wifi.txenable         u:object_r:vendor_oem_wifi_prop:s0
+ro.vendor.oplus.version  u:object_r:vendor_oplus_prop:s0
+ro.vendor.oplus.radio.multisim.config  u:object_r:vendor_oplus_prop:s0
 
-#kawhi.chen@connectivity, 2020/04/22, add for gps
-persist.vendor.oem.gps.debug             u:object_r:vendor_gps_prop:s0
+#ifdef OPLUS_FEATURE_CTS_FINGERPRINT
+#Haiping.Zhong@ANDROID.CTS.1626045, 2018/12/28, Add for Android_P_VTS_GSI_fingerprint
+ro.vendor.gsi.build.flavor  u:object_r:vendor_oplus_prop:s0
+ro.vendor.gsi.version_variant u:object_r:vendor_oplus_prop:s0
+#endif /* OPLUS_FEATURE_CTS_FINGERPRINT*/
 
-# kim.ba@bsp, 2020/4/27, add for 5G diag port
-persist.vendor.sdx50m.online             u:object_r:vendor_usb_prop:s0
+#ifdef VENDOR_EDIT
+#Haoran.Zhang@Tech.CTS.1626045, 2018/12/28, Add for Android_Q_VTS_GSI_fingerprint
+ro.vendor.version_variant u:object_r:vendor_oplus_prop:s0
+#endif
 
-# gt.chang@Connectivity, 2019/09/02, [ITN-61] Select Antenna for BTtestmode
-persist.vendor.oneplus.bt               u:object_r:vendor_oem_bluetooth_prop:s0
-persist.vendor.oneplus.bttestmode       u:object_r:vendor_oem_bluetooth_prop:s0
+#ifdef OPLUS_FEATURE_ENGINEERTOOLS
+vendor.oplus.diag.socket.ip         u:object_r:vendor_engineer_prop:s0
+vendor.oplus.diag.socket.port         u:object_r:vendor_engineer_prop:s0
+vendor.oplus.diag.socket.pid         u:object_r:vendor_engineer_prop:s0
+vendor.oplus.diag.socket.retry         u:object_r:vendor_engineer_prop:s0
+vendor.oplus.diag.socket.channel         u:object_r:vendor_engineer_prop:s0
+vendor.oplus.engineer.adb.flag        u:object_r:vendor_engineer_prop:s0
+vendor.oplus.engineer.adb.address     u:object_r:vendor_engineer_prop:s0
+vendor.oplus.engineer.adb.state        u:object_r:vendor_engineer_adb_state_prop:s0
 
-# bruce.chenyc@Network, 2020/08/20, add for fingerprint
-ro.vendor.build.display.full_id           u:object_r:vendor_rild_prop:s0
+persist.vendor.engineer.hide.      u:object_r:vendor_engineer_hide_prop:s0
+#add for engineermode bluetooth prop
+vendor.bluetooth.soc u:object_r:vendor_engineer_bluetooth_prop:s0
+#endif /* OPLUS_FEATURE_ENGINEERTOOLS */
 
-# ajinath@SYSTEM, 2020/01/24, [OSP-2080] Recovery boot reason
-vendor.oem.rbr.log.clean             u:object_r:vendor_default_prop:s0
+#ifdef VENDOR_EIDT
+#qian.chen@BSP.Fingerprint.Face, 2020/04/27, modify for face
+persist.vendor.oplus.face.sdk.version u:object_r:vendor_oplus_bsp_face_version:s0
+persist.vendor.oplus.face.model.version u:object_r:vendor_oplus_bsp_face_version:s0
+persist.vendor.face.updateflag u:object_r:vendor_oplus_bsp_face_version:s0
+#endif
 
-# oscar.wei@SYSTEM, 2020/09/21, [AN-604] add for opdiagnose
-vendor.copy.opdiagnose.data              u:object_r:vendor_shell_prop:s0
+#ifdef OPLUS_FEATURE_ESIM
+#ChenGuoyao@NETWORK.SIM, 2020/06/15, Add for Esim
+persist.vendor.esim.gpio.status u:object_r:vendor_esim_gpio_status_prop:s0
+ro.vendor.oplus.esim.support  u:object_r:vendor_oplus_prop:s0
+#endif OPLUS_FEATURE_ESIM
 
-vendor.diag.mdpid     u:object_r:vendor_modem_diag_prop:s0
+#ifdef OPLUS_FEATURE_AUDIO_FTM
+#LiLe@PSW.MM.FTM,2019/12/06, Add for ftm audio test
+vendor.oplus.mm.ftm_spk u:object_r:vendor_oplus_audio_prop:s0
+vendor.oplus.mm.ftm_spk1 u:object_r:vendor_oplus_audio_prop:s0
+#endif /* OPLUS_FEATURE_AUDIO_FTM */
 
-#heilay.he@MM.Audio, 2020/09/30, add permission for vendor_db_security_prop
-ro.vendor.product.manufacturer.db  u:object_r:vendor_db_security_prop:s0
-ro.vendor.product.device.db  u:object_r:vendor_db_security_prop:s0
+#network property start
+#HeZhihui@NETWORK.ARCH, 2020/06/12, add network property
+persist.vendor.oplus.radio. u:object_r:vendor_oplus_network_prop:s0
+ro.vendor.oplus.radio.      u:object_r:vendor_oplus_network_prop:s0
+vendor.oplus.radio.         u:object_r:vendor_oplus_network_prop:s0
 
-# henry@system, 2021/02/05, add prop for trigger delete
-vendor.oem.flashvaltest.clear           u:object_r:vendor_oem_wifi_prop:s0
+#ifdef VENDOR_EDIT
+#Weidong.Chen@PSW.NW.RF, 2020.1.16
+#Add for modem dump file permission
+vendor.modem_dump_action       u:object_r:vendor_oplus_prop:s0
+#endif
+
+#ifdef OPLUS_ARCH_NFC
+#HuangRuhong@CONNECTIVITY.NFC.ARCH, 2020/06/29, Add for: oplus nfc hidl
+vendor.nfc_se.config_ready  u:object_r:vendor_nfc_se_prop:s0
+#endif OPLUS_ARCH_NFC
+
+#ifdef OPLUS_ARCH_NFC
+#Liuwenjie@Connectivity.NFC.Basic.674419, 2020/12/01, Add for: Add for:set firmware version to property
+vendor.oplus.nfc.fw.version  u:object_r:vendor_nfc_se_prop:s0
+#endif OPLUS_ARCH_NFC
+
+#ifdef VENDOR_EDIT
+#Hao.Yao@PSW.NW.REG.2736334,2020/01/16,Add for 5gSupported config
+ro.vendor.oppo.radio.5gSupport  u:object_r:vendor_oplus_prop:s0
+#endif
+
+#LuanShaopu@NETWORK.ARCH.1427560, 2021/08/19, add for sts-rfs-omf
+vendor.copy_dcs_olog    u:object_r:vendor_sts_prop:s0
+
+#network property end
+
+#ifdef OPLUS_FEATURE_OTA
+#Shuangquan.Du@PSW.AD.Recovery.0, 2020/06/08, add for update recovery.img
+ro.boot.recovery.updated    u:object_r:vendor_oplus_prop:s0
+#endif /* OPLUS_FEATURE_OTA */
+
+#ifdef OPLUS_ARCH_EXTENDS
+#liuhaituo@AudioDriver.AudioParams, 2021/12/23, add for multi parameters
+ro.vendor.oplus.audiodriver.operator u:object_r:vendor_oplus_prop:s0
+#endif
+
+#ifdef OPLUS_BUG_CTS
+#liangzhuo.xie@ANDROID.CTS, 2020/06/11, Add for self-init
+ro.vendor.oplus.version_suffix u:object_r:vendor_oplus_prop:s0
+ro.vendor.oplus.exp.version u:object_r:vendor_oplus_prop:s0
+ro.vendor.oplus.regionmark  u:object_r:vendor_oplus_prop:s0
+ro.vendor.oplus.operator  u:object_r:vendor_oplus_prop:s0
+ro.vendor.oplus.euex.country  u:object_r:vendor_oplus_prop:s0
+ro.vendor.oplus.market.name  u:object_r:vendor_oplus_prop:s0
+ro.vendor.oplus.market.enname u:object_r:vendor_oplus_prop:s0
+ro.vendor.oplus.gundam u:object_r:vendor_oplus_prop:s0
+#endif OPLUS_BUG_CTS
+#ifdef VENDOR_EDIT
+# YunMang.Xiao@PSW.MM.AudioServer.FrameWork, 2019/06/18, add for dolby security check
+ro.vendor.dolby.model    u:object_r:vendor_oplus_prop:s0
+ro.vendor.dolby.device   u:object_r:vendor_oplus_prop:s0
+ro.vendor.dolby.manufacturer   u:object_r:vendor_oplus_prop:s0
+ro.vendor.dolby.brand    u:object_r:vendor_oplus_prop:s0
+#endif /* VENDOR_EDIT */
+
+#ifdef VENDOR_EDIT
+#Guotian.Wu@CONNECTIVITY.WIFI.HARDWARE.MAC.2959708 , 2022/01/09, Add for use qmi interface to get WLAN MAC ADDR
+vendor.vold.serialno        u:object_r:vendor_oplus_prop:s0
+#endif /* VENDOR_EDIT */
+
+#ifdef VENDOR_EDIT
+#Tao.Hui@CONNECTIVITY.WIFI.BASIC.HARDWARE.1065227, 2020/08/31, Add for ftm get bdfversion
+ro.vendor.oplus.wifi.bdfver    u:object_r:vendor_oplus_prop:s0
+ro.vendor.oplus.wifi.bdfuver    u:object_r:vendor_oplus_prop:s0
+#endif /* VENDOR_EDIT */
+
+#ifdef OPLUS_FEATURE_ZRAM_WRITEBACK
+#Huangwen.Chen@OPTIMIZATION, 2021/01/11, Add for zram writeback
+vendor.sys.zwriteback.postboot  u:object_r:vendor_zwriteback_prop:s0
+#endif /* OPLUS_FEATURE_ZRAM_WRITEBACK */
+
+#ifdef OPLUS_FEATURE_WIFI_SNIFFER
+#LiangXiao@CONNECTIVITY.WIFI.BASIC.LOG.7267, 2020/09/15
+#Add for: wifi sniffer log copy
+vendor.oplus.sniffer.on  u:object_r:vendor_oplus_prop:s0
+#endif /* OPLUS_FEATURE_WIFI_SNIFFER */
+
+#OPLUS_FEATURE_OSIE_SR
+#shumin.nie@MULTIMEDIA.MMSERVER.PLAYER, 2020/12/07, Add for OSIE and SR
+vendor.oplus.media.vpp.osie_sr.on u:object_r:vendor_oplus_prop:s0
+
+#JianRong.Zheng@ANDROID.ENGINEERTOOLS, 2018/09/27, Add for set otg switch property
+#persist.vendor.otg.switch          u:object_r:vendor_otg_switch_prop:s0
+
+#TanZhengpeng@Network, 2021/01/29, Add for limit read permission of gsm.serial
+vendor.gsm.serial     u:object_r:vendor_nw_exported_system_prop:s0
+
+#ifdef OPLUS_FEATURE_CWB
+#Lynn.Guo@MULTIMEDIA.DISPLAY.PANEL, 2022/01/24, add for cwb
+persist.vendor.oplus.display.cwb.debug                 u:object_r:vendor_cwb_prop:s0
+persist.vendor.oplus.display.cwb.dump                  u:object_r:vendor_cwb_prop:s0
+ro.vendor.oplus.display.cwb.rotate                     u:object_r:vendor_cwb_prop:s0
+#endif OPLUS_FEATURE_CWB
+
+#Tianyuankang@Network, 2022/03/17, Add for limit read permission of vendor.gsm.phoneserial
+vendor.gsm.phoneserial     u:object_r:vendor_nw_exported_system_prop:s0
+
+vendor.wifi.addr     u:object_r:vendor_nw_exported_system_prop:s0
+vendor.gsm.countrycode     u:object_r:vendor_nw_exported_system_prop:s0
+vendor.gsm.engineersign     u:object_r:vendor_nw_exported_system_prop:s0
+
+#ifdef OPLUS_FEATURE_PERFORMANCE
+#Zhenkun.Huang@ANDROID.PERFORMANCE.2278905, 2021/09/27, add for performance prop config
+vendor.oplus.dalvik.     u:object_r:vendor_oplus_prop:s0
+ro.vendor.config.oplus.  u:object_r:vendor_oplus_prop:s0
+#endif /* OPLUS_FEATURE_PERFORMANCE */
+
+#ifdef OPLUS_FEATURE_MDMFEATURE
+#Xueqian.Zheng@NETWORK.SIM.2500814, 2021/11/5, add for mdm feature
+ro.vendor.oplus.mdmfeature    u:object_r:vendor_oplus_prop:s0
+#endif
+
+#PSW.MM.Display.HWC, 2022/01/07, Add for HWC hal set property
+vendor.dps.dump.composerpid   u:object_r:vendor_oplus_prop:s0
+
+#ifdef OPLUS_FEATURE_WIFI_FTM
+#XiaSong@CONNECTIVITY.WIFI.HARDWARE.FTM.1911335, 2021/08/03, add for wlan ko insmod
+ro.vendor.oplus.wlan.ko u:object_r:vendor_oplus_prop:s0
+#endif /*OPLUS_FEATURE_WIFI_FTM*/
+
+#xupengcheng@MULTIMEDIA.LCD.DISPLAY 2022/04/25, Add for disable qcom dfs property
+ro.vendor.oplus.display.disable_qcom_dfps    u:object_r:vendor_oplus_prop:s0
 #line 1 "device/qcom/sepolicy_vndr/generic/vendor/common/property_contexts"
-# Copyright (c) 2018-2020, The Linux Foundation. All rights reserved.
+# Copyright (c) 2018-2021, The Linux Foundation. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -179,6 +321,7 @@ vendor.wlan.firmware.version     u:object_r:vendor_wifi_version:s0
 persist.vendor.usb.        u:object_r:vendor_usb_prop:s0
 ro.vendor.usb.             u:object_r:vendor_usb_prop:s0
 vendor.display.               u:object_r:vendor_display_prop:s0
+vendor.display.disable_rounded_corner_thread  u:object_r:vendor_display_prop:s0
 ro.vendor.display.            u:object_r:vendor_display_prop:s0
 persist.vendor.display.       u:object_r:vendor_display_prop:s0
 vendor.gralloc.            u:object_r:vendor_gralloc_prop:s0
@@ -241,16 +384,23 @@ vendor.display.qdcm_socket_service u:object_r:vendor_qdcmss_prop:s0
 vendor.keymaster.strongbox.version u:object_r:vendor_km_strongbox_version_prop:s0
 ctl.vendor.keymaster-sb-4-0        u:object_r:vendor_km_strongbox_version_prop:s0
 ctl.vendor.authsecret.qti-1-0      u:object_r:vendor_km_strongbox_version_prop:s0
+#ifdef OPLUS_FEATURE_SECURITY_COMMON
+#ctl.keymaster-sb-4-0               u:object_r:vendor_km_strongbox_version_prop:s0
+#endif
 
 #vendor-adsprpc
 vendor.fastrpc.                  u:object_r:vendor_adsprpc_prop:s0
 
-# QCV properties for storing soc_id and soc_name
+# QCV properties for storing soc_id, soc_name and soc_model
 ro.vendor.qti.soc_id         u:object_r:vendor_soc_id_prop:s0
 ro.vendor.qti.soc_name       u:object_r:vendor_soc_name_prop:s0
+ro.vendor.qti.soc_model      u:object_r:vendor_soc_model_prop:s0
 
 #kernel console log level
 persist.vendor.console.silent.config    u:object_r:vendor_console_log_level_prop:s0
+
+#qteeconnector properties
+persist.vendor.qteeconnector.           u:object_r:vendor_qteeconnector_opti_prop:s0
 
 vendor.dcvs.prop                 u:object_r:vendor_dcvs_prop:s0
 #line 1 "device/qcom/sepolicy_vndr/qva/vendor/common/property_contexts"
@@ -289,6 +439,7 @@ ctl.vendor.dataadpl                          u:object_r:vendor_dataadpl_prop:s0
 vendor.spcom.                                u:object_r:vendor_spcomlib_prop:s0
 persist.vendor.bt.soc.scram_freqs            u:object_r:vendor_bluetooth_prop:s0
 ctl.vendor.mdm_helper                        u:object_r:vendor_mdm_helper_prop:s0
+ctl.vendor.hvdcp_opti                        u:object_r:vendor_hvdcp_opti_prop:s0
 
 # qcc property
 vendor.qti.qdma.                             u:object_r:vendor_qcc_prop:s0
@@ -326,6 +477,9 @@ vendor.sys.boot_mode                         u:object_r:vendor_boot_mode_prop:s0
 vendor.media.target.version                  u:object_r:vendor_video_prop:s0
 vendor.video.disable.ubwc                    u:object_r:vendor_video_prop:s0
 vendor.media.target_variant                  u:object_r:vendor_video_prop:s0
+vendor.media.target.qssi                     u:object_r:vendor_video_prop:s0
+vendor.media.system.build_codename           u:object_r:vendor_video_prop:s0
+vendor.netflix.bsp_rev                       u:object_r:vendor_video_prop:s0
 
 # factory properties
 ctl.vendor.mmid                              u:object_r:vendor_ctl_vendor_mmid_prop:s0
@@ -391,36 +545,7 @@ ro.vendor.pasr.                              u:object_r:vendor_pasr_prop:s0
 
 #MWQEM
 persist.vendor.mwqem.                        u:object_r:vendor_mwqem_prop:s0
-#line 1 "device/qcom/sepolicy_vndr/qva/vendor/lahaina/property_contexts"
-# Copyright (c) 2020, The Linux Foundation. All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are
-# met:
-#     * Redistributions of source code must retain the above copyright
-#       notice, this list of conditions and the following disclaimer.
-#     * Redistributions in binary form must reproduce the above
-#       copyright notice, this list of conditions and the following
-#       disclaimer in the documentation and/or other materials provided
-#       with the distribution.
-#     * Neither the name of The Linux Foundation nor the names of its
-#       contributors may be used to endorse or promote products derived
-#       from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR IMPLIED
-# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT
-# ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
-# BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
-# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
-# IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#face3d
-persist.vendor.biometricsface.pr u:object_r:vendor_face3d_producer_prop:s0
 #line 1 "system/sepolicy/reqd_mask/property_contexts"
 # empty property_contexts file - this file is used to generate an empty
 # non-platform property context for devices without any property_contexts
