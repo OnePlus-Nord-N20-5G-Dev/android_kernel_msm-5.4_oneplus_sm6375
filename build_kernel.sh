@@ -1,10 +1,10 @@
 #!/bin/bash
 export KERNELDIR=`readlink -f .`
 export RAMFS_SOURCE=`readlink -f $KERNELDIR/ramdisk`
-export PARTITION_SIZE=134217728
+export PARTITION_SIZE=167772160
 
-export OS="11.0.0"
-export SPL="2021-05"
+export OS="12.0.0"
+export SPL="2023-06"
 
 echo "kerneldir = $KERNELDIR"
 echo "ramfs_source = $RAMFS_SOURCE"
@@ -18,7 +18,7 @@ if [[ "${1}" == "skip" ]] ; then
 	echo "Skipping Compilation"
 else
 	echo "Compiling kernel"
-	cp defconfig .config
+	cp arch/arm64/configs/vendor/holi-qgki_defconfig .config
 	make "$@" || exit 1
 fi
 
