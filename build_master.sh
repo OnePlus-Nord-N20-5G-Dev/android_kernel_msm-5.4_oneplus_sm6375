@@ -22,12 +22,12 @@ is_slot_device=1
 ramdisk_compression=gzip
 " > kernelzip/props
 	cp -rp ~/android/anykernel/* kernelzip/
-	find . -name '*.dtb' -exec cat {} + > kernelzip/dtb
-	cp arch/arm64/boot/dtbo.img kernelzip/
+	find ./out/ -name '*.dtb' -exec cat {} + > kernelzip/dtb
+	cp out/arch/arm64/boot/dtbo.img kernelzip/
 	touch kernelzip/vendor_boot
 	cd kernelzip/
 	7z a -mx9 arter97-kernel-$VERSION-tmp.zip *
-	7z a -mx0 arter97-kernel-$VERSION-tmp.zip ../arch/arm64/boot/Image.gz
+	7z a -mx0 arter97-kernel-$VERSION-tmp.zip ../out/arch/arm64/boot/Image
 	zipalign -v 4 arter97-kernel-$VERSION-tmp.zip ../arter97-kernel-$VERSION.zip
 	rm arter97-kernel-$VERSION-tmp.zip
 	cd ..
