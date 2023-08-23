@@ -155,4 +155,7 @@ obj-$(CONFIG_REGULATOR_SPM) += spm-regulator.o
 obj-$(CONFIG_REGULATOR_STUB) += stub-regulator.o
 obj-$(CONFIG_VIRTIO_REGULATOR) += virtio_regulator.o
 
+obj-$(CONFIG_REGULATOR_OPLUS_FAN53870) +=  oplus_camera_fan53870.o
+obj-$(CONFIG_REGULATOR_OPLUS_WL2868C) +=  oplus_camera_wl2868c.o
+
 ccflags-$(CONFIG_REGULATOR_DEBUG) += -DDEBUG

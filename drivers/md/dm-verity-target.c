@@ -284,7 +284,13 @@ out:
 #ifdef CONFIG_DM_VERITY_AVB
 		dm_verity_avb_error_handler();
 #endif
+
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_FEEDBACK)
+		panic("dm-verity device corrupted");
+#else
 		kernel_restart("dm-verity device corrupted");
+#endif /* CONFIG_OPLUS_FEATURE_FEEDBACK */
+
 	}
 
 	return 1;
@@ -1227,7 +1233,13 @@ retry_dev2:
 	}
 
 	/* WQ_UNBOUND greatly improves performance when running on ramdisk */
+
+#if defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
+	v->verify_wq = alloc_workqueue("kverityd", WQ_CPU_INTENSIVE | WQ_MEM_RECLAIM | WQ_UNBOUND | WQ_UX, num_online_cpus());
+#else
 	v->verify_wq = alloc_workqueue("kverityd", WQ_CPU_INTENSIVE | WQ_MEM_RECLAIM | WQ_UNBOUND, num_online_cpus());
+#endif
+
 	if (!v->verify_wq) {
 		ti->error = "Cannot allocate workqueue";
 		r = -ENOMEM;
