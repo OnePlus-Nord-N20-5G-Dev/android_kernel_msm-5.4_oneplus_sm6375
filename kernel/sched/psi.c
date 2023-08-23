@@ -141,6 +141,9 @@
 #include <linux/poll.h>
 #include <linux/psi.h>
 #include "sched.h"
+#if defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
+#include <linux/sched_assist/sched_assist_common.h>
+#endif
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/psi.h>
@@ -231,8 +234,15 @@ static bool test_state(unsigned int *tasks, enum psi_states state)
 		return tasks[NR_MEMSTALL];
 	case PSI_MEM_FULL:
 		return tasks[NR_MEMSTALL] && !tasks[NR_RUNNING];
+#if defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
+	case PSI_UXMEM_SOME:
+		return tasks[NR_UXMEMSTALL];
+	case PSI_UXMEM_FULL:
+		return tasks[NR_UXMEMSTALL] && !tasks[NR_RUNNING];
+#endif
 	case PSI_CPU_SOME:
 		return tasks[NR_RUNNING] > 1;
+	/* UXMEMSTALL is part of MEMSTALL, no need to count it here */
 	case PSI_NONIDLE:
 		return tasks[NR_IOWAIT] || tasks[NR_MEMSTALL] ||
 			tasks[NR_RUNNING];
@@ -707,6 +717,23 @@ static void record_times(struct psi_group_cpu *groupc, int cpu,
 		}
 	}
 
+#if defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
+	if(groupc->state_mask & (1 << PSI_UXMEM_SOME)) {
+		groupc->times[PSI_UXMEM_SOME] += delta;
+		if (groupc->state_mask & (1 << PSI_UXMEM_FULL))
+			groupc->times[PSI_UXMEM_FULL] += delta;
+		else if (memstall_tick) {
+			struct rq *rq = cpu_rq(cpu);
+			u32 sample;
+			/* add to FULL if current is UX */
+			if (test_task_ux(rq->curr)) {
+				sample = min(delta, (u32)jiffies_to_nsecs(1));
+				groupc->times[PSI_UXMEM_FULL] += sample;
+			}
+		}
+	}
+#endif
+
 	if (groupc->state_mask & (1 << PSI_CPU_SOME))
 		groupc->times[PSI_CPU_SOME] += delta;
 
@@ -798,6 +825,18 @@ void psi_task_change(struct task_struct *task, int clear, int set)
 
 	if (!task->pid)
 		return;
+
+#if defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
+	/*
+	 * UXMEMSTALL is part of MEMSTALL, if a task exit memstall,
+	 * it also need exit ux_memstall. A task may exit memstall
+	 * without ux while it enter as ux.
+	 */
+	if ((clear & TSK_MEMSTALL) && (task->psi_flags & TSK_UXMEMSTALL))
+		clear |= TSK_UXMEMSTALL;
+	if ((set & TSK_MEMSTALL) && test_task_ux(task))
+		set |= TSK_UXMEMSTALL;
+#endif
 
 	if (((task->psi_flags & set) ||
 	     (task->psi_flags & clear) != clear) &&
@@ -1029,6 +1068,13 @@ static int psi_memory_show(struct seq_file *m, void *v)
 	return psi_show(m, &psi_system, PSI_MEM);
 }
 
+#if defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
+static int psi_uxmem_show(struct seq_file *m, void *v)
+{
+	return psi_show(m, &psi_system, PSI_UXMEM);
+}
+#endif
+
 static int psi_cpu_show(struct seq_file *m, void *v)
 {
 	return psi_show(m, &psi_system, PSI_CPU);
@@ -1043,6 +1089,13 @@ static int psi_memory_open(struct inode *inode, struct file *file)
 {
 	return single_open(file, psi_memory_show, NULL);
 }
+
+#if defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
+static int psi_uxmem_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, psi_uxmem_show, NULL);
+}
+#endif
 
 static int psi_cpu_open(struct inode *inode, struct file *file)
 {
@@ -1270,6 +1323,14 @@ static ssize_t psi_memory_write(struct file *file, const char __user *user_buf,
 	return psi_write(file, user_buf, nbytes, PSI_MEM);
 }
 
+#if defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
+static ssize_t psi_uxmem_write(struct file *file, const char __user *user_buf,
+				size_t nbytes, loff_t *ppos)
+{
+	return psi_write(file, user_buf, nbytes, PSI_UXMEM);
+}
+#endif
+
 static ssize_t psi_cpu_write(struct file *file, const char __user *user_buf,
 			     size_t nbytes, loff_t *ppos)
 {
@@ -1318,12 +1379,26 @@ static const struct file_operations psi_cpu_fops = {
 	.release        = psi_fop_release,
 };
 
+#if defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
+static const struct file_operations psi_uxmem_fops = {
+	.open           = psi_uxmem_open,
+	.read           = seq_read,
+	.llseek         = seq_lseek,
+	.write          = psi_uxmem_write,
+	.poll           = psi_fop_poll,
+	.release        = psi_fop_release,
+};
+#endif
+
 static int __init psi_proc_init(void)
 {
 	proc_mkdir("pressure", NULL);
 	proc_create("pressure/io", 0, NULL, &psi_io_fops);
 	proc_create("pressure/memory", 0, NULL, &psi_memory_fops);
 	proc_create("pressure/cpu", 0, NULL, &psi_cpu_fops);
+#if defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
+	proc_create("pressure/uxmem", 0, NULL, &psi_uxmem_fops);
+#endif
 	return 0;
 }
 module_init(psi_proc_init);

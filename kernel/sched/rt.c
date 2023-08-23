@@ -15,6 +15,14 @@
 
 #include <trace/hooks/sched.h>
 
+#ifdef CONFIG_OPLUS_FEATURE_GAME_OPT
+#include "../../drivers/soc/oplus/game_opt/game_ctrl.h"
+#endif
+
+#ifdef CONFIG_OPLUS_CPU_AUDIO_PERF
+#include "../sched_assist/sched_assist_audio.h"
+#endif
+
 int sched_rr_timeslice = RR_TIMESLICE;
 int sysctl_sched_rr_timeslice = (MSEC_PER_SEC / HZ) * RR_TIMESLICE;
 /* More than 4 hours if BW_SHIFT equals 20. */
@@ -1099,7 +1107,10 @@ static void update_curr_rt(struct rq *rq)
 	account_group_exec_runtime(curr, delta_exec);
 
 	curr->se.exec_start = now;
-	cgroup_account_cputime(curr, delta_exec);
+	cgroup_account_cputime(curr, delta_exec); 
+#ifdef CONFIG_OPLUS_FEATURE_GAME_OPT
+	g_update_task_runtime(curr, delta_exec);
+#endif
 
 	if (!rt_bandwidth_enabled())
 		return;
@@ -1459,8 +1470,12 @@ enqueue_task_rt(struct rq *rq, struct task_struct *p, int flags)
 {
 	struct sched_rt_entity *rt_se = &p->rt;
 
-	if (flags & ENQUEUE_WAKEUP)
+	if (flags & ENQUEUE_WAKEUP) {
 		rt_se->timeout = 0;
+		#if defined(OPLUS_FEATURE_TASK_CPUSTATS) && defined(CONFIG_OPLUS_CTP)
+		trace_sched_blocked_reason(p);
+		#endif /* defined(OPLUS_FEATURE_TASK_CPUSTATS) && defined(CONFIG_OPLUS_CTP) */
+	}
 
 	enqueue_rt_entity(rt_se, flags);
 	walt_inc_cumulative_runnable_avg(rq, p);
@@ -1663,7 +1678,14 @@ static void check_preempt_equal_prio(struct rq *rq, struct task_struct *p)
 
 #ifdef CONFIG_SCHED_WALT
 #define WALT_RT_PULL_THRESHOLD_NS	250000
+#ifdef CONFIG_OPLUS_FEATURE_SCHED_ASSIST
+struct task_struct *pick_highest_pushable_task(struct rq *rq, int cpu);
+#else
 static struct task_struct *pick_highest_pushable_task(struct rq *rq, int cpu);
+#endif
+#if defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
+extern bool slide_rt_boost(struct task_struct *p);
+#endif
 static void try_pull_rt_task(struct rq *this_rq)
 {
 	int i, this_cpu = this_rq->cpu, src_cpu = this_cpu;
@@ -1697,6 +1719,12 @@ static void try_pull_rt_task(struct rq *this_rq)
 
 	if (!p)
 		goto unlock;
+
+#if defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
+	if (slide_rt_boost(p) && (capacity_orig_of(cpu_of(src_rq)) > capacity_orig_of(cpu_of(this_rq)))) {
+		goto unlock;
+	}
+#endif /* defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST) */
 
 	if (sched_ktime_clock() - p->wts.last_wake_ts <
 				WALT_RT_PULL_THRESHOLD_NS)
@@ -1862,7 +1890,11 @@ static int pick_rt_task(struct rq *rq, struct task_struct *p, int cpu)
  * Return the highest pushable rq's task, which is suitable to be executed
  * on the CPU, NULL otherwise
  */
+#ifdef CONFIG_OPLUS_FEATURE_SCHED_ASSIST
+struct task_struct *pick_highest_pushable_task(struct rq *rq, int cpu)
+#else
 static struct task_struct *pick_highest_pushable_task(struct rq *rq, int cpu)
+#endif
 {
 	struct plist_head *head = &rq->rt.pushable_tasks;
 	struct task_struct *p;
@@ -1877,6 +1909,9 @@ static struct task_struct *pick_highest_pushable_task(struct rq *rq, int cpu)
 
 	return NULL;
 }
+#ifdef CONFIG_OPLUS_FEATURE_SCHED_ASSIST
+EXPORT_SYMBOL_GPL(pick_highest_pushable_task);
+#endif
 
 static DEFINE_PER_CPU(cpumask_var_t, local_cpu_mask);
 
@@ -1894,7 +1929,11 @@ static int rt_energy_aware_wake_cpu(struct task_struct *task)
 	unsigned long tutil = task_util(task);
 	int best_cpu_idle_idx = INT_MAX;
 	int cpu_idle_idx = -1;
+#if defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
+	bool boost_on_big = rt_boost_on_big() || slide_rt_boost(task);
+#else
 	bool boost_on_big = rt_boost_on_big();
+#endif
 	bool best_cpu_lt = true;
 
 	rcu_read_lock();
@@ -2013,10 +2052,23 @@ static int find_lowest_rq(struct task_struct *task)
 	int cpu = -1;
 	int ret;
 	int lowest_cpu = -1;
+#ifdef CONFIG_OPLUS_CPU_AUDIO_PERF
+	unsigned int drop_cpu;
+#endif
 
 	trace_android_rvh_find_lowest_rq(task, lowest_mask, &lowest_cpu);
 	if (lowest_cpu >= 0)
 		return lowest_cpu;
+
+#ifdef CONFIG_OPLUS_CPU_AUDIO_PERF
+	/* skip the high idle latency cpu */
+	drop_cpu = cpumask_first(lowest_mask);
+	while (drop_cpu < nr_cpu_ids) {
+		if (oplus_sched_assist_audio_perf_check_exit_latency(task, drop_cpu))
+			cpumask_clear_cpu(drop_cpu, lowest_mask);
+		drop_cpu = cpumask_next(drop_cpu, lowest_mask);
+	}
+#endif
 
 	/* Make sure the mask is initialized first */
 	if (unlikely(!lowest_mask))
