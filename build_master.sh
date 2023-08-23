@@ -18,7 +18,7 @@ do.modules=0
 do.cleanup=1
 do.cleanuponabort=0
 block=/dev/block/bootdevice/by-name/boot
-is_slot_device=1
+is_slot_device=0
 ramdisk_compression=gzip
 " > kernelzip/props
 	cp -rp ~/android/anykernel/* kernelzip/
