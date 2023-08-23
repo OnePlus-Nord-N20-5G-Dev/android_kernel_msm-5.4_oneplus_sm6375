@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (C) 2017 Linaro Ltd.
- * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
  */
-
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/device.h>
@@ -405,7 +403,7 @@ static void qmi_invoke_handler(struct qmi_handle *qmi, struct sockaddr_qrtr *sq,
 			break;
 	}
 
-	if (!handler->fn || !handler->decoded_size)
+	if (!handler->fn)
 		return;
 
 	dest = kzalloc(handler->decoded_size, GFP_KERNEL);

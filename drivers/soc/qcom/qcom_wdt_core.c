@@ -46,6 +46,13 @@ bool copy_early_boot_log = true;
 
 static struct msm_watchdog_data *wdog_data;
 
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_WATCHDOG)
+extern void oplus_dump_cpu_online_smp_call(void);
+extern void oplus_get_cpu_ping_mask(cpumask_t *pmask, int *cpu_idle_pc_state);
+extern void oplus_dump_wdog_cpu(struct task_struct *w_task);
+extern void oplus_show_utc_time(void);
+#endif
+
 static void qcom_wdt_dump_cpu_alive_mask(struct msm_watchdog_data *wdog_dd)
 {
 	static char alive_mask_buf[MASK_SIZE];
@@ -320,10 +327,6 @@ static int qcom_wdt_suspend(void)
 
 	wdog_data->ops->reset_wdt(wdog_data);
 	if (wdog_data->wakeup_irq_enable) {
-#ifdef CONFIG_HIBERNATION
-		wdog_data->ops->disable_wdt(wdog_data);
-		wdog_data->enabled = false;
-#endif
 		wdog_data->last_pet = sched_clock();
 		return 0;
 	}
@@ -345,27 +348,16 @@ static int qcom_wdt_suspend(void)
  */
 static void qcom_wdt_resume(void)
 {
-	uint32_t val;
-
 	if (!wdog_data)
 		return;
 
-	val = BIT(EN);
 	if (wdog_data->wakeup_irq_enable) {
-#ifdef CONFIG_HIBERNATION
-		wdog_data->ops->set_bark_time(wdog_data->bark_time, wdog_data);
-		wdog_data->ops->set_bite_time(wdog_data->bark_time + 3 * 1000, wdog_data);
-
-		val |= BIT(UNMASKED_INT_EN);
-		wdog_data->ops->enable_wdt(val, wdog_data);
-		wdog_data->enabled = true;
-#endif
 		wdog_data->ops->reset_wdt(wdog_data);
 		wdog_data->last_pet = sched_clock();
 		return;
 	}
 
-	wdog_data->ops->enable_wdt(val, wdog_data);
+	wdog_data->ops->enable_wdt(1, wdog_data);
 	wdog_data->ops->reset_wdt(wdog_data);
 	wdog_data->enabled = true;
 	wdog_data->last_pet = sched_clock();
@@ -660,6 +652,11 @@ static void qcom_wdt_keep_alive_response(void *info)
 static void qcom_wdt_ping_other_cpus(struct msm_watchdog_data *wdog_dd)
 {
 	int cpu;
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_WATCHDOG)
+    cpumask_t mask;
+
+    oplus_get_cpu_ping_mask(&mask, wdog_dd->cpu_idle_pc_state);
+#endif /*VENDOR_EDIT*/
 
 	cpumask_clear(&wdog_dd->alive_mask);
 	/* Make sure alive mask is cleared and set in order */
@@ -726,6 +723,10 @@ static __ref int qcom_wdt_kthread(void *arg)
 			wdog_dd->ops->reset_wdt(wdog_dd);
 			wdog_dd->last_pet = sched_clock();
 		}
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_WATCHDOG)
+        /* for UCT time print, over 30s print once */
+        oplus_show_utc_time();
+#endif
 		/* Check again before scheduling
 		 * Could have been changed on other cpu
 		 */
@@ -851,7 +852,13 @@ static irqreturn_t qcom_wdt_bark_handler(int irq, void *dev_id)
 	if (wdog_dd->freeze_in_progress)
 		dev_info(wdog_dd->dev, "Suspend in progress\n");
 
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_WATCHDOG)
+	oplus_dump_cpu_online_smp_call();
+	oplus_dump_wdog_cpu(wdog_dd->watchdog_task);
+	panic("Handle a watchdog bite! - Falling back to kernel panic!");
+#else
 	qcom_wdt_trigger_bite();
+#endif
 
 	return IRQ_HANDLED;
 }
@@ -914,6 +921,7 @@ static int qcom_wdt_init(struct msm_watchdog_data *wdog_dd,
 			return -EINVAL;
 		}
 	}
+
 	INIT_WORK(&wdog_dd->irq_counts_work, compute_irq_stat);
 	atomic_set(&wdog_dd->irq_counts_running, 0);
 	delay_time = msecs_to_jiffies(wdog_dd->pet_time);

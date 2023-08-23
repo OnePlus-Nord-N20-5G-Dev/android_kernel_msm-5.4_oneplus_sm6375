@@ -49,6 +49,10 @@
 #include <linux/dma-contiguous.h>
 #endif
 
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_MINIDUMP_ENHANCE)
+#include <soc/oplus/system/qcom_minidump_enhance.h>
+#endif
+
 #ifdef CONFIG_QCOM_DYN_MINIDUMP_STACK
 
 #include <trace/events/sched.h>
@@ -191,9 +195,11 @@ static void __init register_kernel_sections(void)
 	struct md_region ksec_entry;
 	char *data_name = "KDATABSS";
 	char *rodata_name = "KROAIDATA";
+#ifdef CONFIG_SMP
 	const size_t static_size = __per_cpu_end - __per_cpu_start;
 	void __percpu *base = (void __percpu *)__per_cpu_start;
 	unsigned int cpu;
+#endif
 
 	strlcpy(ksec_entry.name, data_name, sizeof(ksec_entry.name));
 	ksec_entry.virt_addr = (uintptr_t)_sdata;
@@ -209,6 +215,7 @@ static void __init register_kernel_sections(void)
 	if (msm_minidump_add_region(&ksec_entry) < 0)
 		pr_err("Failed to add rodata section in Minidump\n");
 
+#ifdef CONFIG_SMP
 	/* Add percpu static sections */
 	for_each_possible_cpu(cpu) {
 		void *start = per_cpu_ptr(base, cpu);
@@ -222,6 +229,7 @@ static void __init register_kernel_sections(void)
 		if (msm_minidump_add_region(&ksec_entry) < 0)
 			pr_err("Failed to add percpu sections in Minidump\n");
 	}
+#endif
 }
 
 static inline bool in_stack_range(
@@ -263,10 +271,10 @@ void dump_stack_minidump(u64 sp)
 		return;
 
 	is_vmap_stack = IS_ENABLED(CONFIG_VMAP_STACK);
-#ifdef CONFIG_ARM64
-	if (sp < KIMAGE_VADDR || sp > -256UL)
+
+	if (sp < MODULES_END || sp > -256UL)
 		sp = current_stack_pointer;
-#endif
+
 	/*
 	 * Since stacks are now allocated with vmalloc, the translation to
 	 * physical address is not a simple linear transformation like it is
@@ -1259,16 +1267,22 @@ static void md_register_panic_data(void)
 				  &md_slabinfo_seq_buf);
 #ifdef CONFIG_PAGE_OWNER
 	if (is_page_owner_enabled()) {
+/*codebase_r1.0_00004.0 build error*/
+#ifdef CONFIG_PAGE_OWNER
 		md_register_memory_dump(md_pageowner_dump_size, "PAGEOWNER");
 		debugfs_create_file("page_owner_dump_size_mb", 0400, NULL, NULL,
 			    &proc_page_owner_dump_size_ops);
+#endif
 	}
 #endif
 #ifdef CONFIG_SLUB_DEBUG
 	if (is_slub_debug_enabled()) {
+/*codebase_r1.0_00004.0 build error*/
+#ifdef CONFIG_SLUB_DEBUG
 		md_register_memory_dump(md_slabowner_dump_size, "SLABOWNER");
 		debugfs_create_file("slab_owner_dump_size_mb", 0400, NULL, NULL,
 			    &proc_slab_owner_dump_size_ops);
+#endif
 	}
 #endif
 }
@@ -1361,6 +1375,9 @@ static int __init msm_minidump_log_init(void)
 	atomic_notifier_chain_register(&panic_notifier_list, &md_panic_blk);
 #ifdef CONFIG_QCOM_MINIDUMP_PANIC_CPU_CONTEXT
 	register_die_notifier(&md_die_context_nb);
+#endif
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_MINIDUMP_ENHANCE)
+	register_cpu_contex();
 #endif
 #endif
 	return 0;

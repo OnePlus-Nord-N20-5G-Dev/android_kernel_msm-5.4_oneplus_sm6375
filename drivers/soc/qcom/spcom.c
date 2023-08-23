@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2015-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 /*
@@ -632,12 +631,8 @@ static int spcom_handle_create_channel_command(void *cmd_buf, int cmd_size)
 	mutex_lock(&spcom_dev->chdev_count_lock);
 	ret = spcom_create_channel_chardev(cmd->ch_name, cmd->is_sharable);
 	mutex_unlock(&spcom_dev->chdev_count_lock);
-	if (ret) {
-		if (-EINVAL == ret)
-			spcom_pr_err("failed to create channel, ret [%d]\n", ret);
-		else
-			spcom_pr_err("failed to create ch[%s], ret [%d]\n", cmd->ch_name, ret);
-	}
+	if (ret)
+		spcom_pr_err("failed to create ch[%s], ret [%d]\n", cmd->ch_name, ret);
 
 	return ret;
 }
@@ -1946,10 +1941,10 @@ static long spcom_device_ioctl(struct file *file,
 
 	switch (ioctl) {
 	case SPCOM_SET_IONFD:
-		ret = copy_from_user(&spcom_dev->nvm_ion_fd, argp, sizeof(int));
+		ret = get_user(spcom_dev->nvm_ion_fd, (int32_t *)arg);
 		break;
 	case SPCOM_GET_IONFD:
-		ret = copy_to_user(argp, &spcom_dev->nvm_ion_fd, sizeof(int));
+		ret = put_user(spcom_dev->nvm_ion_fd, (int32_t *)arg);
 		break;
 	case SPCOM_POLL_STATE:
 		ret = copy_from_user(&op, argp,
@@ -2648,8 +2643,11 @@ static int spcom_remove(struct platform_device *pdev)
 		rx_item = list_last_entry(&spcom_dev->rx_list_head,
 					  struct rx_buff_list, list);
 		list_del(&rx_item->list);
-		if (!rx_item)
+		if (!rx_item) {
 			spcom_pr_err("empty entry in pending rx list\n");
+			spin_lock_irqsave(&spcom_dev->rx_lock, flags);
+			continue;
+		}
 		kfree(rx_item);
 	}
 	spin_unlock_irqrestore(&spcom_dev->rx_lock, flags);

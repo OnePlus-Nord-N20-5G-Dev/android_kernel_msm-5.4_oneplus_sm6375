@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/* Copyright (c) 2013-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+/* Copyright (c) 2013-2020, The Linux Foundation. All rights reserved.
  */
 
 #include <linux/err.h>
@@ -494,15 +493,6 @@ static void handle_alloc_generic_req(struct qmi_handle *handle,
 		}
 	}
 
-	if (!client_node) {
-		dev_err(memsh_drv->dev,
-			"memshare_alloc: No valid client node found\n");
-		kfree(alloc_resp);
-		alloc_resp = NULL;
-		mutex_unlock(&memsh_drv->mem_share);
-		return;
-	}
-
 	if (!memblock[index].allotted) {
 		if (memblock[index].guard_band && alloc_req->num_bytes > 0)
 			size = alloc_req->num_bytes + MEMSHARE_GUARD_BYTES;
@@ -594,13 +584,6 @@ static void handle_free_generic_req(struct qmi_handle *handle,
 				free_req->client_id, index);
 			break;
 		}
-	}
-
-	if (!client_node) {
-		dev_err(memsh_drv->dev,
-			"memshare_free: No valid client node found\n");
-		mutex_unlock(&memsh_drv->mem_free);
-		return;
 	}
 
 	if (!flag && !memblock[index].guarantee &&
@@ -796,7 +779,6 @@ static void memshare_init_worker(struct work_struct *work)
 		dev_err(memsh_drv->dev,
 			"memshare: Creating mem_share_svc qmi handle failed\n");
 		kfree(mem_share_svc_handle);
-		mem_share_svc_handle = NULL;
 		destroy_workqueue(mem_share_svc_workqueue);
 		return;
 	}
@@ -805,11 +787,8 @@ static void memshare_init_worker(struct work_struct *work)
 	if (rc < 0) {
 		dev_err(memsh_drv->dev,
 			"memshare: Registering mem share svc failed %d\n", rc);
-		if (mem_share_svc_handle) {
-			qmi_handle_release(mem_share_svc_handle);
-			kfree(mem_share_svc_handle);
-			mem_share_svc_handle = NULL;
-		}
+		qmi_handle_release(mem_share_svc_handle);
+		kfree(mem_share_svc_handle);
 		destroy_workqueue(mem_share_svc_workqueue);
 		return;
 	}
@@ -992,11 +971,8 @@ static int memshare_remove(struct platform_device *pdev)
 		return 0;
 
 	flush_workqueue(mem_share_svc_workqueue);
-	if (mem_share_svc_handle) {
-		qmi_handle_release(mem_share_svc_handle);
-		kfree(mem_share_svc_handle);
-		mem_share_svc_handle = NULL;
-	}
+	qmi_handle_release(mem_share_svc_handle);
+	kfree(mem_share_svc_handle);
 	destroy_workqueue(mem_share_svc_workqueue);
 	return 0;
 }
