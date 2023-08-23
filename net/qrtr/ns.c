@@ -86,19 +86,19 @@ static struct qrtr_node *node_get(unsigned int node_id)
 		return node;
 
 	/* If node didn't exist, allocate and insert it to the tree */
-	node = kzalloc(sizeof(*node), GFP_ATOMIC);
+	node = kzalloc(sizeof(*node), GFP_KERNEL);
 	if (!node)
 		return NULL;
 
 	node->id = node_id;
 	xa_init(&node->servers);
 
-	xa_store(&nodes, node_id, node, GFP_ATOMIC);
+	xa_store(&nodes, node_id, node, GFP_KERNEL);
 
 	return node;
 }
 
-int qrtr_get_service_id(unsigned int node_id, unsigned int port_id)
+unsigned int qrtr_get_service_id(unsigned int node_id, unsigned int port_id)
 {
 	struct qrtr_server *srv;
 	struct qrtr_node *node;
@@ -106,14 +106,14 @@ int qrtr_get_service_id(unsigned int node_id, unsigned int port_id)
 
 	node = node_get(node_id);
 	if (!node)
-		return -EINVAL;
+		return 0;
 
 	xa_for_each(&node->servers, index, srv) {
 		if (srv->node == node_id && srv->port == port_id)
 			return srv->service;
 	}
 
-	return -EINVAL;
+	return 0;
 }
 EXPORT_SYMBOL(qrtr_get_service_id);
 
@@ -227,24 +227,26 @@ static int announce_servers(struct sockaddr_qrtr *sq)
 	struct qrtr_server *srv;
 	struct qrtr_node *node;
 	unsigned long index;
+	unsigned long node_idx;
 	int ret;
 
-	node = node_get(qrtr_ns.local_node);
-	if (!node)
-		return 0;
-
 	/* Announce the list of servers registered in this node */
-	xa_for_each(&node->servers, index, srv) {
-		ret = service_announce_new(sq, srv);
-		if (ret < 0) {
-			if (ret == -ENODEV)
-				continue;
+	xa_for_each(&nodes, node_idx, node) {
+		if (node->id == sq->sq_node) {
+			pr_info("Avoiding duplicate announce for NODE ID %u\n", node->id);
+			continue;
+		}
+		xa_for_each(&node->servers, index, srv) {
+			ret = service_announce_new(sq, srv);
+			if (ret < 0) {
+				if (ret == -ENODEV)
+					continue;
 
-			pr_err("failed to announce new service %d\n", ret);
-			return ret;
+				pr_err("failed to announce new service %d\n", ret);
+				return ret;
+			}
 		}
 	}
-
 	return 0;
 }
 

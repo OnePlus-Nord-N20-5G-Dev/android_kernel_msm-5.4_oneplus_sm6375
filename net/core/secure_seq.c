@@ -121,6 +121,13 @@ EXPORT_SYMBOL(secure_ipv6_port_ephemeral);
 #ifdef CONFIG_INET
 u32 secure_tcp_ts_off(const struct net *net, __be32 saddr, __be32 daddr)
 {
+#if IS_ENABLED(CONFIG_OPLUS_BUG_STABILITY)
+	if (net->ipv4.sysctl_tcp_random_timestamp == 0)
+	{
+		return 0;
+	}
+#endif /* CONFIG_OPLUS_BUG_STABILITY */
+
 	if (READ_ONCE(net->ipv4.sysctl_tcp_timestamps) != 1)
 		return 0;
 
