@@ -22,11 +22,18 @@
 #include <linux/regmap.h>
 #include <linux/slab.h>
 #include <linux/spmi.h>
-#include <linux/suspend.h>
 #include <linux/input/qpnp-power-on.h>
 #include <linux/regulator/driver.h>
 #include <linux/regulator/machine.h>
 #include <linux/regulator/of_regulator.h>
+
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_THEIA)
+#include <soc/oplus/system/oplus_bscheck.h>
+#include <soc/oplus/system/oplus_brightscreen_check.h>
+#endif
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
+#include <../../soc/oplus/system/include/qcom_pmicwd.h>
+#endif
 
 #define PMIC_VER_8941				0x01
 #define PMIC_VERSION_REG			0x0105
@@ -148,6 +155,7 @@ enum qpnp_pon_version {
 
 #define QPNP_PON_UVLO_DLOAD_EN			BIT(7)
 #define QPNP_PON_SMPL_EN			BIT(7)
+#define QPNP_PON_KPDPWR_ON			BIT(0)
 
 /* Limits */
 #define QPNP_PON_S1_TIMER_MAX			10256
@@ -206,6 +214,7 @@ struct pon_regulator {
 	bool			enabled;
 };
 
+#if !IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
 struct qpnp_pon {
 	struct device		*dev;
 	struct regmap		*regmap;
@@ -245,9 +254,12 @@ struct qpnp_pon {
 	bool			resin_pon_reset;
 	ktime_t			kpdpwr_last_release_time;
 	bool			legacy_hard_reset_offset;
+	bool			log_kpd_event;
 };
 
 static struct qpnp_pon *sys_reset_dev;
+#endif
+
 static struct qpnp_pon *modem_reset_dev;
 static DEFINE_SPINLOCK(spon_list_slock);
 static LIST_HEAD(spon_dev_list);
@@ -354,6 +366,7 @@ done:
 	return rc;
 }
 
+#if !IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
 static int
 qpnp_pon_masked_write(struct qpnp_pon *pon, u16 addr, u8 mask, u8 val)
 {
@@ -365,6 +378,7 @@ qpnp_pon_masked_write(struct qpnp_pon *pon, u16 addr, u8 mask, u8 val)
 			addr, rc);
 	return rc;
 }
+#endif
 
 static int qpnp_pon_write(struct qpnp_pon *pon, u16 addr, u8 val)
 {
@@ -411,11 +425,13 @@ static bool is_pon_gen2(struct qpnp_pon *pon)
 		pon->subtype == PON_GEN2_SECONDARY;
 }
 
+#if !IS_MODULE(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
 static bool is_pon_gen3(struct qpnp_pon *pon)
 {
 	return pon->subtype == PON_GEN3_PBS ||
 		pon->subtype == PON_GEN3_HLOS;
 }
+#endif
 
 /**
  * qpnp_pon_set_restart_reason() - Store device restart reason in PMIC register
@@ -840,6 +856,7 @@ int qpnp_pon_is_warm_reset(void)
 }
 EXPORT_SYMBOL(qpnp_pon_is_warm_reset);
 
+#if !IS_MODULE(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
 /**
  * qpnp_pon_wd_config() - configure the watch dog behavior for warm reset
  * @enable: to enable or disable the PON watch dog
@@ -859,6 +876,7 @@ int qpnp_pon_wd_config(bool enable)
 				QPNP_PON_WD_EN, enable ? QPNP_PON_WD_EN : 0);
 }
 EXPORT_SYMBOL(qpnp_pon_wd_config);
+#endif
 
 static int qpnp_pon_get_trigger_config(enum pon_trigger_source pon_src,
 							bool *enabled)
@@ -1042,10 +1060,30 @@ static int qpnp_pon_input_dispatch(struct qpnp_pon *pon, u32 pon_type)
 	 * Simulate a press event in case release event occurred without a press
 	 * event
 	 */
+#if !IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
+	if (pon->log_kpd_event && (cfg->pon_type == PON_KPDPWR))
+		pr_info_ratelimited("PMIC input: KPDPWR status=0x%02x, KPDPWR_ON=%d\n",
+			pon_rt_sts, (pon_rt_sts & QPNP_PON_KPDPWR_ON));
+#endif
+
 	if (!cfg->old_state && !key_status) {
 		input_report_key(pon->pon_input, cfg->key_code, 1);
 		input_sync(pon->pon_input);
 	}
+
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
+	pr_err("keycode = %d,key_st = %d\n",cfg->key_code, key_status);
+#endif /* OPLUS_FEATURE_QCOM_PMICWD */
+
+	#if IS_ENABLED(CONFIG_OPLUS_FEATURE_THEIA)
+	pr_err("keycode = %d,key_st = %d  old_state= %d   %d \n",cfg->key_code, key_status,cfg->old_state ,KEY_POWER);
+	if(cfg->key_code == KEY_POWER && key_status != 0 && cfg->old_state == 0){
+		//we should canel per work
+		black_screen_timer_restart();
+
+		bright_screen_timer_restart();
+	}
+	#endif
 
 	input_report_key(pon->pon_input, cfg->key_code, key_status);
 	input_sync(pon->pon_input);
@@ -1447,6 +1485,9 @@ static int qpnp_pon_config_kpdpwr_init(struct qpnp_pon *pon,
 				       struct device_node *node)
 {
 	int rc;
+#if !IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
+	uint pon_rt_sts;
+#endif
 
 	cfg->state_irq = platform_get_irq_byname(pdev, "kpdpwr");
 	if (cfg->state_irq < 0) {
@@ -1484,6 +1525,18 @@ static int qpnp_pon_config_kpdpwr_init(struct qpnp_pon *pon,
 		cfg->s2_cntl_addr = QPNP_PON_KPDPWR_S2_CNTL(pon);
 		cfg->s2_cntl2_addr = QPNP_PON_KPDPWR_S2_CNTL2(pon);
 	}
+
+#if !IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
+	if (pon->log_kpd_event) {
+		/* Read PON_RT_STS status during driver initialization. */
+		rc = qpnp_pon_read(pon, QPNP_PON_RT_STS(pon), &pon_rt_sts);
+		if (rc < 0)
+			pr_err("failed to read QPNP_PON_RT_STS rc=%d\n", rc);
+
+		pr_info("KPDPWR status at init=0x%02x, KPDPWR_ON=%d\n",
+			pon_rt_sts, (pon_rt_sts & QPNP_PON_KPDPWR_ON));
+	}
+#endif
 
 	return 0;
 }
@@ -2059,6 +2112,12 @@ static void qpnp_pon_debugfs_remove(struct qpnp_pon *pon)
 {}
 #endif
 
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
+extern char pon_reason[];
+extern char poff_reason[];
+int preason_initialized;
+#endif /*CONFIG_OPLUS_FEATURE_QCOM_PMICWD*/
+
 static int qpnp_pon_read_gen2_pon_off_reason(struct qpnp_pon *pon, u16 *reason,
 					int *reason_index_offset)
 {
@@ -2213,22 +2272,42 @@ static int qpnp_pon_read_hardware_info(struct qpnp_pon *pon, bool sys_reset)
 
 	/* PON reason */
 	rc = qpnp_pon_read(pon, QPNP_PON_REASON1(pon), &pon_sts);
-	if (rc)
+	if (rc){
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
+		dev_err(dev,"Unable to read PON_RESASON1 reg rc: %d\n",rc);
+		if (!preason_initialized) {
+			snprintf(pon_reason, 128, "Unable to read PON_RESASON1 reg rc: %d\n", rc);
+			preason_initialized = 1;
+		}
+#endif /*CONFIG_OPLUS_FEATURE_QCOM_PMICWD*/
 		return rc;
-
+	}
 	index = ffs(pon_sts) - 1;
+	#if IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
+		if (pon_sts & 0x80)
+			index = 7;
+	#endif /*CONFIG_OPLUS_FEATURE_QCOM_PMICWD*/
 	cold_boot = sys_reset_dev ? !_qpnp_pon_is_warm_reset(sys_reset_dev)
 				  : !_qpnp_pon_is_warm_reset(pon);
 	if (index >= ARRAY_SIZE(qpnp_pon_reason) || index < 0) {
 		dev_info(dev, "PMIC@SID%d Power-on reason: Unknown and '%s' boot\n",
 			 to_spmi_device(dev->parent)->usid,
 			 cold_boot ? "cold" : "warm");
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
+		if (!preason_initialized)
+			 snprintf(pon_reason, 128, "Unknown[0x%02X] and '%s' boot\n", pon_sts, cold_boot ? "cold" : "warm");
+#endif /*CONFIG_OPLUS_FEATURE_QCOM_PMICWD*/
 	} else {
 		pon->pon_trigger_reason = index;
 		dev_info(dev, "PMIC@SID%d Power-on reason: %s and '%s' boot\n",
 			 to_spmi_device(dev->parent)->usid,
 			 qpnp_pon_reason[index],
 			 cold_boot ? "cold" : "warm");
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
+		if (!preason_initialized)
+			snprintf(pon_reason, 128, "[0x%02X]%s and '%s' boot\n", pon_sts,
+				qpnp_pon_reason[index],	cold_boot ? "cold" : "warm");
+#endif /*CONFIG_OPLUS_FEATURE_QCOM_PMICWD*/
 	}
 
 	/* POFF reason */
@@ -2243,6 +2322,12 @@ static int qpnp_pon_read_hardware_info(struct qpnp_pon *pon, bool sys_reset)
 		if (rc) {
 			dev_err(dev, "Register read failed, addr=0x%04X, rc=%d\n",
 				QPNP_POFF_REASON1(pon), rc);
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
+                    if (!preason_initialized) {
+                            snprintf(poff_reason, 128, "Unable to read POFF_RESASON regs rc:%d\n", rc);
+                            preason_initialized = 1;
+                    }
+#endif /*CONFIG_OPLUS_FEATURE_QCOM_PMICWD*/
 			return rc;
 		}
 		poff_sts = buf[0] | (u16)(buf[1] << 8);
@@ -2252,11 +2337,23 @@ static int qpnp_pon_read_hardware_info(struct qpnp_pon *pon, bool sys_reset)
 					index < reason_index_offset) {
 		dev_info(dev, "PMIC@SID%d: Unknown power-off reason\n",
 			 to_spmi_device(dev->parent)->usid);
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
+		if (!preason_initialized) {
+			snprintf(poff_reason, 128, "Unknown[0x%04X]\n", poff_sts);
+			preason_initialized = 1;
+		}
+#endif /*CONFIG_OPLUS_FEATURE_QCOM_PMICWD*/
 	} else {
 		pon->pon_power_off_reason = index;
 		dev_info(dev, "PMIC@SID%d: Power-off reason: %s\n",
 			 to_spmi_device(dev->parent)->usid,
 			 qpnp_poff_reason[index]);
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
+		if (!preason_initialized) {
+			snprintf(poff_reason, 128, "[0x%04X]%s\n", poff_sts, qpnp_poff_reason[index]);
+			preason_initialized = 1;
+		}
+#endif /*CONFIG_OPLUS_FEATURE_QCOM_PMICWD*/
 	}
 
 	if ((pon->pon_trigger_reason == PON_SMPL ||
@@ -2466,6 +2563,10 @@ static int qpnp_pon_probe(struct platform_device *pdev)
 		spin_unlock_irqrestore(&spon_list_slock, flags);
 		pon->is_spon = true;
 	}
+#if !IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
+	pon->log_kpd_event = of_property_read_bool(dev->of_node, "qcom,log-kpd-event");
+#endif
+
 
 	/* Register the PON configurations */
 	rc = qpnp_pon_config_init(pon, pdev);
@@ -2486,6 +2587,12 @@ static int qpnp_pon_probe(struct platform_device *pdev)
 
 	qpnp_pon_debugfs_init(pon);
 
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
+	if(sys_reset) {
+		pmicwd_init(pdev, pon, sys_reset);
+		kpdpwr_init(pon, sys_reset);
+	}
+#endif /* OPLUS_FEATURE_QCOM_PMICWD */
 	return 0;
 }
 
@@ -2552,31 +2659,9 @@ static int qpnp_pon_freeze(struct device *dev)
 	return rc;
 }
 
-static int qpnp_pon_suspend(struct device *dev)
-{
-#ifdef CONFIG_DEEPSLEEP
-	if (mem_sleep_current == PM_SUSPEND_MEM)
-		return qpnp_pon_freeze(dev);
-#endif
-
-	return 0;
-}
-
-static int qpnp_pon_resume(struct device *dev)
-{
-#ifdef CONFIG_DEEPSLEEP
-	if (mem_sleep_current == PM_SUSPEND_MEM)
-		return qpnp_pon_restore(dev);
-#endif
-
-	return 0;
-}
-
 static const struct dev_pm_ops qpnp_pon_pm_ops = {
 	.freeze = qpnp_pon_freeze,
 	.restore = qpnp_pon_restore,
-	.suspend = qpnp_pon_suspend,
-	.resume = qpnp_pon_resume,
 };
 #endif
 
@@ -2587,11 +2672,11 @@ static const struct of_device_id qpnp_pon_match_table[] = {
 
 static struct platform_driver qpnp_pon_driver = {
 	.driver = {
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_QCOM_PMICWD)
+		.pm = &qpnp_pm_ops,
+#endif /* OPLUS_FEATURE_QCOM_PMICWD */
 		.name = "qcom,qpnp-power-on",
 		.of_match_table = qpnp_pon_match_table,
-#ifdef CONFIG_PM
-		.pm = &qpnp_pon_pm_ops,
-#endif
 	},
 	.probe = qpnp_pon_probe,
 	.remove = qpnp_pon_remove,
