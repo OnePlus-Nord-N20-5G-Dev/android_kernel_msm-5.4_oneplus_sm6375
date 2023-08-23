@@ -100,6 +100,10 @@
 #include <linux/kmemleak.h>
 #include <linux/memory_hotplug.h>
 
+#ifdef CONFIG_OPLUS_KMEMLEAK_DEBUG
+//debug_fs change to proc_fs workaround vintf
+#include <linux/proc_fs.h>
+#endif
 /*
  * Kmemleak configuration and common defines.
  */
@@ -1967,7 +1971,12 @@ static int __init kmemleak_late_init(void)
 	kmemleak_initialized = 1;
 
 	debugfs_create_file("kmemleak", 0644, NULL, NULL, &kmemleak_fops);
-
+#ifdef CONFIG_OPLUS_KMEMLEAK_DEBUG
+//debug_fs change to proc_fs workaround vintf
+	proc_create("kmemleak", 0644, NULL, &kmemleak_fops);
+#else
+	debugfs_create_file("kmemleak", 0644, NULL, NULL, &kmemleak_fops);
+#endif
 	if (kmemleak_error) {
 		/*
 		 * Some error occurred and kmemleak was disabled. There is a
