@@ -9,6 +9,7 @@
 #include <linux/xattr.h>
 #include <linux/uio.h>
 #include <linux/uaccess.h>
+
 #include <linux/splice.h>
 #include <linux/mm.h>
 #include <linux/fs.h>
@@ -247,6 +248,7 @@ static ssize_t ovl_read_iter(struct kiocb *iocb, struct iov_iter *iter)
 	old_cred = ovl_override_creds(file_inode(file)->i_sb);
 	ret = vfs_iter_read(real.file, iter, &iocb->ki_pos,
 			    ovl_iocb_to_rwf(iocb));
+
 	ovl_revert_creds(file_inode(file)->i_sb, old_cred);
 
 	ovl_file_accessed(file);
@@ -699,7 +701,6 @@ const struct file_operations ovl_file_operations = {
 	.compat_ioctl	= ovl_compat_ioctl,
 	.splice_read    = generic_file_splice_read,
 	.splice_write   = ovl_splice_write,
-
 	.copy_file_range	= ovl_copy_file_range,
 	.remap_file_range	= ovl_remap_file_range,
 };

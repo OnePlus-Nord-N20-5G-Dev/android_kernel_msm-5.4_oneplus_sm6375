@@ -1485,7 +1485,6 @@ errout:
 		 * inode->i_size. So truncate them
 		 */
 		ext4_orphan_add(handle, inode);
-
 	ret2 = ext4_journal_stop(handle);
 	if (!ret)
 		ret = ret2;
@@ -1598,7 +1597,6 @@ static int ext4_journalled_write_end(struct file *file,
 		if (!ret)
 			ret = ret2;
 	}
-
 errout:
 	if (pos + len > inode->i_size && !verity && ext4_can_truncate(inode))
 		/* if we have allocated more blocks and copied
@@ -2182,7 +2180,6 @@ static int ext4_writepage(struct page *page,
 		unlock_page(page);
 		return 0;
 	}
-
 	page_bufs = page_buffers(page);
 	/*
 	 * We cannot do block allocation or other extent handling in this
@@ -2747,7 +2744,6 @@ static int mpage_prepare_extent_to_map(struct mpage_da_data *mpd)
 				unlock_page(page);
 				continue;
 			}
-
 			if (mpd->map.m_len == 0)
 				mpd->first_page = page->index;
 			mpd->next_page = page->index + 1;
@@ -4410,7 +4406,6 @@ int ext4_punch_hole(struct inode *inode, loff_t offset, loff_t length)
 	max_length = sbi->s_bitmap_maxbytes - inode->i_sb->s_blocksize;
 	if (offset + length > max_length)
 		length = max_length - offset;
-
 	if (offset & (sb->s_blocksize - 1) ||
 	    (offset + length) & (sb->s_blocksize - 1)) {
 		/*

@@ -823,12 +823,7 @@ static const struct rpc_program cb_program = {
 static int max_cb_time(struct net *net)
 {
 	struct nfsd_net *nn = net_generic(net, nfsd_net_id);
-
-	/* nfsd4_lease is set to at most one hour */
-	if (WARN_ON_ONCE(nn->nfsd4_lease > 3600))
-		return 360 * HZ;
-
-	return max(((u32)nn->nfsd4_lease)/10, 1u) * HZ;
+	return max(nn->nfsd4_lease/10, (time_t)1) * HZ;
 }
 
 static const struct cred *get_backchannel_cred(struct nfs4_client *clp, struct rpc_clnt *client, struct nfsd4_session *ses)
