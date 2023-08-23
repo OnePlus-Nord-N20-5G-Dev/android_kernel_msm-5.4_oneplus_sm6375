@@ -1002,10 +1002,13 @@ out:
 static int selinux_add_opt(int token, const char *s, void **mnt_opts)
 {
 	struct selinux_mnt_opts *opts = *mnt_opts;
+
 	bool is_alloc_opts = false;
+
 
 	if (token == Opt_seclabel)	/* eaten and completely ignored */
 		return 0;
+
 
 	if (!s)
 		return -ENOMEM;
@@ -1015,6 +1018,7 @@ static int selinux_add_opt(int token, const char *s, void **mnt_opts)
 		if (!opts)
 			return -ENOMEM;
 		*mnt_opts = opts;
+
 		is_alloc_opts = true;
 	}
 
@@ -1042,10 +1046,12 @@ static int selinux_add_opt(int token, const char *s, void **mnt_opts)
 	}
 	return 0;
 Einval:
+
 	if (is_alloc_opts) {
 		kfree(opts);
 		*mnt_opts = NULL;
 	}
+
 	pr_warn(SEL_MOUNT_FAIL_MSG);
 	return -EINVAL;
 }
@@ -2090,6 +2096,7 @@ static int selinux_binder_transaction(const struct cred *from,
 			return rc;
 	}
 
+
 	return avc_has_perm(&selinux_state, fromsid, tosid,
 			    SECCLASS_BINDER, BINDER__CALL, NULL);
 }
@@ -2568,8 +2575,9 @@ static void selinux_bprm_committing_creds(struct linux_binprm *bprm)
 static void selinux_bprm_committed_creds(struct linux_binprm *bprm)
 {
 	const struct task_security_struct *tsec = selinux_cred(current_cred());
+	struct itimerval itimer;
 	u32 osid, sid;
-	int rc;
+	int rc, i;
 
 	osid = tsec->osid;
 	sid = tsec->sid;
@@ -2587,8 +2595,11 @@ static void selinux_bprm_committed_creds(struct linux_binprm *bprm)
 	rc = avc_has_perm(&selinux_state,
 			  osid, sid, SECCLASS_PROCESS, PROCESS__SIGINH, NULL);
 	if (rc) {
-		clear_itimer();
-
+		if (IS_ENABLED(CONFIG_POSIX_TIMERS)) {
+			memset(&itimer, 0, sizeof itimer);
+			for (i = 0; i < 3; i++)
+				do_setitimer(i, &itimer, NULL);
+		}
 		spin_lock_irq(&current->sighand->siglock);
 		if (!fatal_signal_pending(current)) {
 			flush_sigqueue(&current->pending);
@@ -2860,8 +2871,10 @@ static int selinux_fs_context_parse_param(struct fs_context *fc,
 		return opt;
 
 	rc = selinux_add_opt(opt, param->string, &fc->security);
+
 	if (!rc)
 		param->string = NULL;
+
 
 	return rc;
 }
@@ -2963,62 +2976,6 @@ static int selinux_inode_init_security(struct inode *inode, struct inode *dir,
 	}
 
 	return 0;
-}
-
-static int selinux_inode_init_security_anon(struct inode *inode,
-					    const struct qstr *name,
-					    const struct inode *context_inode)
-{
-	const struct task_security_struct *tsec = selinux_cred(current_cred());
-	struct common_audit_data ad;
-	struct inode_security_struct *isec;
-	int rc;
-
-	if (unlikely(!selinux_state.initialized))
-		return 0;
-
-	isec = selinux_inode(inode);
-
-	/*
-	 * We only get here once per ephemeral inode.  The inode has
-	 * been initialized via inode_alloc_security but is otherwise
-	 * untouched.
-	 */
-
-	if (context_inode) {
-		struct inode_security_struct *context_isec =
-			selinux_inode(context_inode);
-		if (context_isec->initialized != LABEL_INITIALIZED) {
-			pr_err("SELinux:  context_inode is not initialized");
-			return -EACCES;
-		}
-
-		isec->sclass = context_isec->sclass;
-		isec->sid = context_isec->sid;
-	} else {
-		isec->sclass = SECCLASS_ANON_INODE;
-		rc = security_transition_sid(
-			&selinux_state, tsec->sid, tsec->sid,
-			isec->sclass, name, &isec->sid);
-		if (rc)
-			return rc;
-	}
-
-	isec->initialized = LABEL_INITIALIZED;
-	/*
-	 * Now that we've initialized security, check whether we're
-	 * allowed to actually create this type of anonymous inode.
-	 */
-
-	ad.type = LSM_AUDIT_DATA_INODE;
-	ad.u.inode = inode;
-
-	return avc_has_perm(&selinux_state,
-			    tsec->sid,
-			    isec->sid,
-			    isec->sclass,
-			    FILE__CREATE,
-			    &ad);
 }
 
 static int selinux_inode_create(struct inode *dir, struct dentry *dentry, umode_t mode)
@@ -5802,6 +5759,7 @@ static unsigned int selinux_ip_postroute_compat(struct sk_buff *skb,
 	struct common_audit_data ad;
 	struct lsm_network_audit net = {0,};
 	char *addrp;
+
 	u8 proto = 0;
 
 	if (sk == NULL)
@@ -7017,7 +6975,6 @@ static struct security_hook_list selinux_hooks[] __lsm_ro_after_init = {
 	LSM_HOOK_INIT(inode_alloc_security, selinux_inode_alloc_security),
 	LSM_HOOK_INIT(inode_free_security, selinux_inode_free_security),
 	LSM_HOOK_INIT(inode_init_security, selinux_inode_init_security),
-	LSM_HOOK_INIT(inode_init_security_anon, selinux_inode_init_security_anon),
 	LSM_HOOK_INIT(inode_create, selinux_inode_create),
 	LSM_HOOK_INIT(inode_link, selinux_inode_link),
 	LSM_HOOK_INIT(inode_unlink, selinux_inode_unlink),
