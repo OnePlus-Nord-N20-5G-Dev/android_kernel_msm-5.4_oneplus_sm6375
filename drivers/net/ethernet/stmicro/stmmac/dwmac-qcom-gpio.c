@@ -55,7 +55,7 @@ static int setup_gpio_input_common
 	return ret;
 }
 
-int ethqos_init_regulators(struct qcom_ethqos *ethqos)
+int ethqos_init_reqgulators(struct qcom_ethqos *ethqos)
 {
 	int ret = 0;
 
@@ -104,31 +104,6 @@ int ethqos_init_regulators(struct qcom_ethqos *ethqos)
 			ETHQOSERR("Can not get <%s>\n",
 				  EMAC_VREG_EMAC_PHY_NAME);
 			return PTR_ERR(ethqos->reg_emac_phy);
-		}
-
-		if (ethqos->emac_ver == EMAC_HW_v3_0_0_RG) {
-			ret = regulator_set_load(ethqos->reg_emac_phy, 100);
-			if (ret < 0) {
-				ETHQOSERR("Unable to set load for PHY regulator\n");
-				goto reg_error;
-			}
-		}
-
-		if (ethqos->phyad_change) {
-			/* Specific load needs to be voted for vreg_emac_phy-supply in this case*/
-			ret = regulator_set_load(ethqos->reg_emac_phy, 1000);
-			if (ret < 0) {
-				ETHQOSERR("Unable to set HPM of vreg_emac_phy:%d\n", ret);
-				goto reg_error;
-			}
-
-			/* Voting specific voltage for vreg_emac_phy-supply in this case*/
-			ret = regulator_set_voltage(ethqos->reg_emac_phy, ethqos->phyvoltage_min,
-						    ethqos->phyvoltage_max);
-			if (ret) {
-				ETHQOSERR("Unable to set voltage for vreg_emac_phy:%d\n", ret);
-				goto reg_error;
-			}
 		}
 
 		ret = regulator_enable(ethqos->reg_emac_phy);
@@ -199,7 +174,7 @@ void ethqos_free_gpios(struct qcom_ethqos *ethqos)
 	ethqos->gpio_phy_intr_redirect = -1;
 }
 
-static int ethqos_init_pinctrl(struct device *dev)
+int ethqos_init_pinctrl(struct device *dev)
 {
 	struct pinctrl *pinctrl;
 	struct pinctrl_state *pinctrl_state;

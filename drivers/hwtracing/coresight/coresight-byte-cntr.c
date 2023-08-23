@@ -326,8 +326,7 @@ static int tmc_etr_byte_cntr_open(struct inode *in, struct file *fp)
 
 	mutex_lock(&byte_cntr_data->byte_cntr_lock);
 
-	if (!tmcdrvdata->enable || !byte_cntr_data->block_size ||
-		tmcdrvdata->out_mode != TMC_ETR_OUT_MODE_MEM) {
+	if (!tmcdrvdata->enable || !byte_cntr_data->block_size) {
 		mutex_unlock(&byte_cntr_data->byte_cntr_lock);
 		return -EINVAL;
 	}

@@ -520,21 +520,20 @@ static int mhi_sm_prepare_resume(void)
 				MHI_SM_ERR("IPA enable failed:%d\n", res);
 				return res;
 			}
+		}
 
-			res = ipa_mhi_resume();
-			if (res) {
-				MHI_SM_ERR("Failed resuming ipa_mhi:%d", res);
-				goto exit;
-			}
+		res = ipa_mhi_resume();
+		if (res) {
+			MHI_SM_ERR("Failed resuming ipa_mhi:%d", res);
+			goto exit;
 		}
 	}
 
-	if (mhi_sm_ctx->mhi_dev->use_ipa) {
-		res = ipa_mhi_update_mstate(IPA_MHI_STATE_M0);
-		if (res) {
-			MHI_SM_ERR("Failed updating MHI state to M0, %d", res);
-			goto exit;
-		}
+
+	res = ipa_mhi_update_mstate(IPA_MHI_STATE_M0);
+	if (res) {
+		MHI_SM_ERR("Failed updating MHI state to M0, %d", res);
+		goto exit;
 	}
 
 	if ((old_state == MHI_DEV_M3_STATE) ||
@@ -651,19 +650,17 @@ static int mhi_sm_prepare_suspend(enum mhi_dev_state new_state)
 			goto exit;
 		}
 
-		if (mhi_sm_ctx->mhi_dev->use_ipa) {
-			/* Notify IPA MHI of state change */
-			if (new_state == MHI_DEV_M2_STATE)
-				res = ipa_mhi_update_mstate(IPA_MHI_STATE_M2);
-			else
-				res = ipa_mhi_update_mstate(IPA_MHI_STATE_M3);
+		/* Notify IPA MHI of state change */
+		if (new_state == MHI_DEV_M2_STATE)
+			res = ipa_mhi_update_mstate(IPA_MHI_STATE_M2);
+		else
+			res = ipa_mhi_update_mstate(IPA_MHI_STATE_M3);
 
-			/* Suspend IPA either in M2 or M3 state */
-			res = ipa_mhi_suspend(true);
-			if (res) {
-				MHI_SM_ERR("Failed to suspend ipa_mhi:%d\n", res);
-				goto exit;
-			}
+		/* Suspend IPA either in M2 or M3 state */
+		res = ipa_mhi_suspend(true);
+		if (res) {
+			MHI_SM_ERR("Failed to suspend ipa_mhi:%d\n", res);
+			goto exit;
 		}
 
 		if (new_state == MHI_DEV_M2_STATE)
@@ -1483,7 +1480,7 @@ void mhi_dev_sm_pcie_handler(struct ep_pcie_notify *notify)
 
 	dstate_change_evt->event = event;
 	INIT_WORK(&dstate_change_evt->work, mhi_sm_pcie_event_manager);
-	queue_work(system_highpri_wq, &dstate_change_evt->work);
+	queue_work(mhi_sm_ctx->mhi_sm_wq, &dstate_change_evt->work);
 	atomic_inc(&mhi_sm_ctx->pending_pcie_events);
 
 exit:
@@ -1523,7 +1520,6 @@ int mhi_dev_sm_syserr(void)
 }
 EXPORT_SYMBOL(mhi_dev_sm_syserr);
 
-#ifdef CONFIG_DEBUG_FS
 static ssize_t mhi_sm_debugfs_read(struct file *file, char __user *ubuf,
 				size_t count, loff_t *ppos)
 {
@@ -1637,4 +1633,3 @@ static ssize_t mhi_sm_debugfs_write(struct file *file,
 
 	return count;
 }
-#endif

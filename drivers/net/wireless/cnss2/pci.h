@@ -1,7 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-/* Copyright (c) 2016-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
- */
+/* Copyright (c) 2016-2021, The Linux Foundation. All rights reserved. */
 
 #ifndef _CNSS_PCI_H
 #define _CNSS_PCI_H
@@ -44,7 +42,7 @@ enum  cnss_rtpm_id {
 enum cnss_pci_reg_dev_mask {
 	REG_MASK_QCA6390,
 	REG_MASK_QCA6490,
-	REG_MASK_KIWI,
+	REG_MASK_WCN7850,
 };
 
 struct cnss_msi_user {
@@ -252,9 +250,9 @@ int cnss_pcie_is_device_down(struct cnss_pci_data *pci_priv);
 int cnss_pci_suspend_bus(struct cnss_pci_data *pci_priv);
 int cnss_pci_resume_bus(struct cnss_pci_data *pci_priv);
 int cnss_pci_debug_reg_read(struct cnss_pci_data *pci_priv, u32 offset,
-			    u32 *val, bool raw_access);
+			    u32 *val);
 int cnss_pci_debug_reg_write(struct cnss_pci_data *pci_priv, u32 offset,
-			     u32 val, bool raw_access);
+			     u32 val);
 int cnss_pci_get_iova(struct cnss_pci_data *pci_priv, u64 *addr, u64 *size);
 int cnss_pci_get_iova_ipa(struct cnss_pci_data *pci_priv, u64 *addr,
 			  u64 *size);
@@ -264,4 +262,6 @@ int cnss_pci_get_user_msi_assignment(struct cnss_pci_data *pci_priv,
 				     u32 *user_base_data,
 				     u32 *base_vector);
 bool cnss_pci_is_smmu_s1_enabled(struct cnss_pci_data *pci_priv);
+int cnss_pci_dsp_link_control(struct cnss_pci_data *pci_priv,
+			      bool link_enable);
 #endif /* _CNSS_PCI_H */

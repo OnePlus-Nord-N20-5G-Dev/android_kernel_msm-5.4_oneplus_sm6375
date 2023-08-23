@@ -59,6 +59,12 @@ config ION_DEFER_FREE_NO_SCHED_IDLE
 	  free thereby increasing the priority of defer free thread.
 	  if you're not sure say Y here.
 
+config OPLUS_ION_BOOSTPOOL
+	bool "Support ION Boost pool"
+	default y
+	help
+	  This driver supports ION boost pool.
+
 config ION_POOL_AUTO_REFILL
 	bool "Refill the ION heap pools automatically"
 	depends on ION && QGKI && ION_MSM_HEAPS=y
@@ -85,10 +91,3 @@ config PANIC_ON_MSM_ION_HEAPS_FAILURE
 	msm ion heap probe fails. This can happen when any invalid heap id,
 	heap types are added in device tree. Panic ensures early detection
 	of such changes.
-
-config DEBUG_ION_TRACK_HEAP_MEM
-	bool "Track total memory allocated in each ION heap"
-	help
-	  Add support to track the total amount of memory allocated by each ION
-	  heap. This information makes it easier to identify if an ION client is
-	  responsible for a memory leak.

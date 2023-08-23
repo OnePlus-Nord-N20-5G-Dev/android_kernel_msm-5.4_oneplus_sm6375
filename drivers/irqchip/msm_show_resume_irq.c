@@ -6,9 +6,12 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
-#include <linux/msm_show_resume_irq.h>
 
+#if !defined(OPLUS_FEATURE_POWERINFO_STANDBY_DEBUG) || !defined(CONFIG_OPLUS_POWERINFO_STANDBY_DEBUG)
 int msm_show_resume_irq_mask;
+#else
+int msm_show_resume_irq_mask = 1;
+#endif
 
 module_param_named(
 	debug_mask, msm_show_resume_irq_mask, int, 0664);

@@ -17,6 +17,12 @@
 
 #define CLIENT_ID_PROP "qcom,client-id"
 #define MPSS_RMTS_CLIENT_ID 1
+//#ifdef VENDOR_EDIT
+//add for nv backup and restore
+//#ifdef FEATURE_OPLUS_NV_BACKUP
+#define MPSS_OEMBACK_CLIENT_ID 4
+//#endif /* FEATURE_OPLUS_NV_BACKUP */
+//#endif /* VENDOR_EDIT */
 
 static int uio_get_mem_index(struct uio_info *info, struct vm_area_struct *vma)
 {
@@ -74,7 +80,14 @@ static void setup_shared_ram_perms(u32 client_id, phys_addr_t addr, u32 size,
 	int ret;
 	u32 source_vmlist[1] = {VMID_HLOS};
 
-	if (client_id != MPSS_RMTS_CLIENT_ID)
+	//#ifndef VENDOR_EDIT
+	//add for nv backup and restore
+	//#ifdef FEATURE_OPLUS_NV_BACKUP
+	//if (client_id != MPSS_RMTS_CLIENT_ID)
+	//#else
+	if ((client_id != MPSS_RMTS_CLIENT_ID) && (client_id != MPSS_OEMBACK_CLIENT_ID))
+	//#endif /* FEATURE_OPLUS_NV_BACKUP */
+	//#endif /* VENDOR_EDIT */
 		return;
 
 	if (vm_nav_path) {
@@ -190,10 +203,7 @@ static int msm_sharedmem_probe(struct platform_device *pdev)
 	info->mem[0].addr = shared_mem_pyhsical;
 	info->mem[0].size = shared_mem_size;
 	info->mem[0].memtype = UIO_MEM_PHYS;
-#ifdef CONFIG_HIBERNATION
-	info->client_id = client_id;
-	info->vm_nav_path = vm_nav_path;
-#endif
+
 	ret = uio_register_device(&pdev->dev, info);
 	if (ret) {
 		pr_err("uio register failed ret=%d\n", ret);
@@ -215,28 +225,11 @@ static int msm_sharedmem_remove(struct platform_device *pdev)
 	return 0;
 }
 
-#ifdef CONFIG_HIBERNATION
-static int msm_sharedmem_restore(struct device *dev)
-{
-	struct uio_info *info = dev_get_drvdata(dev);
-
-	setup_shared_ram_perms(info->client_id, info->mem[0].addr,
-			info->mem[0].size, info->vm_nav_path);
-	return 0;
-}
-#endif
-
 static const struct of_device_id msm_sharedmem_of_match[] = {
 	{.compatible = "qcom,sharedmem-uio",},
 	{},
 };
 MODULE_DEVICE_TABLE(of, msm_sharedmem_of_match);
-
-#ifdef CONFIG_HIBERNATION
-static const struct dev_pm_ops msm_sharedmem_pm_ops = {
-	.restore = msm_sharedmem_restore,
-};
-#endif
 
 static struct platform_driver msm_sharedmem_driver = {
 	.probe          = msm_sharedmem_probe,
@@ -244,9 +237,6 @@ static struct platform_driver msm_sharedmem_driver = {
 	.driver         = {
 		.name   = DRIVER_NAME,
 		.of_match_table = msm_sharedmem_of_match,
-#ifdef CONFIG_HIBERNATION
-		.pm = &msm_sharedmem_pm_ops,
-#endif
 	},
 };
 

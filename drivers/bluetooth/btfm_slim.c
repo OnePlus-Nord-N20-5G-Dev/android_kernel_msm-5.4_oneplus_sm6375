@@ -22,6 +22,10 @@
 #include "btfm_slim.h"
 #include "btfm_slim_slave.h"
 
+#ifdef OPLUS_BT_SLIM_MODIFY
+#include <linux/timer.h>
+#endif
+
 #define BT_CMD_SLIM_TEST	0xbfac
 #define DELAY_FOR_PORT_OPEN_MS (200)
 
@@ -29,7 +33,16 @@ struct class *btfm_slim_class;
 static int btfm_slim_major;
 struct btfmslim *btfm_slim_drv_data;
 
+#ifdef OPLUS_BT_SLIM_MODIFY
+static bool btfm_is_port_opening_delayed = false;
+static int btfm_num_ports_open = 0;
+static struct timer_list btfm_slim_timer;
+#else
 static bool btfm_is_port_opening_delayed = true;
+#endif
+
+
+
 
 int btfm_slim_write(struct btfmslim *btfmslim,
 		uint16_t reg, int bytes, void *src, uint8_t pgd)
@@ -133,6 +146,14 @@ static bool btfm_slim_is_sb_reset_needed(int chip_ver)
 	}
 }
 
+#ifdef OPLUS_BT_SLIM_MODIFY
+//timer timeout
+static void btfm_slim_timerout(struct timer_list *arg){
+    BTFMSLIM_DBG("btfm_slim_timerout ");
+    btfm_is_port_opening_delayed = false;
+}
+#endif
+
 int btfm_slim_enable_ch(struct btfmslim *btfmslim, struct btfmslim_ch *ch,
 	uint8_t rxport, uint32_t rates, uint8_t grp, uint8_t nchan)
 {
@@ -167,11 +188,22 @@ int btfm_slim_enable_ch(struct btfmslim *btfmslim, struct btfmslim_ch *ch,
 
 		BTFMSLIM_INFO("btfm_is_port_opening_delayed %d",
 				btfm_is_port_opening_delayed);
-
+#ifdef OPLUS_BT_SLIM_MODIFY
+        //if no timeout, delay 200ms
+        //only the first channel opened need the delay
+		if (btfm_is_port_opening_delayed && !btfm_num_ports_open) {
+			BTFMSLIM_DBG("del_timer del_timer");
+			del_timer(&btfm_slim_timer);
+			btfm_is_port_opening_delayed = false;
+			BTFMSLIM_INFO("SB reset needed, sleeping");
+			msleep(DELAY_FOR_PORT_OPEN_MS);
+			BTFMSLIM_INFO("SB reset needed, sleeping end");
+#else
 		if (!btfm_is_port_opening_delayed) {
 			BTFMSLIM_INFO("SB reset needed, sleeping");
 			btfm_is_port_opening_delayed = true;
 			msleep(DELAY_FOR_PORT_OPEN_MS);
+#endif
 		}
 	}
 
@@ -250,8 +282,14 @@ int btfm_slim_enable_ch(struct btfmslim *btfmslim, struct btfmslim_ch *ch,
 		BTFMSLIM_ERR("slim_control_ch failed ret[%d]", ret);
 		goto remove_channel;
 	}
-
+#ifdef OPLUS_BT_SLIM_MODIFY
+	if (ret == 0)
+		btfm_num_ports_open ++;
+#endif
 error:
+#ifdef OPLUS_BT_SLIM_MODIFY
+	BTFMSLIM_INFO("btfm_slim_enable_ch:btfm_num_ports_open: %d", btfm_num_ports_open);
+#endif
 	return ret;
 
 remove_channel:
@@ -268,7 +306,9 @@ int btfm_slim_disable_ch(struct btfmslim *btfmslim, struct btfmslim_ch *ch,
 	uint8_t rxport, uint8_t grp, uint8_t nchan)
 {
 	int ret, i;
+#ifdef OPLUS_BT_SLIM_MODIFY
 	int chipset_ver;
+#endif
 
 	if (!btfmslim || !ch)
 		return -EINVAL;
@@ -276,7 +316,9 @@ int btfm_slim_disable_ch(struct btfmslim *btfmslim, struct btfmslim_ch *ch,
 	BTFMSLIM_INFO("port:%d, grp: %d, ch->grph:0x%x, ch->ch_hdl:0x%x ",
 		ch->port, grp, ch->grph, ch->ch_hdl);
 
+#ifndef OPLUS_BT_SLIM_MODIFY
 	btfm_is_port_opening_delayed = false;
+#endif
 
 	/* For 44.1/88.2 Khz A2DP Rx, disconnect the port first */
 	if (rxport &&
@@ -320,15 +362,24 @@ int btfm_slim_disable_ch(struct btfmslim *btfmslim, struct btfmslim_ch *ch,
 			}
 		}
 	}
+#ifdef OPLUS_BT_SLIM_MODIFY
+	if (btfm_num_ports_open > 0)
+		btfm_num_ports_open--;
 
 	chipset_ver = btpower_get_chipset_version();
-	BTFMSLIM_INFO("chipset soc version:%x", chipset_ver);
-	if (chipset_ver == QCA_SLATE_SOC_ID_0100 ||
-		chipset_ver == QCA_SLATE_SOC_ID_0200) {
-		BTFMSLIM_INFO("chipset is Slate, calling slim suspend for LPI");
-		slim_vote_for_suspend(btfmslim->slim_pgd);
+	BTFMSLIM_INFO("btfm_slim_disable_ch:btfm_num_ports_open: %d", btfm_num_ports_open);
+	BTFMSLIM_INFO("btfm_slim_disable_ch:chipset soc version:%x", chipset_ver);
+	BTFMSLIM_INFO("btfm_slim_disable_ch:btfm_is_port_opening_delayed:%d", btfm_is_port_opening_delayed);
+	//disable port, start timer
+	//only when btfm_num_ports_open == 0 and soc is apache, and the btfm_is_port_opening_delayed is false, we need the delay
+	if(!btfm_num_ports_open && btfm_slim_is_sb_reset_needed(chipset_ver) && !btfm_is_port_opening_delayed){
+		BTFMSLIM_DBG("enable btfm_slim_timer");
+		btfm_is_port_opening_delayed = true;
+		btfm_slim_timer.expires = jiffies + msecs_to_jiffies(DELAY_FOR_PORT_OPEN_MS);
+		timer_setup(&btfm_slim_timer,btfm_slim_timerout,0);
+		add_timer(&btfm_slim_timer);
 	}
-
+#endif
 error:
 	return ret;
 }
@@ -516,15 +567,6 @@ int btfm_slim_hw_init(struct btfmslim *btfmslim)
 		slim_ifd->e_addr[0], slim_ifd->e_addr[1],
 		slim_ifd->e_addr[2], slim_ifd->e_addr[3],
 		slim_ifd->e_addr[4], slim_ifd->e_addr[5]);
-
-	if (chipset_ver == QCA_HSP_SOC_ID_0200 ||
-		chipset_ver == QCA_HSP_SOC_ID_0210 ||
-		chipset_ver == QCA_HSP_SOC_ID_1201 ||
-		chipset_ver == QCA_HSP_SOC_ID_1211 ||
-		chipset_ver == QCA_APACHE_SOC_ID_0121) {
-		BTFMSLIM_INFO("SB reset needed before getting LA, sleeping");
-		msleep(DELAY_FOR_PORT_OPEN_MS);
-	}
 
 	/* Assign Logical Address for PGD (Ported Generic Device)
 	 * enumeration address

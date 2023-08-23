@@ -18,6 +18,7 @@
 #include <linux/percpu.h>
 #include <linux/refcount.h>
 #include <linux/slab.h>
+#include <linux/suspend.h>
 #include <linux/msm_rtb.h>
 #include <linux/wakeup_reason.h>
 
@@ -33,10 +34,21 @@
 #include <asm/virt.h>
 
 #include <linux/syscore_ops.h>
-#include <linux/suspend.h>
-#include <linux/notifier.h>
 
 #include "irq-gic-common.h"
+#if defined(OPLUS_FEATURE_POWERINFO_STANDBY) && defined(CONFIG_OPLUS_WAKELOCK_PROFILER)
+#include "../../drivers/soc/oplus/oplus_wakelock/oplus_wakelock_profiler_qcom.h"
+#endif
+
+
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_NWPOWER)
+void (*match_modem_wakeup)(void) = NULL;
+EXPORT_SYMBOL(match_modem_wakeup);
+void (*match_wlan_wakeup)(void) = NULL;
+EXPORT_SYMBOL(match_wlan_wakeup);
+extern is_first_ipcc_msg;
+#endif /* CONFIG_OPLUS_FEATURE_NWPOWER */
+
 
 #define GICD_INT_NMI_PRI	(GICD_INT_DEF_PRI & ~0x80)
 
@@ -60,14 +72,6 @@ struct gic_chip_data {
 	bool			has_rss;
 	unsigned int		ppi_nr;
 	struct partition_desc	**ppi_descs;
-#ifdef CONFIG_HIBERNATION
-	unsigned int enabled_irqs[32];
-	unsigned int active_irqs[32];
-	unsigned int irq_edg_lvl[64];
-	unsigned int ppi_edg_lvl;
-	unsigned int enabled_sgis;
-	unsigned int pending_sgis;
-#endif
 };
 
 static struct gic_chip_data gic_data __read_mostly;
@@ -147,9 +151,6 @@ static enum gic_intid_range get_intid_range(struct irq_data *d)
 {
 	return __get_intid_range(d->hwirq);
 }
-
-static void gic_dist_init(void);
-static void gic_cpu_init(void);
 
 static inline unsigned int gic_irq(struct irq_data *d)
 {
@@ -588,65 +589,9 @@ static int gic_irq_set_vcpu_affinity(struct irq_data *d, void *vcpu)
 }
 
 #ifdef CONFIG_PM
-#ifdef CONFIG_HIBERNATION
-extern int in_suspend;
-static bool hibernation;
-
-static int gic_suspend_notifier(struct notifier_block *nb,
-				unsigned long event,
-				void *dummy)
-{
-#ifdef CONFIG_DEEPSLEEP
-	if ((event == PM_HIBERNATION_PREPARE) || ((event == PM_SUSPEND_PREPARE)
-			&& (mem_sleep_current == PM_SUSPEND_MEM)))
-#else
-	if (event == PM_HIBERNATION_PREPARE)
-#endif
-		hibernation = true;
-#ifdef CONFIG_DEEPSLEEP
-	else if ((event == PM_POST_HIBERNATION) || ((event == PM_POST_SUSPEND)
-			&& (mem_sleep_current == PM_SUSPEND_MEM)))
-#else
-	else if (event == PM_POST_HIBERNATION)
-#endif
-		hibernation = false;
-	return NOTIFY_OK;
-}
-
-static struct notifier_block gic_notif_block = {
-	.notifier_call = gic_suspend_notifier,
-};
-
-static void gic_hibernation_suspend(void)
-{
-	int i;
-	void __iomem *base = gic_data.dist_base;
-	void __iomem *rdist_base = gic_data_rdist_sgi_base();
-
-	gic_data.enabled_sgis = readl_relaxed(rdist_base + GICD_ISENABLER);
-	gic_data.pending_sgis = readl_relaxed(rdist_base + GICD_ISPENDR);
-	/* Store edge level for PPIs by reading GICR_ICFGR1 */
-	gic_data.ppi_edg_lvl = readl_relaxed(rdist_base + GICR_ICFGR0 + 4);
-
-	for (i = 0; i * 32 < GIC_LINE_NR; i++) {
-		gic_data.enabled_irqs[i] = readl_relaxed(base +
-						GICD_ISENABLER + i * 4);
-		gic_data.active_irqs[i] = readl_relaxed(base +
-						GICD_ISPENDR + i * 4);
-	}
-
-	for (i = 2; i < GIC_LINE_NR / 16; i++)
-		gic_data.irq_edg_lvl[i] = readl_relaxed(base +
-						GICD_ICFGR + i * 4);
-}
-#endif
 
 static int gic_suspend(void)
 {
-#ifdef CONFIG_HIBERNATION
-	if (unlikely(hibernation))
-		gic_hibernation_suspend();
-#endif
 	return 0;
 }
 
@@ -659,6 +604,9 @@ static void gic_show_resume_irq(struct gic_chip_data *gic)
 
 	if (!msm_show_resume_irq_mask)
 		return;
+	#if defined(OPLUS_FEATURE_POWERINFO_STANDBY) && defined(CONFIG_OPLUS_WAKELOCK_PROFILER)
+	wakeup_reasons_statics(IRQ_NAME_WAKE_SUM, WS_CNT_SUM);
+	#endif
 
 	for (i = 0; i * 32 < GIC_LINE_NR; i++) {
 		enabled = readl_relaxed(base + GICD_ICENABLER + i * 4);
@@ -683,8 +631,44 @@ static void gic_show_resume_irq(struct gic_chip_data *gic)
 		else if (desc->irq_data.chip && desc->irq_data.chip->name)
 			name = desc->irq_data.chip->name;
 
+
+		pr_warn("%s: %d triggered %s\n", __func__, irq, name);
+
+		#if defined(OPLUS_FEATURE_POWERINFO_STANDBY) && defined(CONFIG_OPLUS_WAKELOCK_PROFILER)
+		if ((name != NULL)&&(strncmp(name, "ipa", strlen("ipa")) != 0))
+			log_irq_wakeup_reason(irq);
+		#endif
+
 		pr_warn("%s: irq:%d hwirq:%u triggered %s\n",
 			 __func__, irq, i, name);
+		#if IS_ENABLED(CONFIG_OPLUS_FEATURE_NWPOWER)
+
+		if (strncmp(name, "ipcc_0", strlen("ipcc_0")) == 0) {
+			is_first_ipcc_msg = 1;
+			if (match_modem_wakeup != NULL) {
+				match_modem_wakeup();
+			}
+		} else if ((strncmp(name, "WLAN", strlen("WLAN")) == 0)|| 
+		(strncmp(name, "msi_wlan_irq", strlen("msi_wlan_irq")) == 0)) {
+			if (match_wlan_wakeup != NULL) {
+				match_wlan_wakeup();
+			}
+		}
+		#endif /* CONFIG_OPLUS_FEATURE_NWPOWER */
+
+		#if defined(OPLUS_FEATURE_POWERINFO_STANDBY) && defined(CONFIG_OPLUS_WAKELOCK_PROFILER)
+		#if IS_ENABLED(CONFIG_OPLUS_FEATURE_NWPOWER)
+		do {
+			if (strncmp(name, "ipa", strlen("ipa")) != 0) {
+				wakeup_reasons_statics(name, WS_CNT_MODEM|WS_CNT_WLAN|WS_CNT_ADSP|WS_CNT_CDSP|WS_CNT_SLPI);
+			}
+		} while (0);
+		#else
+		do {
+			wakeup_reasons_statics(name, WS_CNT_MODEM|WS_CNT_WLAN|WS_CNT_ADSP|WS_CNT_CDSP|WS_CNT_SLPI);
+		} while(0);
+		#endif /* CONFIG_OPLUS_FEATURE_NWPOWER */
+		#endif
 	}
 }
 
@@ -695,47 +679,6 @@ static void gic_resume_one(struct gic_chip_data *gic)
 
 static void gic_resume(void)
 {
-#ifdef CONFIG_HIBERNATION
-	int i;
-	void __iomem *base = gic_data.dist_base;
-	void __iomem *rdist_base = gic_data_rdist_sgi_base();
-
-	/*
-	 * in_suspend is defined in hibernate.c and will be 0 during
-	 * hibernation restore case. Also it willl be 0 for suspend to ram case
-	 * and similar cases. Underlying code will not get executed in regular
-	 * cases and will be executed only for hibernation restore.
-	 */
-	if (unlikely((in_suspend == 0 && hibernation))) {
-		pr_info("Re-initializing gic in hibernation restore\n");
-		gic_dist_init();
-		gic_cpu_init();
-		/* Activate and enable SGIs and PPIs */
-		writel_relaxed(gic_data.enabled_sgis,
-			       rdist_base + GICD_ISENABLER);
-		writel_relaxed(gic_data.pending_sgis,
-			       rdist_base + GICD_ISPENDR);
-		/* Restore edge and level triggers for PPIs from GICR_ICFGR1 */
-		writel_relaxed(gic_data.ppi_edg_lvl,
-			       rdist_base + GICR_ICFGR0 + 4);
-
-		/* Restore edge and level triggers */
-		for (i = 2; i < GIC_LINE_NR / 16; i++)
-			writel_relaxed(gic_data.irq_edg_lvl[i],
-					base + GICD_ICFGR + i * 4);
-		gic_dist_wait_for_rwp();
-
-		/* Activate and enable interrupts from backup */
-		for (i = 0; i * 32 < GIC_LINE_NR; i++) {
-			writel_relaxed(gic_data.active_irqs[i],
-				       base + GICD_ISPENDR + i * 4);
-
-			writel_relaxed(gic_data.enabled_irqs[i],
-				       base + GICD_ISENABLER + i * 4);
-		}
-		gic_dist_wait_for_rwp();
-	}
-#endif
 	gic_resume_one(&gic_data);
 }
 
@@ -898,7 +841,7 @@ static bool gic_has_group0(void)
 	return val != 0;
 }
 
-static void gic_dist_init(void)
+static void __init gic_dist_init(void)
 {
 	unsigned int i;
 	u64 affinity;
@@ -1970,11 +1913,7 @@ static int __init gicv3_of_init(struct device_node *node, struct device_node *pa
 			     redist_stride, &node->fwnode);
 	if (err)
 		goto out_unmap_rdist;
-#ifdef CONFIG_HIBERNATION
-	err = register_pm_notifier(&gic_notif_block);
-	if (err)
-		goto out_unmap_rdist;
-#endif
+
 	gic_populate_ppi_partitions(node);
 
 	if (static_branch_likely(&supports_deactivate_key))

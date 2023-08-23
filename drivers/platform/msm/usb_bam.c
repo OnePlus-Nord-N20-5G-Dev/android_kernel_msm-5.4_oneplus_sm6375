@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Copyright (c) 2011-2021, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2011-2020, The Linux Foundation. All rights reserved.
  */
 
 #include <linux/kernel.h>
@@ -1301,7 +1301,7 @@ static struct notifier_block usb_bam_panic_blk = {
 	.notifier_call  = usb_bam_panic_notifier,
 };
 
-static void usb_bam_register_panic_hdlr(void)
+void usb_bam_register_panic_hdlr(void)
 {
 	atomic_notifier_chain_register(&panic_notifier_list,
 			&usb_bam_panic_blk);

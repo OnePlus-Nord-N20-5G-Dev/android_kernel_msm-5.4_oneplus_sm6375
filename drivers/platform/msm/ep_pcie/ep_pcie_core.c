@@ -29,6 +29,8 @@
 #include <linux/interconnect.h>
 
 #include "ep_pcie_com.h"
+#include <asm/dma-iommu.h>
+#include <linux/dma-mapping.h>
 #include <linux/platform_device.h>
 
 #define PCIE_MHI_STATUS(n)			((n) + 0x148)
@@ -657,12 +659,10 @@ static void ep_pcie_core_init(struct ep_pcie_dev_t *dev, bool configured)
 				PCIE20_LINK_CONTROL2_LINK_STATUS2,
 				0xf, dev->link_speed);
 
-		if (!dev->tcsr_not_supported) {
-			EP_PCIE_DBG2(dev, "PCIe V%d: Clear disconn_req after D3_COLD\n",
-					dev->rev);
-			ep_pcie_write_reg_field(dev->tcsr_perst_en,
-						TCSR_PCIE_RST_SEPARATION, BIT(5), 0);
-		}
+		EP_PCIE_DBG2(dev, "PCIe V%d: Clear disconn_req after D3_COLD\n",
+			     dev->rev);
+		ep_pcie_write_reg_field(dev->tcsr_perst_en,
+					TCSR_PCIE_RST_SEPARATION, BIT(5), 0);
 	}
 
 	if (!dev->enumerated) {
@@ -1681,6 +1681,7 @@ int ep_pcie_core_enable_endpoint(enum ep_pcie_options opt)
 	u32 val = 0;
 	u32 retries = 0;
 	u32 bme = 0;
+	bool perst = true;
 	bool ltssm_en = false;
 	struct ep_pcie_dev_t *dev = &ep_pcie_dev;
 
@@ -1921,11 +1922,19 @@ int ep_pcie_core_enable_endpoint(enum ep_pcie_options opt)
 		if (retries % 100 == 0)
 			EP_PCIE_DBG(dev, "PCIe V%d: LTSSM_STATE:0x%x\n",
 					dev->rev, (val >> 0xC) & 0x3f);
+		perst = atomic_read(&dev->perst_deast) ? 1 : 0;
 	} while ((!(val & XMLH_LINK_UP) ||
 		!ep_pcie_confirm_linkup(dev, false))
-		&& (retries < LINK_UP_CHECK_MAX_COUNT));
+		&& (retries < LINK_UP_CHECK_MAX_COUNT) && perst);
 
-	if (retries == LINK_UP_CHECK_MAX_COUNT) {
+	if (!perst) {
+		dev->perst_ast_in_enum_counter++;
+		EP_PCIE_ERR(dev,
+				"PCIe V%d: Perst asserted No. %ld while waiting for link to be up\n",
+				dev->rev, dev->perst_ast_in_enum_counter);
+		ret = EP_PCIE_ERROR;
+		goto link_fail;
+	} else if (retries == LINK_UP_CHECK_MAX_COUNT) {
 		EP_PCIE_ERR(dev, "PCIe V%d: link initialization failed\n",
 			dev->rev);
 		ret = EP_PCIE_ERROR;
@@ -2055,12 +2064,10 @@ int ep_pcie_core_disable_endpoint(void)
 	}
 	dev->conf_ipa_msi_iatu = false;
 
-	if (!dev->tcsr_not_supported) {
-		EP_PCIE_DBG2(dev, "PCIe V%d: Set pcie_disconnect_req during D3_COLD\n",
-				dev->rev);
-		ep_pcie_write_reg_field(dev->tcsr_perst_en,
-					TCSR_PCIE_RST_SEPARATION, BIT(5), 1);
-	}
+	EP_PCIE_DBG2(dev, "PCIe V%d: Set pcie_disconnect_req during D3_COLD\n",
+		     dev->rev);
+	ep_pcie_write_reg_field(dev->tcsr_perst_en,
+				TCSR_PCIE_RST_SEPARATION, BIT(5), 1);
 
 	ep_pcie_pipe_clk_deinit(dev);
 	ep_pcie_clk_deinit(dev);

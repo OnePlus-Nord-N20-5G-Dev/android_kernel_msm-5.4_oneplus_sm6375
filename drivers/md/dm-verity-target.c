@@ -273,18 +273,17 @@ out:
 	if (v->mode == DM_VERITY_MODE_LOGGING)
 		return 0;
 
-	if (v->mode == DM_VERITY_MODE_EIO) {
-#ifdef CONFIG_DM_VERITY_AVB
-		dm_verity_avb_error_handler();
-#endif
-		kernel_halt();
-	}
-
 	if (v->mode == DM_VERITY_MODE_RESTART) {
 #ifdef CONFIG_DM_VERITY_AVB
 		dm_verity_avb_error_handler();
 #endif
+
+#if IS_ENABLED(CONFIG_OPLUS_FEATURE_FEEDBACK)
+		panic("dm-verity device corrupted");
+#else
 		kernel_restart("dm-verity device corrupted");
+#endif /* CONFIG_OPLUS_FEATURE_FEEDBACK */
+
 	}
 
 	return 1;
@@ -943,16 +942,19 @@ static int verity_parse_opt_args(struct dm_arg_set *as, struct dm_verity *v,
 				return r;
 			}
 			continue;
+
 		} else if (!strcasecmp(arg_name, DM_VERITY_OPT_AT_MOST_ONCE)) {
 			r = verity_alloc_most_once(v);
 			if (r)
 				return r;
 			continue;
+
 		} else if (verity_is_fec_opt_arg(arg_name)) {
 			r = verity_fec_parse_opt_args(as, v, &argc, arg_name);
 			if (r)
 				return r;
 			continue;
+
 		} else if (verity_verify_is_sig_opt_arg(arg_name)) {
 			r = verity_verify_sig_parse_opt_args(as, v,
 							     verify_args,
@@ -1030,6 +1032,7 @@ static int verity_ctr(struct dm_target *ti, unsigned argc, char **argv)
 	v->version = num;
 
 retry_dev1:
+
 	r = dm_get_device(ti, argv[1], FMODE_READ, &v->data_dev);
 	if (r) {
 		if (r == -ENODEV && dm_device_wait) {
@@ -1227,7 +1230,13 @@ retry_dev2:
 	}
 
 	/* WQ_UNBOUND greatly improves performance when running on ramdisk */
+
+#if defined(OPLUS_FEATURE_SCHED_ASSIST) && defined(CONFIG_OPLUS_FEATURE_SCHED_ASSIST)
+	v->verify_wq = alloc_workqueue("kverityd", WQ_CPU_INTENSIVE | WQ_MEM_RECLAIM | WQ_UNBOUND | WQ_UX, num_online_cpus());
+#else
 	v->verify_wq = alloc_workqueue("kverityd", WQ_CPU_INTENSIVE | WQ_MEM_RECLAIM | WQ_UNBOUND, num_online_cpus());
+#endif
+
 	if (!v->verify_wq) {
 		ti->error = "Cannot allocate workqueue";
 		r = -ENOMEM;

@@ -69,10 +69,7 @@ do {									\
 #define BLKSIZE_1024		2
 #define BLKSIZE_2048		3
 
-#define FLUSHPERIOD_1	    0x1
 #define FLUSHPERIOD_2048	0x800
-
-#define PERFLSHEOT_BIT	    BIT(18)
 
 struct csr_drvdata {
 	void __iomem		*base;
@@ -89,7 +86,6 @@ struct csr_drvdata {
 	struct clk		*clk;
 	spinlock_t		spin_lock;
 	bool			usb_bam_support;
-	bool			perflsheot_set_support;
 	bool			hwctrl_set_support;
 	bool			set_byte_cntr_support;
 	bool			timestamp_support;
@@ -167,8 +163,6 @@ void msm_qdss_csr_enable_flush(struct coresight_csr *csr)
 
 	usbflshctrl = csr_readl(drvdata, CSR_USBFLSHCTRL);
 	usbflshctrl |= 0x2;
-	if (drvdata->perflsheot_set_support)
-		usbflshctrl |= PERFLSHEOT_BIT;
 	csr_writel(drvdata, usbflshctrl, CSR_USBFLSHCTRL);
 
 	CSR_LOCK(drvdata);
@@ -221,8 +215,6 @@ void msm_qdss_csr_disable_flush(struct coresight_csr *csr)
 
 	usbflshctrl = csr_readl(drvdata, CSR_USBFLSHCTRL);
 	usbflshctrl &= ~0x2;
-	if (drvdata->perflsheot_set_support)
-		usbflshctrl &= ~PERFLSHEOT_BIT;
 	csr_writel(drvdata, usbflshctrl, CSR_USBFLSHCTRL);
 
 	CSR_LOCK(drvdata);
@@ -607,19 +599,8 @@ static int csr_probe(struct platform_device *pdev)
 		dev_dbg(dev, "aodbg_csr_support operation not supported\n");
 	else
 		dev_dbg(dev, "aodbg_csr_support operation supported\n");
-	drvdata->perflsheot_set_support = of_property_read_bool(
-			pdev->dev.of_node, "qcom,perflsheot-set-support");
-	if (!drvdata->perflsheot_set_support)
-		dev_dbg(dev, "perflsheot_set_support handled by other subsystem\n");
-	else
-		dev_dbg(dev, "perflsheot_set_support operation supported\n");
 
-	if (drvdata->perflsheot_set_support) {
-		ret = of_property_read_u32(pdev->dev.of_node, "qcom,flushperiod",
-						&drvdata->flushperiod);
-		if (ret)
-			drvdata->flushperiod = FLUSHPERIOD_1;
-	} else if (drvdata->usb_bam_support)
+	if (drvdata->usb_bam_support)
 		drvdata->flushperiod = FLUSHPERIOD_2048;
 	drvdata->msr_support = of_property_read_bool(pdev->dev.of_node,
 						"qcom,msr-support");

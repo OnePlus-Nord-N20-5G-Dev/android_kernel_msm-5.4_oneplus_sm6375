@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2010-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #include <linux/delay.h>
@@ -25,7 +24,6 @@
 #include <linux/err.h>
 #include <linux/platform_device.h>
 #include <linux/cpu_pm.h>
-#include <linux/syscore_ops.h>
 #include <asm/arch_timer.h>
 #include <soc/qcom/rpm-notifier.h>
 #include <soc/qcom/lpm_levels.h>
@@ -46,7 +44,6 @@
 #define MPM_REG_STATUS 4
 #define MPM_GPIO 0
 #define MPM_GIC 1
-#define MAX_REG_WIDTH	3
 
 #define QCOM_MPM_REG_WIDTH  DIV_ROUND_UP(num_mpm_irqs, 32)
 #define MPM_REGISTER(reg, index) ((reg * QCOM_MPM_REG_WIDTH + index + 2) * (4))
@@ -65,12 +62,6 @@ struct msm_mpm_device_data {
 static int num_mpm_irqs = 64;
 static struct msm_mpm_device_data msm_mpm_dev_data;
 static unsigned int *mpm_to_irq;
-#ifdef CONFIG_DEEPSLEEP
-static unsigned int mpm_enabled[MAX_REG_WIDTH];
-static unsigned int mpm_type_raising_edge[MAX_REG_WIDTH];
-static unsigned int mpm_type_falling_edge[MAX_REG_WIDTH];
-static unsigned int mpm_type_level[MAX_REG_WIDTH];
-#endif
 static DEFINE_SPINLOCK(mpm_lock);
 
 static irq_hw_number_t get_parent_hwirq(struct irq_domain *d,
@@ -498,55 +489,6 @@ static irqreturn_t msm_mpm_irq(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
-#ifdef CONFIG_DEEPSLEEP
-static int mpm_suspend(void)
-{
-	int i;
-	unsigned int reg;
-
-	for (i = 0; i < QCOM_MPM_REG_WIDTH; i++) {
-		reg = MPM_REG_RISING_EDGE;
-		mpm_type_raising_edge[i] = msm_mpm_read(reg, i);
-
-		reg = MPM_REG_FALLING_EDGE;
-		mpm_type_falling_edge[i] = msm_mpm_read(reg, i);
-
-		reg = MPM_REG_POLARITY;
-		mpm_type_level[i] = msm_mpm_read(reg, i);
-
-		reg = MPM_REG_ENABLE;
-		mpm_enabled[i] =  msm_mpm_read(reg, i);
-	}
-
-	return 0;
-}
-
-static void mpm_resume(void)
-{
-	int i;
-	unsigned int reg;
-
-	for (i = 0; i < QCOM_MPM_REG_WIDTH; i++) {
-		reg = MPM_REG_RISING_EDGE;
-		msm_mpm_write(reg, i, mpm_type_raising_edge[i]);
-
-		reg = MPM_REG_FALLING_EDGE;
-		msm_mpm_write(reg, i, mpm_type_falling_edge[i]);
-
-		reg = MPM_REG_POLARITY;
-		msm_mpm_write(reg, i, mpm_type_level[i]);
-
-		reg = MPM_REG_ENABLE;
-		msm_mpm_write(reg, i, mpm_enabled[i]);
-	}
-}
-
-static struct syscore_ops mpm_syscore_ops = {
-	.suspend = mpm_suspend,
-	.resume = mpm_resume,
-};
-#endif
-
 static int msm_mpm_init(struct device_node *node)
 {
 	struct msm_mpm_device_data *dev = &msm_mpm_dev_data;
@@ -602,10 +544,6 @@ static int msm_mpm_init(struct device_node *node)
 		goto set_wake_irq_err;
 	}
 
-#ifdef CONFIG_DEEPSLEEP
-	register_syscore_ops(&mpm_syscore_ops);
-#endif
-
 	return 0;
 set_wake_irq_err:
 	free_irq(dev->ipc_irq, msm_mpm_irq);
@@ -635,12 +573,8 @@ static const struct of_device_id mpm_gic_chip_data_table[] = {
 		.data = mpm_qcs405_gic_chip_data,
 	},
 	{
-		.compatible = "qcom,mpm-gic-scuba",
-		.data = mpm_scuba_gic_chip_data,
-	},
-	{
-		.compatible = "qcom,mpm-gic-bengal",
-		.data = mpm_bengal_gic_chip_data,
+		.compatible = "qcom,mpm-gic-blair",
+		.data = mpm_blair_gic_chip_data,
 	},
 	{}
 };

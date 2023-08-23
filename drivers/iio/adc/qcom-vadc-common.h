@@ -58,8 +58,7 @@
 #define ADC5_USR_DATA_CHECK			0x8000
 
 #define R_PU_100K			100000
-#define RATIO_MAX_ADC7			0x4000
-#define R_PU_30K			30000
+#define RATIO_MAX_ADC7		0x4000
 
 #define DIE_TEMP_ADC7_SCALE_1				-60000
 #define DIE_TEMP_ADC7_SCALE_2				20000
@@ -244,7 +243,6 @@ enum vadc_scale_fn_type {
 	SCALE_HW_CALIB_PM5_GEN3_BATT_THERM_100K,
 	SCALE_HW_CALIB_PM5_GEN3_BATT_ID_100K,
 	SCALE_HW_CALIB_PM5_GEN3_USB_IN_I,
-	SCALE_HW_CALIB_PM5_GEN3_BATT_THERM_30K,
 	SCALE_HW_CALIB_INVALID,
 };
 
@@ -279,7 +277,5 @@ int qcom_vadc_decimation_from_dt(u32 value);
 void adc_tm_scale_therm_voltage_100k_gen3(struct adc_tm_config *param);
 
 int32_t adc_tm_absolute_rthr_gen3(struct adc_tm_config *tm_config);
-
-void qcom_vadc_gen3_set_r_comp(int r_comp_ohm);
 
 #endif /* QCOM_VADC_COMMON_H */
