@@ -16,25 +16,6 @@
 ##################################################################################
 
 -include oplus_native_features.mk
-###ifdef OPLUS_ARCH_INJECT
-OPLUS_CONNECTIVITY_NATIVE_FEATURE_SET :=
-
-
-ifeq ($(OPLUS_FEATURE_WIFI_MTUDETECT), yes)
-OPLUS_CONNECTIVITY_NATIVE_FEATURE_SET += OPLUS_FEATURE_WIFI_MTUDETECT
-endif
-
-
-$(foreach myfeature,$(OPLUS_CONNECTIVITY_NATIVE_FEATURE_SET),\
-    $( \
-        $(eval KBUILD_CFLAGS += -D$(myfeature)) \
-        $(eval KBUILD_CPPFLAGS += -D$(myfeature)) \
-        $(eval CFLAGS_KERNEL += -D$(myfeature)) \
-        $(eval CFLAGS_MODULE += -D$(myfeature)) \
-    ) \
-)
-###endif OPLUS_ARCH_INJECT
-
 #bsp team should check and modify neccessary to make sure the following macro is allowed to declare
 #can add or delete item for the top level macro
 ALLOWED_MCROS := OPLUS_FEATURE_POWERINFO_FTM \
@@ -56,7 +37,6 @@ OPLUS_FEATURE_AUDIODETECT \
 OPLUS_AUDIO_PA_BOOST_VOLTAGE \
 OPLUS_FEATURE_SWITCH_CHECK \
 OPLUS_FEATURE_OLC \
-OPLUS_FEATURE_GAME_OPT \
 OPLUS_FEATURE_SENSOR_FEEDBACK \
 OPLUS_FEATURE_DATA_MODULE
 
@@ -91,7 +71,6 @@ KBUILD_CFLAGS += -DOPLUS_FEATURE_TP_BASIC
 #only declare a macro if nativefeature is define and also added in above ALLOWED_MCROS
 $(foreach myfeature,$(ALLOWED_MCROS),\
     $(if $(strip $($(myfeature))),\
-         $(warning make $(myfeature) to be a macro here) \
          $(eval KBUILD_CFLAGS += -D$(myfeature)) \
          $(eval KBUILD_CPPFLAGS += -D$(myfeature)) \
          $(eval CFLAGS_KERNEL += -D$(myfeature)) \
