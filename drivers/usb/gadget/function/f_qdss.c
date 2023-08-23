@@ -502,6 +502,8 @@ static void qdss_unbind(struct usb_configuration *c, struct usb_function *f)
 	qdss_string_defs[QDSS_DATA_IDX].id = 0;
 	qdss_string_defs[QDSS_CTRL_IDX].id = 0;
 
+	qdss->debug_inface_enabled = false;
+
 	clear_eps(f);
 	clear_desc(gadget, f);
 }
@@ -589,8 +591,8 @@ static void usb_qdss_connect_work(struct work_struct *work)
 
 	qdss = container_of(work, struct f_qdss, connect_w);
 
-	/* If qdss is closed or cable is removed, discard connect_work */
-	if (qdss->qdss_close || qdss->usb_connected == 0) {
+	/* If cable is removed, discard connect_work */
+	if (qdss->usb_connected == 0) {
 		cancel_work_sync(&qdss->disconnect_w);
 		return;
 	}
@@ -924,6 +926,8 @@ void usb_qdss_close(struct usb_qdss_ch *ch)
 
 	if (qdss->endless_req) {
 		spin_unlock_irqrestore(&channel_lock, flags);
+		/* Flush connect work before proceeding with de-queue */
+		flush_work(&qdss->connect_w);
 		usb_ep_dequeue(qdss->port.data, qdss->endless_req);
 		spin_lock_irqsave(&channel_lock, flags);
 	}
@@ -965,9 +969,7 @@ static void qdss_cleanup(void)
 
 static void qdss_free_func(struct usb_function *f)
 {
-	struct f_qdss *qdss = func_to_qdss(f);
-
-	qdss->debug_inface_enabled = false;
+	/* Do nothing as usb_qdss_alloc() doesn't alloc anything. */
 }
 
 static inline struct usb_qdss_opts *to_f_qdss_opts(struct config_item *item)

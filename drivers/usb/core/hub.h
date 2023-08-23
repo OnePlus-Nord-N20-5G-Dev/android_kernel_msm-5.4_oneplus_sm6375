@@ -62,7 +62,6 @@ struct usb_hub {
 	unsigned		disconnected:1;
 	unsigned		in_reset:1;
 	unsigned		quirk_disable_autosuspend:1;
-	unsigned		quirk_set_addr_quick_retry:1;
 
 	unsigned		quirk_check_port_auto_suspend:1;
 

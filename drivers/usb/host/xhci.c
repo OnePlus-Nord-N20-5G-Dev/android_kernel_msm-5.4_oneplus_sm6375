@@ -1034,12 +1034,12 @@ int xhci_suspend(struct xhci_hcd *xhci, bool do_wakeup)
 			xhci->shared_hcd->state != HC_STATE_SUSPENDED)
 		return -EINVAL;
 
+	if (!HCD_HW_ACCESSIBLE(hcd))
+		return 0;
+
 	/* Clear root port wake on bits if wakeup not allowed. */
 	xhci_disable_hub_port_wake(xhci, &xhci->usb3_rhub, do_wakeup);
 	xhci_disable_hub_port_wake(xhci, &xhci->usb2_rhub, do_wakeup);
-
-	if (!HCD_HW_ACCESSIBLE(hcd))
-		return 0;
 
 	xhci_dbc_suspend(xhci);
 
@@ -4222,7 +4222,6 @@ static int xhci_setup_device(struct usb_hcd *hcd, struct usb_device *udev,
 		xhci_copy_ep0_dequeue_into_input_ctx(xhci, udev);
 	ctrl_ctx->add_flags = cpu_to_le32(SLOT_FLAG | EP0_FLAG);
 	ctrl_ctx->drop_flags = 0;
-	xhci->cmd_delay = hcd->cmd_delay;
 
 	trace_xhci_address_ctx(xhci, virt_dev->in_ctx,
 				le32_to_cpu(slot_ctx->dev_info) >> 27);
