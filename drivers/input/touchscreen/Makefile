@@ -68,6 +68,7 @@ obj-$(CONFIG_TOUCHSCREEN_USB_COMPOSITE)	+= usbtouchscreen.o
 obj-$(CONFIG_TOUCHSCREEN_PCAP)		+= pcap_ts.o
 obj-$(CONFIG_TOUCHSCREEN_PENMOUNT)	+= penmount.o
 obj-$(CONFIG_TOUCHSCREEN_PIXCIR)	+= pixcir_i2c_ts.o
+obj-$(CONFIG_TOUCHSCREEN_RM_TS)		+= raydium_i2c_ts.o
 obj-$(CONFIG_TOUCHSCREEN_S3C2410)	+= s3c2410_ts.o
 obj-$(CONFIG_TOUCHSCREEN_S6SY761)	+= s6sy761.o
 obj-$(CONFIG_TOUCHSCREEN_SILEAD)	+= silead.o
@@ -110,10 +111,16 @@ obj-$(CONFIG_TOUCHSCREEN_ROHM_BU21023)	+= rohm_bu21023.o
 obj-$(CONFIG_TOUCHSCREEN_RASPBERRYPI_FW)	+= raspberrypi-ts.o
 obj-$(CONFIG_TOUCHSCREEN_IQS5XX)	+= iqs5xx.o
 obj-$(CONFIG_TOUCHSCREEN_ST)	+= st/
-obj-$(CONFIG_TOUCHSCREEN_HIMAX_CHIPSET)	+= hxchipset/
-obj-$(CONFIG_TOUCHSCREEN_FTS)	+= focaltech_touch/
-obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_TCM)	+= synaptics_tcm/
-obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX) += synaptics_dsx/
-obj-$(CONFIG_TOUCHSCREEN_NT36XXX)	+= nt36xxx/
-obj-$(CONFIG_TOUCHSCREEN_PARADE)        += pt/
-obj-$(CONFIG_TOUCHSCREEN_RM_TS)         += raydium/
+#obj-$(CONFIG_TOUCHSCREEN_FTS)	+= focaltech_touch/
+#obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_TCM)	+= synaptics_tcm/
+#obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX) += synaptics_dsx/
+
+#ifdef OPLUS_FEATURE_TP_BASIC
+obj-$(CONFIG_TOUCHPANEL_CUSTOM) += touch_custom/
+obj-$(CONFIG_TOUCHPANEL_OPLUS) += oplus_touchscreen_v2/
+#endif /*OPLUS_FEATURE_TP_BASIC*/
+
+#obj-$(CONFIG_TOUCHSCREEN_FTS)	+= focaltech_touch/
+#obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_TCM)	+= synaptics_tcm/
+#obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX) += synaptics_dsx/
+#obj-$(CONFIG_TOUCHSCREEN_NT36XXX)	+= nt36xxx/
