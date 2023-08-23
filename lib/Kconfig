@@ -294,6 +294,12 @@ config LZ4HC_COMPRESS
 config LZ4_DECOMPRESS
 	tristate
 
+config NAN_SHAN_COMPRESS
+	tristate
+
+config NAN_SHAN_DECOMPRESS
+	tristate
+
 config ZSTD_COMPRESS
 	select XXHASH
 	tristate

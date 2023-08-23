@@ -1102,8 +1102,10 @@
   i2c_register_driver
   i2c_smbus_read_byte
   i2c_smbus_read_byte_data
+  i2c_smbus_read_byte_data
   i2c_smbus_read_i2c_block_data
   i2c_smbus_write_byte
+  i2c_smbus_write_byte_data
   i2c_smbus_write_byte_data
   i2c_smbus_write_i2c_block_data
   __i2c_smbus_xfer
@@ -1941,6 +1943,7 @@
   refcount_dec_not_one
   refcount_inc_checked
   refcount_inc_not_zero_checked
+  refcount_warn_saturate
   __refrigerator
   regcache_cache_bypass
   regcache_cache_only
