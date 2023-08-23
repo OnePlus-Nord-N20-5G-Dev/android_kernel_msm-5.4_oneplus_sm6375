@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
- * Copyright (c) 2019, 2021, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2019, The Linux Foundation. All rights reserved.
  */
 
 #ifndef _ION_KERNEL_H
@@ -47,15 +47,10 @@ struct ion_buffer {
 	void *vaddr;
 	struct sg_table *sg_table;
 	struct list_head attachments;
-};
-
-/* refer to include/linux/pm.h */
-#ifdef CONFIG_HIBERNATION
-struct ion_pm_ops {
-	int (*freeze)(struct ion_heap *heap);
-	int (*restore)(struct ion_heap *heap);
-};
+#if defined(OPLUS_FEATURE_MEMLEAK_DETECT) && defined(CONFIG_DUMP_TASKS_MEM)
+	struct task_struct *tsk;
 #endif
+};
 
 /**
  * struct ion_heap_ops - ops to operate on a given heap
@@ -77,9 +72,6 @@ struct ion_heap_ops {
 	void (*free)(struct ion_buffer *buffer);
 	int (*shrink)(struct ion_heap *heap, gfp_t gfp_mask, int nr_to_scan);
 	long (*get_pool_size)(struct ion_heap *heap);
-#ifdef CONFIG_HIBERNATION
-	struct ion_pm_ops pm;
-#endif
 };
 
 /**
@@ -153,9 +145,6 @@ struct ion_heap {
 
 	/* heap's debugfs root */
 	struct dentry *debugfs_dir;
-#ifdef CONFIG_DEBUG_ION_TRACK_HEAP_MEM
-	atomic_long_t total_allocated;
-#endif
 };
 
 #define ion_device_add_heap(heap) __ion_device_add_heap(heap, THIS_MODULE)

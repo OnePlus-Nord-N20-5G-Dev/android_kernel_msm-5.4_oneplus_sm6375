@@ -1,7 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only WITH Linux-syscall-note */
 /*
  * Copyright (c) 2017-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
  */
 #ifndef LINUX_SLATECOM_INTERFACE_H
 #define LINUX_SLATECOM_INTERFACE_H
@@ -19,11 +18,8 @@
 #define SLATECOM_TWM_EXIT  8
 #define SLATECOM_SLATE_APP_RUNNING 9
 #define SLATECOM_ADSP_DOWN2_SLATE  10
-#define SLATECOM_SLATE_LOAD 11
-#define SLATECOM_SLATE_UNLOAD 12
-#define SLATECOM_DEVICE_STATE_TRANSITION 13
-#define SLATE_SEND_TIME_DATA 14
-#define SLATECOM_SEND_DEBUG_CONFIG 15
+#define SLATECOM_SLATE_WEAR_LOAD 11
+#define SLATECOM_SLATE_WEAR_UNLOAD 12
 #define EXCHANGE_CODE  'V'
 
 struct slate_ui_data {
@@ -49,24 +45,6 @@ enum slate_event_type {
 	SLATE_DSP_READY,
 	SLATE_BT_ERROR,
 	SLATE_BT_READY,
-	SLATE_SNS_ERROR,
-	SLATE_SNS_READY,
-};
-
-enum device_state_transition {
-	STATE_TWM_ENTER = 1,
-	STATE_TWM_EXIT,
-	STATE_DS_ENTER,
-	STATE_DS_EXIT,
-	STATE_S2D_ENTER,
-	STATE_S2D_EXIT,
-};
-
-enum debug_config {
-	ENABLE_PMIC_RTC,
-	DISABLE_PMIC_RTC,
-	ENABLE_QCLI,
-	DISABLE_QCLI,
 };
 
 #define REG_READ \
@@ -99,23 +77,15 @@ enum debug_config {
 #define SLATE_MODEM_DOWN2_SLATE_DONE \
 	_IOWR(EXCHANGE_CODE, SLATECOM_MODEM_DOWN2_SLATE, \
 	struct slate_ui_data)
-#define SLATE_LOAD \
-	_IOWR(EXCHANGE_CODE, SLATECOM_SLATE_LOAD, \
+#define SLATE_WEAR_LOAD \
+	_IOWR(EXCHANGE_CODE, SLATECOM_SLATE_WEAR_LOAD, \
 	struct slate_ui_data)
-#define SLATE_UNLOAD \
-	_IOWR(EXCHANGE_CODE, SLATECOM_SLATE_UNLOAD, \
+#define SLATE_WEAR_UNLOAD \
+	_IOWR(EXCHANGE_CODE, SLATECOM_SLATE_WEAR_UNLOAD, \
 	struct slate_ui_data)
 #define SLATE_ADSP_DOWN2_SLATE_DONE \
 	_IOWR(EXCHANGE_CODE, SLATECOM_ADSP_DOWN2_SLATE, \
 	struct slate_ui_data)
-#define DEVICE_STATE_TRANSITION \
-	_IOWR(EXCHANGE_CODE, SLATECOM_DEVICE_STATE_TRANSITION, \
-	struct slate_ui_data)
-#define SEND_TIME_DATA \
-	_IOWR(EXCHANGE_CODE, SLATE_SEND_TIME_DATA, \
-	struct slate_ui_data)
-#define SEND_DEBUG_CONFIG \
-	_IOWR(EXCHANGE_CODE, SLATECOM_SEND_DEBUG_CONFIG, \
-	struct slate_ui_data)
+
 #endif /* LINUX_SLATECOM_INTERFACE_H */
 

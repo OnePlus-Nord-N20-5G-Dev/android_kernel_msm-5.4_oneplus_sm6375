@@ -320,9 +320,6 @@ void security_inode_free(struct inode *inode);
 int security_inode_init_security(struct inode *inode, struct inode *dir,
 				 const struct qstr *qstr,
 				 initxattrs initxattrs, void *fs_data);
-int security_inode_init_security_anon(struct inode *inode,
-				      const struct qstr *name,
-				      const struct inode *context_inode);
 int security_old_inode_init_security(struct inode *inode, struct inode *dir,
 				     const struct qstr *qstr, const char **name,
 				     void **value, size_t *len);
@@ -725,13 +722,6 @@ static inline int security_inode_init_security(struct inode *inode,
 	return 0;
 }
 
-static inline int security_inode_init_security_anon(struct inode *inode,
-						    const struct qstr *name,
-						    const struct inode *context_inode)
-{
-	return 0;
-}
-
 static inline int security_old_inode_init_security(struct inode *inode,
 						   struct inode *dir,
 						   const struct qstr *qstr,
@@ -997,7 +987,8 @@ static inline void security_transfer_creds(struct cred *new,
 {
 }
 
-static inline void security_cred_getsecid(const struct cred *c, u32 *secid)
+static inline void security_cred_getsecid(const struct cred *c,
+					  u32 *secid)
 {
 	*secid = 0;
 }

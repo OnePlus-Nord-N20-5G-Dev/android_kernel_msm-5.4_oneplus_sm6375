@@ -19,7 +19,6 @@
 #include <linux/mmc/pm.h>
 #include <linux/dma-direction.h>
 #include <linux/ipc_logging.h>
-#include <linux/blkdev.h>
 
 struct mmc_ios {
 	unsigned int	clock;			/* clock rate */
@@ -204,6 +203,9 @@ struct mmc_host_ops {
 				  unsigned int direction, int blk_size);
 #if defined(CONFIG_SDC_QTI)
 	int     (*notify_load)(struct mmc_host *host, enum mmc_load);
+#endif
+#ifdef CONFIG_MMC_PASSWORDS
+	int	(*sd_lock_reset)(struct mmc_host *host);
 #endif
 };
 
@@ -454,7 +456,6 @@ struct mmc_host {
 #define MMC_CAP_HW_RESET	(1 << 31)	/* Hardware reset */
 
 	u32			caps2;		/* More host capabilities */
-	u32			cached_caps2;
 
 #define MMC_CAP2_BOOTPART_NOACC	(1 << 0)	/* Boot partition no access */
 #define MMC_CAP2_FULL_PWR_CYCLE	(1 << 2)	/* Can do full power cycle */
@@ -540,6 +541,9 @@ struct mmc_host {
 
 	struct delayed_work	detect;
 	int			detect_change;	/* card detect flag */
+#ifdef CONFIG_EMMC_SDCARD_OPTIMIZE
+    int detect_change_retry;
+#endif
 	struct mmc_slot		slot;
 
 	const struct mmc_bus_ops *bus_ops;	/* current bus driver */
@@ -604,13 +608,6 @@ struct mmc_host {
 #if defined(CONFIG_SDC_QTI)
 	atomic_t active_reqs;
 #endif
-
-#if defined(CONFIG_SDC_QTI)
-	bool			crash_on_err;
-	bool                    hiber_notifier;
-#endif
-	bool			deepsleep;
-
 	unsigned long		private[0] ____cacheline_aligned;
 };
 

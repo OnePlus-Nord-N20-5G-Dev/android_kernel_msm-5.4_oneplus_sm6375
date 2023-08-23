@@ -40,17 +40,11 @@
 /* Indicate backport support for key configuration for Beacon protection*/
 #define CFG80211_BIGTK_CONFIGURATION_SUPPORT 1
 
-/* Indicate backport support for Operation Channel validation*/
-#define CFG80211_OCV_CONFIGURATION_SUPPORT 1
-
 /* Indicate backport support for supported AKM advertisement per interface*/
 #define CFG80211_IFTYPE_AKM_SUITES_SUPPORT 1
 
 /* Indicate backport support for configuring PMKSA timer params*/
 #define CFG80211_CONFIG_PMKSA_TIMER_PARAMS_SUPPORT 1
-
-/* Indicate backport support for 6GHz band */
-#define CFG80211_6GHZ_BAND_SUPPORTED 1
 
 /**
  * DOC: Device registration

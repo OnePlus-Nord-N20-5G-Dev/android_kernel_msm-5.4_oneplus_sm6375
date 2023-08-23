@@ -1,6 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 #undef TRACE_SYSTEM
 #define TRACE_SYSTEM vmscan
+#undef TRACE_INCLUDE_PATH
+#define TRACE_INCLUDE_PATH trace/events
 
 #if !defined(_TRACE_VMSCAN_H) || defined(TRACE_HEADER_MULTI_READ)
 #define _TRACE_VMSCAN_H

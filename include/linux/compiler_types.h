@@ -67,9 +67,7 @@ extern void __chk_io_ptr(const volatile void __iomem *);
 /* The above compilers also define __GNUC__, so order is important here. */
 #include <linux/compiler-gcc.h>
 #else
-#ifndef __COVERITY__
 #error "Unknown compiler"
-#endif
 #endif
 
 /*
