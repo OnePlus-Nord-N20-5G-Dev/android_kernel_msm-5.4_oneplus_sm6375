@@ -535,7 +535,7 @@ static inline void ncm_reset_values(struct f_ncm *ncm)
 	ncm->port.header_len = 0;
 
 	ncm->port.fixed_out_len = le32_to_cpu(ntb_parameters.dwNtbOutMaxSize);
-	ncm->port.fixed_in_len =  le32_to_cpu(ntb_parameters.dwNtbInMaxSize);
+	ncm->port.fixed_in_len = NTB_DEFAULT_IN_SIZE;
 }
 
 /*
@@ -1029,11 +1029,6 @@ static struct sk_buff *ncm_wrap_ntb(struct gether *port,
 	const int rem = le16_to_cpu(ntb_parameters.wNdpInPayloadRemainder);
 	const int dgram_idx_len = 2 * 2 * opts->dgram_item_len;
 
-	if (ncm->port.fixed_in_len != le32_to_cpu(ntb_parameters.dwNtbInMaxSize))
-		ncm->port.fixed_in_len = le32_to_cpu(ntb_parameters.dwNtbInMaxSize);
-
-	max_size = ncm->port.fixed_in_len;
-
 	if (!skb && !ncm->skb_tx_data)
 		return NULL;
 
@@ -1451,23 +1446,40 @@ static int ncm_bind(struct usb_configuration *c, struct usb_function *f)
 	 * with list_for_each_entry, so we assume no race condition
 	 * with regard to ncm_opts->bound access
 	 */
-	mutex_lock(&ncm_opts->lock);
-	gether_set_gadget(ncm_opts->net, cdev->gadget);
 	if (!ncm_opts->bound) {
-		status = gether_register_netdev(ncm_opts->net);
-		if (status) {
+		mutex_lock(&ncm_opts->lock);
+		ncm_opts->net = gether_setup_default();
+		if (IS_ERR(ncm_opts->net)) {
+			status = PTR_ERR(ncm_opts->net);
 			mutex_unlock(&ncm_opts->lock);
-			goto fail;
+			goto error;
+		}
+		gether_set_gadget(ncm_opts->net, cdev->gadget);
+		status = gether_register_netdev(ncm_opts->net);
+		mutex_unlock(&ncm_opts->lock);
+		if (status) {
+			free_netdev(ncm_opts->net);
+			goto error;
 		}
 		ncm_opts->bound = true;
 	}
-	mutex_unlock(&ncm_opts->lock);
+
+	/* export host's Ethernet address in CDC format */
+	status = gether_get_host_addr_cdc(ncm_opts->net, ncm->ethaddr,
+				      sizeof(ncm->ethaddr));
+	if (status < 12) { /* strlen("01234567890a") */
+		ERROR(cdev, "%s: failed to get host eth addr, err %d\n",
+		__func__, status);
+		status = -EINVAL;
+		goto netdev_cleanup;
+	}
+	ncm->port.ioport = netdev_priv(ncm_opts->net);
 
 	us = usb_gstrings_attach(cdev, ncm_strings,
 				 ARRAY_SIZE(ncm_string_defs));
 	if (IS_ERR(us)) {
 		status = PTR_ERR(us);
-		goto fail;
+		goto netdev_cleanup;
 	}
 	ncm_control_intf.iInterface = us[STRING_CTRL_IDX].id;
 	ncm_data_nop_intf.iInterface = us[STRING_DATA_IDX].id;
@@ -1575,7 +1587,10 @@ fail:
 		kfree(ncm->notify_req->buf);
 		usb_ep_free_request(ncm->notify, ncm->notify_req);
 	}
+netdev_cleanup:
+	gether_cleanup(netdev_priv(ncm_opts->net));
 
+error:
 	ERROR(cdev, "%s: can't bind, err %d\n", f->name, status);
 
 	return status;
@@ -1616,15 +1631,369 @@ static const struct config_item_type ncm_func_type = {
 	.ct_owner	= THIS_MODULE,
 };
 
+#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_USB_F_NCM
+#define MIRROR_LINK_STRING_LENGTH_MAX 32
+#define CAR_LINK_STRING_LENGTH_MAX 64
+#define CAR_LINK_SWITCH_NCM_STRING  "CARLINK_ACTION"
+#define CARLINK_GET_VERSION 0x81
+#define CARLINK_SEND_STRING 0x82
+#define CARLINK_SWITCH_NCM  0x83
+#define CARLINK_REPLY_VERSION 0x01
+
+struct ncm_setup_desc {
+	struct work_struct work;
+	struct device *device;
+	uint8_t version;
+	uint8_t major; // Mirror Link major version
+	uint8_t minor; // Mirror Link minor version
+	spinlock_t lock;
+};
+
+typedef enum {
+	CAR_VID = 0,
+	CAR_PID,
+	CAR_PORT,
+	CAR_NAME,
+	CAR_VIN = 5,
+	CAR_INFO_MAX
+} car_info_type;
+
+typedef enum {
+	CAR_MSG_VERSION,
+	CAR_MSG_INFO,
+	CAR_MSG_NCM,
+	CAR_MSG_MIRROR,
+	CAR_MSG_MAX
+} carlink_msg_type;
+
+static struct ncm_setup_desc *_ncm_setup_desc = NULL;
+static short _ocar_msg_state = 0X00;
+static int _ocar_info_type = 0;
+static struct workqueue_struct *ocar_wq = NULL;
+
+static char car_info_vid[CAR_LINK_STRING_LENGTH_MAX];
+static char car_info_pid[CAR_LINK_STRING_LENGTH_MAX];
+static char car_info_port[CAR_LINK_STRING_LENGTH_MAX];
+static char car_info_name[CAR_LINK_STRING_LENGTH_MAX];
+static char car_info_vin[CAR_LINK_STRING_LENGTH_MAX];
+static char *car_info_envp[6] = {car_info_vid, car_info_pid, car_info_port,
+	car_info_name, car_info_vin, NULL};
+
+static void android_setup_complete(struct usb_ep *ep, struct usb_request *req)
+{
+	struct usb_composite_dev *cdev;
+
+	if (req->status || req->actual != req->length)
+		DBG((struct usb_composite_dev *) ep->driver_data,
+				"setup complete --> %d, %d/%d\n",
+				req->status, req->actual, req->length);
+
+	/*
+	 * REVIST The same ep0 requests are shared with function drivers
+	 * so they don't have to maintain the same ->complete() stubs.
+	 *
+	 * Because of that, we need to check for the validity of ->context
+	 * here, even though we know we've set it to something useful.
+	 */
+	if (!req->context)
+		return;
+
+	cdev = req->context;
+
+	if (cdev->req == req)
+		cdev->setup_pending = false;
+	else if (cdev->os_desc_req == req)
+		cdev->os_desc_pending = false;
+	else
+		WARN(1, "unknown request %pK\n", req);
+}
+
+static void android_read_string(struct usb_ep *ep, struct usb_request *req)
+{
+	struct usb_composite_dev *cdev;
+	int i = 0;
+
+	if (req->status || req->actual != req->length)
+		DBG((struct usb_composite_dev *) ep->driver_data,
+				"setup complete --> %d, %d/%d\n",
+				req->status, req->actual, req->length);
+
+	/*
+	 * REVIST The same ep0 requests are shared with function drivers
+	 * so they don't have to maintain the same ->complete() stubs.
+	 *
+	 * Because of that, we need to check for the validity of ->context
+	 * here, even though we know we've set it to something useful.
+	 */
+	if (!req->context) {
+		return;
+	}
+
+	cdev = req->context;
+
+	if (cdev->req == req) {
+		*((uint8_t *)req->buf + req->length) = 0;
+		printk("req->buf length = %d, buf = %s\n", req->length, (uint8_t *)req->buf);
+		printk("req actual = %d\n", req->actual);
+		printk("req->buf:");
+		for(i=0; i<req->length; i++) {
+		    printk("0x:%x ", *((uint8_t *)req->buf + i));
+		}
+		printk("\n");
+
+		switch(_ocar_info_type) {
+			case CAR_VID: {
+				snprintf(car_info_vid, CAR_LINK_STRING_LENGTH_MAX,
+							"CARLINK_VID=%s", (uint8_t *)req->buf);
+				break;
+			}
+
+			case CAR_PID: {
+				snprintf(car_info_pid, CAR_LINK_STRING_LENGTH_MAX,
+							"CARLINK_PID=%s", (uint8_t *)req->buf);
+				break;
+			}
+
+			case CAR_PORT: {
+				snprintf(car_info_port, CAR_LINK_STRING_LENGTH_MAX,
+							"CARLINK_PORT=%s", (uint8_t *)req->buf);
+				break;
+			}
+
+			case CAR_NAME: {
+				snprintf(car_info_name, CAR_LINK_STRING_LENGTH_MAX,
+							"CARLINK_NAME=%s", (uint8_t *)req->buf);
+				break;
+			}
+
+			case CAR_VIN: {
+				snprintf(car_info_vin, CAR_LINK_STRING_LENGTH_MAX,
+							"CARLINK_VIN=%s", (uint8_t *)req->buf);
+				break;
+			}
+
+			default: {
+				printk("unused carlink_msg = %d\n", _ocar_info_type);
+				break;
+			}
+		}
+
+		if (_ocar_info_type == CAR_VIN) {
+			spin_lock(&_ncm_setup_desc->lock);
+			_ocar_msg_state = _ocar_msg_state | (1 << CAR_MSG_INFO);
+			spin_unlock(&_ncm_setup_desc->lock);
+			queue_work(ocar_wq, &_ncm_setup_desc->work);
+		}
+	}
+
+	if (cdev->req == req) {
+		cdev->setup_pending = false;
+	} else if (cdev->os_desc_req == req) {
+		cdev->os_desc_pending = false;
+	} else {
+		WARN(1, "unknown request %pK\n", req);
+	}
+}
+
+static int android_ep0_queue(struct usb_composite_dev *cdev,
+		struct usb_request *req, gfp_t gfp_flags)
+{
+	int ret;
+
+	ret = usb_ep_queue(cdev->gadget->ep0, req, gfp_flags);
+	if (ret == 0) {
+		if (cdev->req == req)
+			cdev->setup_pending = true;
+		else if (cdev->os_desc_req == req)
+			cdev->os_desc_pending = true;
+		else
+			WARN(1, "unknown request %pK\n", req);
+	}
+
+	return ret;
+}
+
+
+static void ncm_setup_work(struct work_struct *data)
+{
+	char *carlink_envp[2] = { 0 };
+	short cur_msg_state;
+	int state;
+	int i; /*test*/
+
+	spin_lock(&_ncm_setup_desc->lock);
+	cur_msg_state = _ocar_msg_state;
+	_ocar_msg_state = _ocar_msg_state & 0X00;
+	spin_unlock(&_ncm_setup_desc->lock);
+	printk("oplus: CAR_LINK cur_msg_state = 0x%x\n", cur_msg_state);
+
+	for (state = 0; state < CAR_MSG_MAX; state++) {
+		if(0X01 & (cur_msg_state >> state)) {
+			switch(state) {
+				case CAR_MSG_VERSION: {
+					char carlink_version_string[CAR_LINK_STRING_LENGTH_MAX];
+					//char *carlink_envp[2] = {carlink_version_string, NULL};
+					carlink_envp[0] = carlink_version_string;
+					printk("oplus: CAR_LINK GET_VERSION uevent!\n");
+					snprintf(carlink_version_string, CAR_LINK_STRING_LENGTH_MAX,
+						"CARLINK_VERSION=V0.%d", _ncm_setup_desc->version);
+					kobject_uevent_env(&_ncm_setup_desc->device->kobj, KOBJ_CHANGE, carlink_envp);
+					break;
+				}
+
+				case CAR_MSG_INFO: {
+					printk("oplus: CAR_LINK MSG_INFO uevent!\n");
+					for (i = 0; i < 5; i++) {
+						printk("CAR_LINK MSG_INFO: index %d = %s\n", i, car_info_envp[i]);
+					}
+					kobject_uevent_env(&_ncm_setup_desc->device->kobj, KOBJ_CHANGE, car_info_envp);
+					break;
+				}
+
+				case CAR_MSG_NCM: {
+					char carlink_ncm_string[CAR_LINK_STRING_LENGTH_MAX];
+					carlink_envp[0] = carlink_ncm_string;
+					printk("oplus: CAR_LINK SWITCH_NCM uevent!\n");
+					snprintf(carlink_ncm_string, CAR_LINK_STRING_LENGTH_MAX,
+						"%s=start", CAR_LINK_SWITCH_NCM_STRING);
+					kobject_uevent_env(&_ncm_setup_desc->device->kobj, KOBJ_CHANGE, carlink_envp);
+					break;
+				}
+
+				case CAR_MSG_MIRROR: {
+					char mirror_link_string[MIRROR_LINK_STRING_LENGTH_MAX];
+					carlink_envp[0] = mirror_link_string;
+					printk("oplus: MirrorLink uevent!\n");
+					snprintf(mirror_link_string, MIRROR_LINK_STRING_LENGTH_MAX,
+						"MirrorLink=V%d.%d", _ncm_setup_desc->major, _ncm_setup_desc->minor);
+					kobject_uevent_env(&_ncm_setup_desc->device->kobj, KOBJ_CHANGE, carlink_envp);
+					break;
+				}
+
+				default: {
+					printk("unused carlink_msg_state = %d\n", state);
+					break;
+				}
+			}
+		}
+	}
+}
+
+int ncm_ctrlrequest(struct usb_composite_dev *cdev,
+			const struct usb_ctrlrequest *ctrl)
+{
+	struct usb_request *req = NULL;
+	u16 w_length = 0;
+	int value = -EOPNOTSUPP;
+	int retValue = -EOPNOTSUPP;
+	int msg_type = 0;
+
+	if (_ncm_setup_desc == NULL || cdev == NULL || ctrl == NULL) {
+		printk("f_ncm param error !\n");
+		return value;
+	}
+
+	w_length = le16_to_cpu(ctrl->wLength);
+	req = cdev->req;
+	req->zero = 0;
+	req->context = cdev;
+	req->length = 0;
+	if (ctrl->bRequest == CARLINK_SEND_STRING) {
+		req->complete = android_read_string;
+	} else {
+		req->complete = android_setup_complete;
+	}
+
+	if (ctrl->bRequestType == 0x40 && ctrl->bRequest == 0xF0
+			&& _ncm_setup_desc) {
+		msg_type = CAR_MSG_MIRROR;
+		_ncm_setup_desc->minor = (uint8_t)(ctrl->wValue >> 8);
+		_ncm_setup_desc->major = (uint8_t)(ctrl->wValue & 0xFF);
+		spin_lock(&_ncm_setup_desc->lock);
+		_ocar_msg_state = _ocar_msg_state | (1 << CAR_MSG_MIRROR);
+		spin_unlock(&_ncm_setup_desc->lock);
+		queue_work(ocar_wq, &_ncm_setup_desc->work);
+		value = 0;
+	}
+
+	if (ctrl->bRequestType == (USB_DIR_OUT | USB_TYPE_VENDOR)) {
+		if (ctrl->bRequest == CARLINK_SEND_STRING) {
+			printk("ncm_ctrlrequest: CARLINK_SEND_STRING: wIndex(ID) = %d, wValue = %d, wLength = %d\n",
+				ctrl->wIndex, ctrl->wValue, ctrl->wLength);
+			value = 0;
+			msg_type = CAR_MSG_INFO;
+			_ocar_info_type = ctrl->wIndex;
+		} else if (ctrl->bRequest == CARLINK_SWITCH_NCM) {
+			printk("ncm_ctrlrequest: CARLINK_SWITCH_NCM: wIndex = %d, wValue = %d, wLength = %d\n",
+					ctrl->wIndex, ctrl->wValue, ctrl->wLength);
+			msg_type = CAR_MSG_NCM;
+			value = 0;
+			spin_lock(&_ncm_setup_desc->lock);
+			_ocar_msg_state = _ocar_msg_state | (1 << CAR_MSG_NCM);
+			spin_unlock(&_ncm_setup_desc->lock);
+			queue_work(ocar_wq, &_ncm_setup_desc->work);
+		}
+
+	} else if (ctrl->bRequestType == (USB_DIR_IN | USB_TYPE_VENDOR)) {
+		if (ctrl->bRequest == CARLINK_GET_VERSION) {
+			printk("ncm_ctrlrequest: CARLINK_GET_VERSION: wIndex = %d, wValue = %d, wLength = %d\n",
+					ctrl->wIndex, ctrl->wValue, ctrl->wLength);
+			msg_type = CAR_MSG_VERSION;
+			_ncm_setup_desc->version = CARLINK_REPLY_VERSION;
+			spin_lock(&_ncm_setup_desc->lock);
+			_ocar_msg_state = _ocar_msg_state | (1 << CAR_MSG_VERSION);
+			spin_unlock(&_ncm_setup_desc->lock);
+			queue_work(ocar_wq, &_ncm_setup_desc->work);
+			value = 0;
+		}
+	}
+
+	if (value == 0 && (msg_type == CAR_MSG_VERSION || msg_type == CAR_MSG_INFO)) {
+		if (msg_type == CAR_MSG_VERSION) {
+			retValue = min(w_length, (u16) 1);
+			req->length = retValue;
+			req->context = cdev;
+			req->zero = retValue < w_length;
+			*(u8 *)req->buf = CARLINK_REPLY_VERSION;
+		} else {
+			req->length = w_length;
+			req->context = cdev;
+			req->zero = 0;
+		}
+		retValue = android_ep0_queue(cdev, req, GFP_ATOMIC);
+		if (retValue < 0) {
+			DBG(cdev, "ncm_ctrlrequest: ep_queue --> %d\n", retValue);
+			req->status = 0;
+			if (retValue != -ESHUTDOWN)
+				android_setup_complete(cdev->gadget->ep0, req);
+		}
+	}
+
+	return value;
+}
+#endif /* CONFIG_USB_F_NCM */
+#endif
+
 static void ncm_free_inst(struct usb_function_instance *f)
 {
 	struct f_ncm_opts *opts;
 
+#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_USB_F_NCM
+	cancel_work_sync(&_ncm_setup_desc->work);
+	/* release _ncm_setup_desc related resource */
+	device_destroy(_ncm_setup_desc->device->class,
+		_ncm_setup_desc->device->devt);
+	destroy_workqueue(ocar_wq);
+	kfree(_ncm_setup_desc);
+#endif /* CONFIG_USB_F_NCM */
+#endif
+
 	opts = container_of(f, struct f_ncm_opts, func_inst);
 	if (opts->bound)
 		gether_cleanup(netdev_priv(opts->net));
-	else
-		free_netdev(opts->net);
+
 	kfree(opts->ncm_interf_group);
 	kfree(opts);
 }
@@ -1643,13 +2012,6 @@ static struct usb_function_instance *ncm_alloc_inst(void)
 
 	mutex_init(&opts->lock);
 	opts->func_inst.free_func_inst = ncm_free_inst;
-	opts->net = gether_setup_default();
-	if (IS_ERR(opts->net)) {
-		struct net_device *net = opts->net;
-
-		kfree(opts);
-		return ERR_CAST(net);
-	}
 	INIT_LIST_HEAD(&opts->ncm_os_desc.ext_prop);
 
 	descs[0] = &opts->ncm_os_desc;
@@ -1665,6 +2027,17 @@ static struct usb_function_instance *ncm_alloc_inst(void)
 	}
 	opts->ncm_interf_group = ncm_interf_group;
 
+#ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_USB_F_NCM
+	_ncm_setup_desc = kzalloc(sizeof(*_ncm_setup_desc), GFP_KERNEL);
+	if (!_ncm_setup_desc)
+		return ERR_PTR(-ENOMEM);
+	spin_lock_init(&_ncm_setup_desc->lock);
+	ocar_wq = create_singlethread_workqueue("ocar_wq");
+	INIT_WORK(&_ncm_setup_desc->work, ncm_setup_work);
+	_ncm_setup_desc->device = create_function_device("f_ncm");
+#endif /* CONFIG_USB_F_NCM */
+#endif
 	return &opts->func_inst;
 }
 
@@ -1684,20 +2057,17 @@ static void ncm_free(struct usb_function *f)
 static void ncm_unbind(struct usb_configuration *c, struct usb_function *f)
 {
 	struct f_ncm *ncm = func_to_ncm(f);
-	struct f_ncm_opts   *ncm_opts;
+	struct f_ncm_opts *opts = container_of(f->fi, struct f_ncm_opts,
+					func_inst);
 
 	DBG(c->cdev, "ncm unbind\n");
 
-	ncm_opts = container_of(f->fi, struct f_ncm_opts, func_inst);
+	opts->bound = false;
 
 	hrtimer_cancel(&ncm->task_timer);
 
 	kfree(f->os_desc_table);
 	f->os_desc_n = 0;
-
-	ncm->timer_stopping = true;
-	ncm->netdev = NULL;
-	gether_disconnect(&ncm->port);
 
 	ncm_string_defs[0].id = 0;
 	usb_free_all_descriptors(f);
@@ -1710,16 +2080,13 @@ static void ncm_unbind(struct usb_configuration *c, struct usb_function *f)
 	kfree(ncm->notify_req->buf);
 	usb_ep_free_request(ncm->notify, ncm->notify_req);
 
-	mutex_lock(&ncm_opts->lock);
-	SET_NETDEV_DEV(ncm_opts->net, NULL);
-	mutex_unlock(&ncm_opts->lock);
+	gether_cleanup(netdev_priv(opts->net));
 }
 
 static struct usb_function *ncm_alloc(struct usb_function_instance *fi)
 {
 	struct f_ncm		*ncm;
 	struct f_ncm_opts	*opts;
-	int status;
 
 	/* allocate and initialize one new instance */
 	ncm = kzalloc(sizeof(*ncm), GFP_KERNEL);
@@ -1729,20 +2096,9 @@ static struct usb_function *ncm_alloc(struct usb_function_instance *fi)
 	opts = container_of(fi, struct f_ncm_opts, func_inst);
 	mutex_lock(&opts->lock);
 	opts->refcnt++;
-
-	/* export host's Ethernet address in CDC format */
-	status = gether_get_host_addr_cdc(opts->net, ncm->ethaddr,
-				      sizeof(ncm->ethaddr));
-	if (status < 12) { /* strlen("01234567890a") */
-		kfree(ncm);
-		mutex_unlock(&opts->lock);
-		return ERR_PTR(-EINVAL);
-	}
 	ncm_string_defs[STRING_MAC_IDX].s = ncm->ethaddr;
-
 	spin_lock_init(&ncm->lock);
 	ncm_reset_values(ncm);
-	ncm->port.ioport = netdev_priv(opts->net);
 	mutex_unlock(&opts->lock);
 	ncm->port.is_fixed = true;
 	ncm->port.supports_multi_frame = true;
