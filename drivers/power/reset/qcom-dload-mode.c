@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/* Copyright (c) 2020-2021, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2020 The Linux Foundation. All rights reserved.
  */
+
 #include <linux/delay.h>
 #include <linux/err.h>
 #include <linux/init.h>
@@ -14,9 +15,6 @@
 #include <linux/pm.h>
 #include <linux/qcom_scm.h>
 #include <soc/qcom/minidump.h>
-#ifdef CONFIG_HIBERNATION
-#include <linux/syscore_ops.h>
-#endif
 
 enum qcom_download_dest {
 	QCOM_DOWNLOAD_DEST_UNKNOWN = -1,
@@ -41,6 +39,7 @@ static bool enable_dump =
 	IS_ENABLED(CONFIG_POWER_RESET_QCOM_DOWNLOAD_MODE_DEFAULT);
 static enum qcom_download_mode current_download_mode = QCOM_DOWNLOAD_NODUMP;
 static enum qcom_download_mode dump_mode = QCOM_DOWNLOAD_FULLDUMP;
+static bool early_pcie_init_enable;
 
 static int set_download_mode(enum qcom_download_mode mode)
 {
@@ -100,9 +99,7 @@ static int param_set_download_mode(const char *val,
 	if (ret)
 		return ret;
 
-	msm_enable_dump_mode(enable_dump);
-	if (!enable_dump)
-		qcom_scm_disable_sdi();
+	msm_enable_dump_mode(true);
 
 	return 0;
 }
@@ -243,17 +240,6 @@ static struct attribute_group qcom_dload_attr_group = {
 	.attrs = qcom_dload_attrs,
 };
 
-#ifdef CONFIG_HIBERNATION
-static void qcom_dload_syscore_resume(void)
-{
-	msm_enable_dump_mode(enable_dump);
-}
-
-static struct syscore_ops qcom_dload_syscore_ops = {
-	.resume = qcom_dload_syscore_resume,
-};
-#endif
-
 static int qcom_dload_panic(struct notifier_block *this, unsigned long event,
 			      void *ptr)
 {
@@ -277,14 +263,12 @@ static int qcom_dload_reboot(struct notifier_block *this, unsigned long event,
 		set_download_mode(QCOM_DOWNLOAD_NODUMP);
 
 	if (cmd) {
-		if (!strcmp(cmd, "edl"))
-			set_download_mode(QCOM_DOWNLOAD_EDL);
+		if (!strcmp(cmd, "edl")) {
+			early_pcie_init_enable ? set_download_mode(QCOM_EDLOAD_PCI_MODE)
+				: set_download_mode(QCOM_DOWNLOAD_EDL);
+		}
 		else if (!strcmp(cmd, "qcom_dload"))
 			msm_enable_dump_mode(true);
-		else if (!strcmp(cmd, "rtc"))
-			qcom_scm_custom_reset_type = QCOM_SCM_RST_SHUTDOWN_TO_RTC_MODE;
-		else if (!strcmp(cmd, "twm"))
-			qcom_scm_custom_reset_type = QCOM_SCM_RST_SHUTDOWN_TO_TWM_MODE;
 	}
 
 	if (current_download_mode != QCOM_DOWNLOAD_NODUMP)
@@ -299,7 +283,7 @@ static void __iomem *map_prop_mem(const char *propname)
 	void __iomem *addr;
 
 	if (!np) {
-		pr_warn("Unable to find DT property: %s\n", propname);
+		pr_err("Unable to find DT property: %s\n", propname);
 		return NULL;
 	}
 
@@ -330,6 +314,33 @@ static void store_kaslr_offset(void)
 static void store_kaslr_offset(void) {}
 #endif /* CONFIG_RANDOMIZE_BASE */
 
+static void check_pci_edl(struct device_node *np)
+{
+	void __iomem *mem;
+	uint32_t read_val;
+	int ret_l, ret_h, l, h, mask_value;
+
+	mem = of_iomap(np, 0);
+	if (!mem) {
+		pr_info("Unable to map memory for DT property: %s\n", np->name);
+		return;
+	}
+
+	read_val = __raw_readl(mem);
+	ret_l = of_property_read_u32_index(np, "qcom,boot-config-shift", 0, &l);
+	ret_h = of_property_read_u32_index(np, "qcom,boot-config-shift", 1, &h);
+
+	if (!ret_l && !ret_h) {
+		mask_value = (read_val >> l) & GENMASK(h - l, 0);
+		if (mask_value == 5 || mask_value == 7) {
+			early_pcie_init_enable = true;
+			pr_info("Setting up EDL mode to PCIE\n");
+		}
+	}
+
+	iounmap(mem);
+}
+
 static int qcom_dload_probe(struct platform_device *pdev)
 {
 	struct qcom_dload *poweroff;
@@ -359,6 +370,7 @@ static int qcom_dload_probe(struct platform_device *pdev)
 
 	poweroff->dload_dest_addr = map_prop_mem("qcom,msm-imem-dload-type");
 	store_kaslr_offset();
+	check_pci_edl(pdev->dev.of_node);
 
 	msm_enable_dump_mode(enable_dump);
 	if (!enable_dump)
@@ -372,9 +384,6 @@ static int qcom_dload_probe(struct platform_device *pdev)
 	poweroff->reboot_nb.notifier_call = qcom_dload_reboot;
 	poweroff->reboot_nb.priority = 255;
 	register_reboot_notifier(&poweroff->reboot_nb);
-#ifdef CONFIG_HIBERNATION
-	register_syscore_ops(&qcom_dload_syscore_ops);
-#endif
 
 	platform_set_drvdata(pdev, poweroff);
 
