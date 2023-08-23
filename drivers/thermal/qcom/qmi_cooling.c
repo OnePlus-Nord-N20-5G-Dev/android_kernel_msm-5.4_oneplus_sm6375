@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2017-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #define pr_fmt(fmt) "%s:%s " fmt, KBUILD_MODNAME, __func__
@@ -85,20 +84,17 @@ static char  device_clients[][QMI_CLIENT_NAME_LENGTH] = {
 	{"sdr1_lte_dsc"},
 	{"sdr0_nr_dsc"},
 	{"sdr1_nr_dsc"},
-	{"pa_sdr0_dsc"},
-	{"pa_sdr1_dsc"},
-	{"pa_fr1_sdr0_dsc"},
-	{"pa_fr1_sdr1_dsc"},
-	{"pa_fr1_sdr0_scg_dsc"},
-	{"pa_fr1_sdr1_scg_dsc"},
+	{"pa_lte_sdr0_dsc"},
+	{"pa_lte_sdr1_dsc"},
+	{"pa_nr_sdr0_dsc"},
+	{"pa_nr_sdr1_dsc"},
+	{"pa_nr_sdr0_scg_dsc"},
+	{"pa_nr_sdr1_scg_dsc"},
 	{"mmw0_dsc"},
 	{"mmw1_dsc"},
 	{"mmw2_dsc"},
 	{"mmw3_dsc"},
-	{"mmw_ul_throttling_dsc"},
 	{"mmw_ific_dsc"},
-	{"tmd_rf_cal"},
-	{"modem_v2x"},
 };
 
 static int qmi_get_max_state(struct thermal_cooling_device *cdev,
@@ -345,15 +341,6 @@ static void thermal_qmi_net_reset(struct qmi_handle *qmi)
 	}
 }
 
-#ifdef CONFIG_DEEPSLEEP
-static int qmi_unregister_cooling_device(struct qmi_cooling_device *qmi_cdev)
-{
-	thermal_cooling_device_unregister(qmi_cdev->cdev);
-	qmi_cdev->cdev = NULL;
-	return 0;
-}
-#endif
-
 static void thermal_qmi_del_server(struct qmi_handle *qmi,
 				    struct qmi_service *service)
 {
@@ -362,13 +349,8 @@ static void thermal_qmi_del_server(struct qmi_handle *qmi,
 						handle);
 	struct qmi_cooling_device *qmi_cdev = NULL;
 
-	list_for_each_entry(qmi_cdev, &tmd->tmd_cdev_list, qmi_node) {
+	list_for_each_entry(qmi_cdev, &tmd->tmd_cdev_list, qmi_node)
 		qmi_cdev->connection_active = false;
-#ifdef CONFIG_DEEPSLEEP
-		if (tmd->inst_id == 1)
-			qmi_unregister_cooling_device(qmi_cdev);
-#endif
-	}
 }
 
 static int thermal_qmi_new_server(struct qmi_handle *qmi,
