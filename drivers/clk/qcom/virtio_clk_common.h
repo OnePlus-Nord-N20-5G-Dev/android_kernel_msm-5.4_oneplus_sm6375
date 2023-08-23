@@ -7,15 +7,6 @@
 #include <linux/types.h>
 
 /*
- *
- */
-struct virtio_clk_init_data {
-	const char		*name;
-	const char		* const *parent_names;
-	u8			num_parents;
-};
-
-/*
  * struct clk_virtio_desc - virtio clock descriptor
  * clk_names: the pointer of clock name pointer
  * num_clks: number of clocks
@@ -23,7 +14,7 @@ struct virtio_clk_init_data {
  * num_resets: number of resets
  */
 struct clk_virtio_desc {
-	const struct virtio_clk_init_data *clks;
+	const char * const *clk_names;
 	size_t num_clks;
 	const char * const *reset_names;
 	size_t num_resets;

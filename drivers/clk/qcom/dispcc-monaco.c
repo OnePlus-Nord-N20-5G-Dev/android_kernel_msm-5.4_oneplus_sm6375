@@ -19,7 +19,6 @@
 #include "clk-regmap-divider.h"
 #include "common.h"
 #include "vdd-level-monaco.h"
-#include "clk-pm.h"
 
 static DEFINE_VDD_REGULATORS(vdd_cx, VDD_NOMINAL + 1, 1, vdd_corner);
 
@@ -311,7 +310,7 @@ static struct clk_branch disp_cc_mdss_ahb_clk = {
 				.hw = &disp_cc_mdss_ahb_clk_src.clkr.hw,
 			},
 			.num_parents = 1,
-			.flags = CLK_SET_RATE_PARENT,
+			.flags = CLK_SET_RATE_PARENT | CLK_IS_CRITICAL,
 			.ops = &clk_branch2_ops,
 		},
 	},
@@ -473,7 +472,7 @@ static struct clk_branch disp_cc_sleep_clk = {
 				.hw = &disp_cc_sleep_clk_src.clkr.hw,
 			},
 			.num_parents = 1,
-			.flags = CLK_SET_RATE_PARENT,
+			.flags = CLK_SET_RATE_PARENT | CLK_IS_CRITICAL,
 			.ops = &clk_branch2_ops,
 		},
 	},
@@ -529,7 +528,7 @@ static const struct regmap_config disp_cc_monaco_regmap_config = {
 	.fast_io = true,
 };
 
-static struct qcom_cc_desc disp_cc_monaco_desc = {
+static const struct qcom_cc_desc disp_cc_monaco_desc = {
 	.config = &disp_cc_monaco_regmap_config,
 	.clks = disp_cc_monaco_clocks,
 	.num_clks = ARRAY_SIZE(disp_cc_monaco_clocks),
@@ -546,10 +545,6 @@ MODULE_DEVICE_TABLE(of, disp_cc_monaco_match_table);
 static int disp_cc_monaco_probe(struct platform_device *pdev)
 {
 	int ret;
-
-	ret = register_qcom_clks_pm(pdev, false, &disp_cc_monaco_desc);
-	if (ret)
-		dev_err(&pdev->dev, "Failed register dispcc_pm_rt_ops clocks\n");
 
 	ret = qcom_cc_probe(pdev, &disp_cc_monaco_desc);
 	if (ret) {

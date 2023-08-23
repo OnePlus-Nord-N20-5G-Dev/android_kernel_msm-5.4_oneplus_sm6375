@@ -2,7 +2,6 @@
 /*
  * Copyright (c) 2015-2016, 2018-2021 The Linux Foundation.
  * All rights reserved.
- * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #ifndef __QCOM_CLK_ALPHA_PLL_H__
@@ -26,7 +25,6 @@ enum {
 	CLK_ALPHA_PLL_TYPE_REGERA,
 	CLK_ALPHA_PLL_TYPE_AGERA,
 	CLK_ALPHA_PLL_TYPE_LUCID_EVO,
-	CLK_ALPHA_PLL_TYPE_RIVIAN_EVO,
 	CLK_ALPHA_PLL_TYPE_MAX,
 };
 
@@ -97,7 +95,6 @@ struct clk_alpha_pll {
 #define SUPPORTS_FSM_LEGACY_MODE BIT(4)
 #define SUPPORTS_SLEW           BIT(4)
 #define BYPASS_LATCH		BIT(6)
-#define SUPPORTS_NO_PLL_LATCH	BIT(7)
 	u8 flags;
 
 	struct clk_regmap clkr;
@@ -193,7 +190,6 @@ extern const struct clk_ops clk_alpha_pll_fixed_zonda_evo_ops;
 extern const struct clk_ops clk_alpha_pll_postdiv_zonda_evo_ops;
 extern const struct clk_ops clk_alpha_pll_postdiv_lucid_evo_ops;
 extern const struct clk_ops clk_alpha_pll_lucid_evo_ops;
-extern const struct clk_ops clk_alpha_pll_rivian_evo_ops;
 
 void clk_alpha_pll_configure(struct clk_alpha_pll *pll, struct regmap *regmap,
 			     const struct alpha_pll_config *config);
@@ -219,11 +215,6 @@ int clk_lucid_evo_pll_configure(struct clk_alpha_pll *pll,
 				struct regmap *regmap,
 				const struct alpha_pll_config *config);
 int clk_zonda_evo_pll_configure(struct clk_alpha_pll *pll,
-				struct regmap *regmap,
-				const struct alpha_pll_config *config);
-void clk_huayra_pll_configure(struct clk_alpha_pll *pll, struct regmap *regmap,
-				const struct alpha_pll_config *config);
-int clk_rivian_evo_pll_configure(struct clk_alpha_pll *pll,
 				struct regmap *regmap,
 				const struct alpha_pll_config *config);
 #endif
