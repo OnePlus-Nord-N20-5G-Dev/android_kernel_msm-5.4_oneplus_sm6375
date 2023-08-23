@@ -32,12 +32,25 @@ static irqreturn_t mmc_gpio_cd_irqt(int irq, void *dev_id)
 	struct mmc_host *host = dev_id;
 	struct mmc_gpio *ctx = host->slot.handler_priv;
 
+#ifdef CONFIG_EMMC_SDCARD_OPTIMIZE
+	int present = host->ops->get_cd(host);
+
+	pr_info("%s,line(%d),%s: cd gpio irq, gpio state %d (CARD_%s)\n",
+		__func__, __LINE__, mmc_hostname(host), present, present?"INSERT":"REMOVAL");
+#endif /* CONFIG_EMMC_SDCARD_OPTIMIZE */
+
+
 #if defined(CONFIG_SDC_QTI)
 	/* New card is not corrupted */
 	host->corrupted_card = false;
 #endif
 
 	host->trigger_card_event = true;
+
+#ifdef CONFIG_EMMC_SDCARD_OPTIMIZE
+        host->detect_change_retry = 5;
+#endif /* CONFIG_EMMC_SDCARD_OPTIMIZE */
+
 	mmc_detect_change(host, msecs_to_jiffies(ctx->cd_debounce_delay_ms));
 
 	return IRQ_HANDLED;
@@ -97,28 +110,6 @@ int mmc_gpio_get_cd(struct mmc_host *host)
 		gpiod_get_value(ctx->cd_gpio);
 }
 EXPORT_SYMBOL(mmc_gpio_get_cd);
-
-void mmc_gpiod_free_cd_irq(struct mmc_host *host)
-{
-	devm_free_irq(host->parent, host->slot.cd_irq, host);
-}
-EXPORT_SYMBOL(mmc_gpiod_free_cd_irq);
-
-void mmc_gpiod_restore_cd_irq(struct mmc_host *host)
-{
-	struct mmc_gpio *ctx = host->slot.handler_priv;
-	int irq = host->slot.cd_irq;
-	int ret;
-
-	if (irq >= 0) {
-		ret = devm_request_threaded_irq(host->parent, irq,
-			NULL, ctx->cd_gpio_isr,
-			IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING |
-			IRQF_ONESHOT,
-			ctx->cd_label, host);
-	}
-}
-EXPORT_SYMBOL(mmc_gpiod_restore_cd_irq);
 
 void mmc_gpiod_request_cd_irq(struct mmc_host *host)
 {

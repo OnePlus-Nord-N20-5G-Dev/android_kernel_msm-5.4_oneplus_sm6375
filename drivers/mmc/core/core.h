@@ -35,8 +35,11 @@ struct mmc_bus_ops {
 #if defined(CONFIG_SDC_QTI)
 	int (*change_bus_speed)(struct mmc_host *host, unsigned long *freq);
 #endif
-	int (*pre_hibernate)(struct mmc_host *host);
-	int (*post_hibernate)(struct mmc_host *host);
+
+#ifdef CONFIG_MMC_PASSWORDS
+	int (*sysfs_add)(struct mmc_host *, struct mmc_card *card);
+	void (*sysfs_remove)(struct mmc_host *, struct mmc_card *card);
+#endif
 };
 
 void mmc_attach_bus(struct mmc_host *host, const struct mmc_bus_ops *ops);
@@ -113,9 +116,6 @@ extern void mmc_cqe_clk_scaling_start_busy(struct mmc_queue *mq,
 	struct mmc_host *host, bool lock_needed);
 extern void mmc_cqe_clk_scaling_stop_busy(struct mmc_host *host,
 			bool lock_needed, bool is_cqe_dcmd);
-#if defined(CONFIG_DEEPSLEEP)
-extern void mmc_is_deepsleep(struct mmc_host *host);
-#endif
 #endif
 int mmc_execute_tuning(struct mmc_card *card);
 int mmc_hs200_to_hs400(struct mmc_card *card);
