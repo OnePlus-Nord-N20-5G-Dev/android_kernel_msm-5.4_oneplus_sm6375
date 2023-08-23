@@ -523,7 +523,6 @@ static int sy6970_enable_hvdcp(struct sy6970 *bq)
 				SY6970_HVDCPEN_MASK, val);
 	return ret;
 }
-EXPORT_SYMBOL_GPL(sy6970_enable_hvdcp);
 
 static int sy6970_disable_hvdcp(struct sy6970 *bq)
 {
@@ -534,7 +533,6 @@ static int sy6970_disable_hvdcp(struct sy6970 *bq)
 				SY6970_HVDCPEN_MASK, val);
 	return ret;
 }
-EXPORT_SYMBOL_GPL(sy6970_disable_hvdcp);
 
 static int sy6970_disable_maxc(struct sy6970 *bq)
 {
@@ -931,7 +929,6 @@ int sy6970_disable_watchdog_timer(struct sy6970 *sy)
 	return sy6970_update_bits(sy, SY6970_REG_07,
 						SY6970_WDT_MASK, val);
 }
-EXPORT_SYMBOL_GPL(sy6970_disable_watchdog_timer);
 
 int sy6970_reset_watchdog_timer(struct sy6970 *sy)
 {
@@ -978,7 +975,6 @@ int sy6970_enable_enlim(struct sy6970 *sy)
 	u8 val = SY6970_ENILIM_ENABLE << SY6970_ENILIM_SHIFT;
 	return sy6970_update_bits(sy, SY6970_REG_00, SY6970_ENILIM_MASK, val);
 }
-EXPORT_SYMBOL_GPL(sy6970_enable_enlim);
 
 int sy6970_enter_hiz_mode(struct sy6970 *sy)
 {
@@ -1036,7 +1032,6 @@ int sy6970_disable_enlim(struct sy6970 *sy)
 						SY6970_ENILIM_MASK, val);
 
 }
-EXPORT_SYMBOL_GPL(sy6970_disable_enlim);
 
 int sy6970_get_hiz_mode(struct sy6970 *bq, u8 *state)
 {
@@ -1071,7 +1066,6 @@ static int sy6970_enable_term(struct sy6970 *bq, bool enable)
 
 	return ret;
 }
-EXPORT_SYMBOL_GPL(sy6970_enable_term);
 
 int sy6970_set_boost_current(struct sy6970 *bq, int curr)
 {
@@ -1123,7 +1117,6 @@ static int sy6970_enable_auto_dpdm(struct sy6970* bq, bool enable)
 
 	return ret;
 }
-EXPORT_SYMBOL_GPL(sy6970_enable_auto_dpdm);
 
 int sy6970_set_boost_voltage(struct sy6970 *bq, int volt)
 {
@@ -1160,7 +1153,6 @@ static int sy6970_enable_ico(struct sy6970* bq, bool enable)
 
 	return ret;
 }
-EXPORT_SYMBOL_GPL(sy6970_enable_ico);
 
 static int sy6970_read_idpm_limit(struct sy6970 *bq, int *icl)
 {
@@ -1176,7 +1168,6 @@ static int sy6970_read_idpm_limit(struct sy6970 *bq, int *icl)
 		return 0;
 	}
 }
-EXPORT_SYMBOL_GPL(sy6970_read_idpm_limit);
 
 static int sy6970_enable_safety_timer(struct sy6970 *bq)
 {
@@ -1193,7 +1184,6 @@ static int sy6970_disable_safety_timer(struct sy6970 *bq)
 
 	return sy6970_update_bits(bq, SY6970_REG_07, SY6970_EN_TIMER_MASK, val);
 }
-EXPORT_SYMBOL_GPL(sy6970_disable_safety_timer);
 
 
 static int sy6970_switch_to_hvdcp(struct sy6970 *bq, enum hvdcp_type type)
