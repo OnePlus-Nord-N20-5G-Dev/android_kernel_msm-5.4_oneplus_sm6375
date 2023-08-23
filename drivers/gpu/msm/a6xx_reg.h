@@ -413,7 +413,6 @@
 #define A6XX_RBBM_ISDB_CNT                       0x533
 #define A6XX_RBBM_NC_MODE_CNTL                   0X534
 #define A6XX_RBBM_SNAPSHOT_STATUS                0x535
-#define A6XX_RBBM_LPAC_GBIF_CLIENT_QOS_CNTL      0x5ff
 
 #define A6XX_RBBM_SECVID_TRUST_CNTL              0xF400
 #define A6XX_RBBM_SECVID_TSB_TRUSTED_BASE_LO     0xF800
@@ -759,7 +758,6 @@
 #define A6XX_UCHE_CMDQ_CONFIG               0xE3C
 
 /* SP registers */
-#define A6XX_SP_DBG_ECO_CNTL                0xAE00
 #define A6XX_SP_ADDR_MODE_CNTL              0xAE01
 #define A6XX_SP_NC_MODE_CNTL                0xAE02
 #define A6XX_SP_PERFCTR_SP_SEL_0            0xAE10
@@ -1213,14 +1211,6 @@
 #define A6XX_GPUHTW_LLC_SCID_SHIFT		25
 #define A6XX_GPUHTW_LLC_SCID_MASK \
 	(((1 << A6XX_GPU_LLC_SCID_NUM_BITS) - 1) << A6XX_GPUHTW_LLC_SCID_SHIFT)
-
-/* FUSA registers */
-#define A6XX_GPU_FUSA_REG_ECC_CTRL			0x3FC00
-#define A6XX_GPU_FUSA_REG_CSR_PRIY			0x3FC52
-#define A6XX_GPU_FUSA_DISABLE_NUM_BITS			4
-#define A6XX_GPU_FUSA_DISABLE_BITS			0x5
-#define A6XX_GPU_FUSA_DISABLE_MASK \
-	((1 << A6XX_GPU_FUSA_DISABLE_NUM_BITS) - 1)
 
 #endif /* _A6XX_REG_H */
 

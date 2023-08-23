@@ -172,8 +172,6 @@ struct kgsl_functable {
 	/** @gpu_bus_set: Target specific function to set gpu bandwidth */
 	int (*gpu_bus_set)(struct kgsl_device *device, int bus_level, u32 ab);
 	void (*deassert_gbif_halt)(struct kgsl_device *device);
-	int (*drawctxt_set_shadow_mem)(struct kgsl_device_private *dev_priv,
-		struct kgsl_context *context, uint32_t memory_id);
 };
 
 struct kgsl_ioctl {
@@ -322,6 +320,10 @@ struct kgsl_device {
 	u32 speed_bin;
 	/** @gmu_fault: Set when a gmu or rgmu fault is encountered */
 	bool gmu_fault;
+	#if IS_ENABLED(CONFIG_DRM_MSM)
+	bool snapshot_control;
+	int snapshotfault;
+	#endif
 	/** @timelines: Iterator for assigning IDs to timelines */
 	struct idr timelines;
 	/** @timelines_lock: Spinlock to protect the timelines idr */
@@ -526,6 +528,10 @@ struct kgsl_snapshot {
 	bool first_read;
 	bool recovered;
 	struct kgsl_device *device;
+
+	#if IS_ENABLED(CONFIG_DRM_MSM)
+	char snapshot_hashid[96];
+	#endif
 };
 
 /**

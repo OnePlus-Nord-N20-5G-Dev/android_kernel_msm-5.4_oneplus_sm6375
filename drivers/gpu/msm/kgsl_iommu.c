@@ -25,6 +25,12 @@
 #include "kgsl_sharedmem.h"
 #include "kgsl_trace.h"
 
+#ifdef OPLUS_BUG_STABILITY
+#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+#include <soc/oplus/system/oplus_mm_kevent_fb.h>
+#endif
+#endif /*OPLUS_BUG_STABILITY*/
+
 #define _IOMMU_PRIV(_mmu) (&((_mmu)->priv.iommu))
 
 
@@ -607,6 +613,7 @@ static int kgsl_iommu_fault_handler(struct iommu_domain *domain,
 	char *comm = "unknown";
 	bool skip_fault = false;
 	struct kgsl_process_private *private;
+	struct kgsl_context *context= NULL;
 
 	static DEFINE_RATELIMIT_STATE(_rs,
 					DEFAULT_RATELIMIT_INTERVAL,
@@ -680,8 +687,25 @@ static int kgsl_iommu_fault_handler(struct iommu_domain *domain,
 		no_page_fault_log = kgsl_mmu_log_fault_addr(mmu, ptbase, addr);
 
 	if (!no_page_fault_log && __ratelimit(&_rs)) {
-		struct kgsl_context *context = kgsl_context_get(device,
-							contextidr);
+		#ifdef OPLUS_BUG_STABILITY
+		#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+		#ifdef NEED_FEEDBACK_TO_DISPLAY
+		mm_fb_kevent(OPLUS_MM_DIRVER_FB_EVENT_DISPLAY,
+		    OPLUS_DISPLAY_EVENTID_GPU_FAULT,
+		    "kgsl error", MM_FB_KEY_RATELIMIT_1H,
+		    "EventID@@%d$$gpu fault$$pid=%08lx,comm=%d",
+		    OPLUS_MM_DIRVER_FB_EVENT_ID_GPU_FAULT, ptname, comm);
+		#else
+		//feedback to atlas
+		mm_fb_kevent(OPLUS_MM_DIRVER_FB_EVENT_DISPLAY,
+		    OPLUS_DISPLAY_EVENTID_GPU_FAULT,
+		    "gpu fault", MM_FB_KEY_RATELIMIT_1H,
+		    "pid=%08lx,comm=%d", ptname, comm);
+		#endif //NEED_FEEDBACK_TO_DISPLAY
+		#endif //CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+		#endif /*OPLUS_BUG_STABILITY*/
+
+		context = kgsl_context_get(device, contextidr);
 
 		dev_crit(ctx->kgsldev->dev,
 			"GPU PAGE FAULT: addr = %lX pid= %d name=%s drawctxt=%d context pid = %d\n",
@@ -932,22 +956,22 @@ static void setup_64bit_pagetable(struct kgsl_mmu *mmu,
 		struct kgsl_iommu_pt *pt)
 {
 	if (mmu->secured && pagetable->name == KGSL_MMU_SECURE_PT) {
-		pt->compat_va_start = mmu->secure_base;
+		pt->compat_va_start = KGSL_IOMMU_SECURE_BASE(mmu);
 		pt->compat_va_end = KGSL_IOMMU_SECURE_END(mmu);
-		pt->va_start = mmu->secure_base;
+		pt->va_start = KGSL_IOMMU_SECURE_BASE(mmu);
 		pt->va_end = KGSL_IOMMU_SECURE_END(mmu);
 	} else {
 		pt->compat_va_start = KGSL_IOMMU_SVM_BASE32(mmu);
-		pt->compat_va_end = mmu->secure_base;
+		pt->compat_va_end = KGSL_IOMMU_SECURE_BASE(mmu);
 		pt->va_start = KGSL_IOMMU_VA_BASE64;
 		pt->va_end = KGSL_IOMMU_VA_END64;
 	}
 
 	if (pagetable->name != KGSL_MMU_GLOBAL_PT &&
 		pagetable->name != KGSL_MMU_SECURE_PT) {
-		if (is_compat_task()) {
+		if (kgsl_is_compat_task()) {
 			pt->svm_start = KGSL_IOMMU_SVM_BASE32(mmu);
-			pt->svm_end = mmu->secure_base;
+			pt->svm_end = KGSL_IOMMU_SECURE_BASE(mmu);
 		} else {
 			pt->svm_start = KGSL_IOMMU_SVM_BASE64;
 			pt->svm_end = KGSL_IOMMU_SVM_END64;
@@ -961,13 +985,13 @@ static void setup_32bit_pagetable(struct kgsl_mmu *mmu,
 {
 	if (mmu->secured) {
 		if (pagetable->name == KGSL_MMU_SECURE_PT) {
-			pt->compat_va_start = mmu->secure_base;
+			pt->compat_va_start = KGSL_IOMMU_SECURE_BASE(mmu);
 			pt->compat_va_end = KGSL_IOMMU_SECURE_END(mmu);
-			pt->va_start = mmu->secure_base;
+			pt->va_start = KGSL_IOMMU_SECURE_BASE(mmu);
 			pt->va_end = KGSL_IOMMU_SECURE_END(mmu);
 		} else {
 			pt->va_start = KGSL_IOMMU_SVM_BASE32(mmu);
-			pt->va_end = mmu->secure_base;
+			pt->va_end = KGSL_IOMMU_SECURE_BASE(mmu);
 			pt->compat_va_start = pt->va_start;
 			pt->compat_va_end = pt->va_end;
 		}
@@ -1055,18 +1079,16 @@ static void _enable_gpuhtw_llc(struct kgsl_mmu *mmu,
 			"System cache no-write-alloc is disabled for GPU pagetables\n");
 }
 
-int kgsl_set_smmu_aperture(struct kgsl_device *device)
+static int set_smmu_aperture(struct kgsl_device *device, int cb_num)
 {
-	struct kgsl_iommu *iommu = _IOMMU_PRIV(&(device->mmu));
-	struct kgsl_iommu_context *ctx = &iommu->user_context;
 	int ret;
 
 	if (!test_bit(KGSL_MMU_SMMU_APERTURE, &device->mmu.features))
 		return 0;
 
-	ret = qcom_scm_kgsl_set_smmu_aperture(ctx->cb_num);
+	ret = qcom_scm_kgsl_set_smmu_aperture(cb_num);
 	if (ret == -EBUSY)
-		ret = qcom_scm_kgsl_set_smmu_aperture(ctx->cb_num);
+		ret = qcom_scm_kgsl_set_smmu_aperture(cb_num);
 
 	if (ret)
 		dev_err(device->dev, "Unable to set the SMMU aperture: %d. The aperture needs to be set to use per-process pagetables\n",
@@ -1135,7 +1157,7 @@ static int _init_global_pt(struct kgsl_mmu *mmu, struct kgsl_pagetable *pt)
 	ctx->cb_num = (int) cb_num;
 
 	if (!test_bit(KGSL_MMU_GLOBAL_PAGETABLE, &device->mmu.features)) {
-		ret = kgsl_set_smmu_aperture(device);
+		ret = set_smmu_aperture(device, cb_num);
 
 		if (ret)
 			goto done;
@@ -2498,14 +2520,6 @@ int kgsl_iommu_probe(struct kgsl_device *device)
 
 	if (of_property_read_bool(node, "qcom,global_pt"))
 		set_bit(KGSL_MMU_GLOBAL_PAGETABLE, &mmu->features);
-
-	if (of_property_read_u32(node, "qcom,secure-size", &mmu->secure_size))
-		mmu->secure_size = KGSL_IOMMU_SECURE_SIZE;
-	else if (mmu->secure_size >
-			(KGSL_IOMMU_SECURE_END(mmu) - KGSL_IOMMU_SVM_BASE32(mmu)))
-		mmu->secure_size = KGSL_IOMMU_SECURE_SIZE;
-
-	mmu->secure_base = KGSL_IOMMU_SECURE_END(mmu) - mmu->secure_size;
 
 	/* Fill out the rest of the devices in the node */
 	of_platform_populate(node, NULL, NULL, &pdev->dev);

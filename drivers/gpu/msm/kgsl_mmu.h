@@ -149,8 +149,6 @@ struct kgsl_mmu {
 	const struct kgsl_mmu_ops *mmu_ops;
 	bool secured;
 	unsigned long features;
-	unsigned int secure_base;
-	unsigned int secure_size;
 	union {
 		struct kgsl_iommu iommu;
 	} priv;

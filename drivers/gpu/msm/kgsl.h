@@ -1,7 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
  * Copyright (c) 2008-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 #ifndef __KGSL_H
 #define __KGSL_H
@@ -72,11 +71,6 @@
 #define SCRATCH_RPTR_GPU_ADDR(dev, id) \
 	((dev)->scratch->gpuaddr + SCRATCH_RPTR_OFFSET(id))
 
-/* OFFSET to KMD postamble packets in scratch buffer */
-#define SCRATCH_POSTAMBLE_OFFSET (100 * sizeof(u64))
-#define SCRATCH_POSTAMBLE_ADDR(dev) \
-	((dev)->scratch->gpuaddr + SCRATCH_POSTAMBLE_OFFSET)
-
 /* Timestamp window used to detect rollovers (half of integer range) */
 #define KGSL_TIMESTAMP_WINDOW 0x80000000
 
@@ -133,7 +127,6 @@ struct kgsl_driver {
 	struct mutex process_mutex;
 	rwlock_t proclist_lock;
 	struct mutex devlock;
-	struct mutex kernel_map_mutex;
 	struct {
 		atomic_long_t vmalloc;
 		atomic_long_t vmalloc_max;
@@ -151,6 +144,8 @@ struct kgsl_driver {
 	struct workqueue_struct *mem_workqueue;
 	struct kthread_worker worker;
 	struct task_struct *worker_thread;
+	struct kthread_worker ev_worker;
+	struct task_struct *ev_worker_thread;
 };
 
 extern struct kgsl_driver kgsl_driver;
@@ -308,7 +303,7 @@ struct kgsl_event {
 	void *priv;
 	struct list_head node;
 	unsigned int created;
-	struct work_struct work;
+	struct kthread_work work;
 	int result;
 	struct kgsl_event_group *group;
 };
@@ -448,8 +443,6 @@ long kgsl_ioctl_timeline_fence_get(struct kgsl_device_private *dev_priv,
 long kgsl_ioctl_timeline_signal(struct kgsl_device_private *dev_priv,
 		unsigned int cmd, void *data);
 long kgsl_ioctl_timeline_destroy(struct kgsl_device_private *dev_priv,
-		unsigned int cmd, void *data);
-long kgsl_ioctl_drawctxt_set_shadow_mem(struct kgsl_device_private *dev_priv,
 		unsigned int cmd, void *data);
 
 void kgsl_mem_entry_destroy(struct kref *kref);
@@ -633,4 +626,9 @@ static inline void kgsl_gpu_sysfs_add_link(struct kobject *dst,
 {
 }
 #endif
+
+static inline bool kgsl_is_compat_task(void)
+{
+	return (BITS_PER_LONG == 32) || is_compat_task();
+}
 #endif /* __KGSL_H */

@@ -324,13 +324,6 @@ static const unsigned int a6xx_pre_crashdumper_registers[] = {
 };
 
 static const unsigned int a6xx_gmu_wrapper_registers[] = {
-	/* GMU CX */
-	0x1f840, 0x1f840, 0x1f844, 0x1f845, 0x1f887, 0x1f889, 0x1f8d0, 0x1f8d0,
-	/* GMU AO*/
-	0x23b0C, 0x23b0E, 0x23b15, 0x23b15,
-};
-
-static const unsigned int a6xx_holi_gmu_wrapper_registers[] = {
 	/* GMU SPTPRAC */
 	0x1a880, 0x1a881,
 	/* GMU CX */
@@ -1820,8 +1813,8 @@ void a6xx_snapshot(struct adreno_device *adreno_dev,
 	}
 
 	if (adreno_is_a619_holi(adreno_dev)) {
-		r.regs = a6xx_holi_gmu_wrapper_registers;
-		r.count = ARRAY_SIZE(a6xx_holi_gmu_wrapper_registers) / 2;
+		r.regs = a6xx_gmu_wrapper_registers;
+		r.count = ARRAY_SIZE(a6xx_gmu_wrapper_registers) / 2;
 
 		kgsl_snapshot_add_section(device, KGSL_SNAPSHOT_SECTION_REGS,
 			snapshot, a6xx_snapshot_gmu_wrapper_registers, &r);
@@ -1840,7 +1833,7 @@ void a6xx_snapshot(struct adreno_device *adreno_dev,
 	if (gpudev->sptprac_is_on)
 		sptprac_on = gpudev->sptprac_is_on(adreno_dev);
 
-	if (!adreno_gx_is_on(adreno_dev))
+	if (!gmu_core_dev_gx_is_on(device))
 		return;
 
 	kgsl_regread(device, A6XX_CP_IB1_BASE, &lo);
@@ -2328,11 +2321,9 @@ void a6xx_crashdump_init(struct adreno_device *adreno_dev)
 	/* Program the capturescript for the MVC regsiters */
 	ptr += _a6xx_crashdump_init_mvc(adreno_dev, ptr, &offset);
 
-	if (!adreno_is_a690(adreno_dev) && !adreno_is_a663(adreno_dev)) {
-		ptr += _a6xx_crashdump_init_ctx_dbgahb(ptr, &offset);
+	ptr += _a6xx_crashdump_init_ctx_dbgahb(ptr, &offset);
 
-		ptr += _a6xx_crashdump_init_non_ctx_dbgahb(ptr, &offset);
-	}
+	ptr += _a6xx_crashdump_init_non_ctx_dbgahb(ptr, &offset);
 
 	/* Save CD register end pointer to check CD status completion */
 	a6xx_cd_reg_end = a6xx_crashdump_registers->hostptr + offset;
