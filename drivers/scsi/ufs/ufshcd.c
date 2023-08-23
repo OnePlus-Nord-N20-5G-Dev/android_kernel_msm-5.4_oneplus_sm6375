@@ -51,6 +51,7 @@
 #include "ufs-sysfs.h"
 #include "ufs_bsg.h"
 #include "ufshcd-crypto.h"
+#include <trace/hooks/oplus_ufs.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/ufs.h>
@@ -2609,9 +2610,16 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
 		BUG();
 	}
 
+#ifdef CONFIG_OPLUS_UFS_DRIVER
+	if (!down_read_trylock(&hba->clk_scaling_lock)) {
+		hba->ufs_stats.scsi_blk_reqs.ts = ktime_get();
+		hba->ufs_stats.scsi_blk_reqs.busy_ctx = SCALING_BUSY;
+		return SCSI_MLQUEUE_HOST_BUSY;
+	}
+#else
 	if (!down_read_trylock(&hba->clk_scaling_lock))
 		return SCSI_MLQUEUE_HOST_BUSY;
-
+#endif /*CONFIG_OPLUS_UFS_DRIVER*/
 	hba->req_abort_count = 0;
 
 	/* acquire the tag to make sure device cmds don't use it */
@@ -2622,12 +2630,20 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
 		 * find different tag instead of waiting for dev manage command
 		 * completion.
 		 */
+	#ifdef CONFIG_OPLUS_UFS_DRIVER
+		hba->ufs_stats.scsi_blk_reqs.ts = ktime_get();
+		hba->ufs_stats.scsi_blk_reqs.busy_ctx = LRB_IN_USE;
+	#endif
 		err = SCSI_MLQUEUE_HOST_BUSY;
 		goto out;
 	}
 
 	err = ufshcd_hold(hba, true);
 	if (err) {
+	#ifdef CONFIG_OPLUS_UFS_DRIVER
+		hba->ufs_stats.scsi_blk_reqs.ts = ktime_get();
+		hba->ufs_stats.scsi_blk_reqs.busy_ctx = UFSHCD_HOLD;
+	#endif
 		err = SCSI_MLQUEUE_HOST_BUSY;
 		clear_bit_unlock(tag, &hba->lrb_in_use);
 		goto out;
@@ -2689,6 +2705,10 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
 		}
 		fallthrough;
 	case UFSHCD_STATE_RESET:
+	#ifdef CONFIG_OPLUS_UFS_DRIVER
+		hba->ufs_stats.scsi_blk_reqs.ts = ktime_get();
+		hba->ufs_stats.scsi_blk_reqs.busy_ctx = UFS_RESET_OR_EH_SCHEDULED;
+	#endif
 		err = SCSI_MLQUEUE_HOST_BUSY;
 		goto out_compl_cmd;
 	case UFSHCD_STATE_ERROR:
@@ -4533,11 +4553,7 @@ EXPORT_SYMBOL_GPL(ufshcd_make_hba_operational);
  * @hba: per adapter instance
  * @can_sleep: perform sleep or just spin
  */
-#if defined(CONFIG_SCSI_UFSHCD_QTI)
-void ufshcd_hba_stop(struct ufs_hba *hba, bool can_sleep)
-#else
 static inline void ufshcd_hba_stop(struct ufs_hba *hba, bool can_sleep)
-#endif
 {
 	int err;
 
@@ -7248,11 +7264,22 @@ static int ufshcd_set_low_vcc_level(struct ufs_hba *hba)
  * Returns zero on success (all required W-LUs are added successfully),
  * non-zero error value on failure (if failed to add any of the required W-LU).
  */
+#ifdef CONFIG_OPLUS_UFS_DRIVER
+int __attribute__((weak)) register_device_proc(char *name, char *version, char *vendor)
+{
+	return 0;
+}
+#endif
 static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
 {
 	int ret = 0;
 	struct scsi_device *sdev_rpmb;
 	struct scsi_device *sdev_boot;
+#ifdef CONFIG_OPLUS_UFS_DRIVER
+		static char temp_version[5] = {0};
+		static char vendor[9] = {0};
+		static char model[17] = {0};
+#endif
 
 	hba->sdev_ufs_device = __scsi_add_device(hba->host, 0, 0,
 		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_UFS_DEVICE_WLUN), NULL);
@@ -7286,6 +7313,14 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
 remove_sdev_ufs_device:
 	scsi_remove_device(hba->sdev_ufs_device);
 out:
+#ifdef CONFIG_OPLUS_UFS_DRIVER
+	strncpy(temp_version, hba->sdev_ufs_device->rev, 4);
+	strncpy(vendor, hba->sdev_ufs_device->vendor, 8);
+	strncpy(model, hba->sdev_ufs_device->model, 16);
+	register_device_proc("ufs_version", temp_version, vendor);
+	register_device_proc("ufs", model, vendor);
+#endif
+	trace_android_vh_ufs_gen_proc_devinfo(hba);
 	return ret;
 }
 
@@ -7947,8 +7982,6 @@ out:
 static void ufshcd_async_scan(void *data, async_cookie_t cookie)
 {
 	struct ufs_hba *hba = (struct ufs_hba *)data;
-	struct device *dev = hba->dev;
-	struct device_node *np = dev->of_node;
 	int ret;
 
 	/* Initialize hba, detect and initialize UFS device */
@@ -7958,9 +7991,6 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
 
 	/* Probe and add UFS logical units  */
 	ret = ufshcd_add_lus(hba);
-
-	if (!of_property_read_bool(np, "secondary-storage"))
-		hba->primary_boot_device_probed = true;
 out:
 	/*
 	 * If we failed to initialize the device or the device is not
@@ -8978,26 +9008,12 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
 	/* enable the host irq as host controller would be active soon */
 	ufshcd_enable_irq(hba);
 
-
-#if defined(CONFIG_SCSI_UFSHCD_QTI)
-	if (hba->restore) {
-		/* Configure UTRL and UTMRL base address registers */
-		ufshcd_writel(hba, lower_32_bits(hba->utrdl_dma_addr),
-			      REG_UTP_TRANSFER_REQ_LIST_BASE_L);
-		ufshcd_writel(hba, upper_32_bits(hba->utrdl_dma_addr),
-			      REG_UTP_TRANSFER_REQ_LIST_BASE_H);
-		ufshcd_writel(hba, lower_32_bits(hba->utmrdl_dma_addr),
-			      REG_UTP_TASK_REQ_LIST_BASE_L);
-		ufshcd_writel(hba, upper_32_bits(hba->utmrdl_dma_addr),
-			      REG_UTP_TASK_REQ_LIST_BASE_H);
-		/* Commit the registers */
-		mb();
-	}
-#else
+#if !defined(CONFIG_SCSI_UFSHCD_QTI)
 	ret = ufshcd_vreg_set_hpm(hba);
 	if (ret)
 		goto disable_irq_and_vops_clks;
 #endif
+
 	/*
 	 * Call vendor specific resume callback. As these callbacks may access
 	 * vendor specific host controller register space call them when the
@@ -9007,10 +9023,6 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
 	if (ret)
 #if defined(CONFIG_SCSI_UFSHCD_QTI)
 		goto disable_irq_and_vops_clks;
-
-	/* Resuming from hibernate, assume that link was OFF */
-	if (hba->restore)
-		ufshcd_set_link_off(hba);
 #else
 		goto disable_vreg;
 #endif
@@ -9039,15 +9051,6 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
 	}
 
 	if (!ufshcd_is_ufs_dev_active(hba)) {
-		/*
-		 * QCS610 UFS 3.x uses PMIC Buck regulator which requires
-		 * additional delay to settle its voltage back to normal 2.5
-		 * volts from the power down, so below delay_ssu flag is
-		 * used to enable delay before sending start stop unit command.
-		 */
-		if (hba->delay_ssu && hba->dev_info.wspecversion >= 0x300)
-			usleep_range(20, 25);
-
 		ret = ufshcd_set_dev_pwr_mode(hba, UFS_ACTIVE_PWR_MODE);
 #if defined(CONFIG_SCSI_UFSHCD_QTI)
 		if (ret) {
@@ -9101,18 +9104,8 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
 	goto out;
 
 set_old_dev_pwr_mode:
-	if (old_pwr_mode != hba->curr_dev_pwr_mode) {
-		/*
-		 * QCS610 UFS 3.x uses PMIC Buck regulator which requires
-		 * additional delay to settle its voltage back to normal 2.5
-		 * volts from the power down, so below delay_ssu flag is
-		 * used to enable delay before sending start stop unit command.
-		 */
-		if (hba->delay_ssu && hba->dev_info.wspecversion >= 0x300)
-			usleep_range(20, 25);
-
+	if (old_pwr_mode != hba->curr_dev_pwr_mode)
 		ufshcd_set_dev_pwr_mode(hba, old_pwr_mode);
-	}
 set_old_link_state:
 	ufshcd_link_state_transition(hba, old_link_state, 0);
 vendor_suspend:
@@ -9137,12 +9130,6 @@ disable_vreg:
 #endif
 out:
 	hba->pm_op_in_progress = 0;
-
-#if defined(CONFIG_SCSI_UFSHCD_QTI)
-	if (hba->restore)
-		hba->restore = false;
-#endif
-
 	if (ret)
 		ufshcd_update_reg_hist(&hba->ufs_stats.resume_err, (u32)ret);
 	return ret;
@@ -9307,63 +9294,6 @@ int ufshcd_runtime_idle(struct ufs_hba *hba)
 }
 EXPORT_SYMBOL(ufshcd_runtime_idle);
 
-#if defined(CONFIG_SCSI_UFSHCD_QTI)
-int ufshcd_system_freeze(struct ufs_hba *hba)
-{
-	int ret = 0;
-
-	/*
-	 * Run time resume the controller to make sure
-	 * the PM work queue threads do not try to resume
-	 * the child (scsi host), which leads to errors as
-	 * the controller is not yet resumed.
-	 */
-	pm_runtime_get_sync(hba->dev);
-	ret = ufshcd_system_suspend(hba);
-	pm_runtime_put_sync(hba->dev);
-
-	/*
-	 * Ensure no runtime PM operations take
-	 * place in the hibernation and restore sequence
-	 * on successful freeze operation.
-	 */
-	if (!ret)
-		pm_runtime_disable(hba->dev);
-
-	return ret;
-}
-EXPORT_SYMBOL(ufshcd_system_freeze);
-
-int ufshcd_system_restore(struct ufs_hba *hba)
-{
-	int ret = 0;
-
-	hba->restore = true;
-	ret = ufshcd_system_resume(hba);
-
-	/*
-	 * Now any runtime PM operations can be
-	 * allowed on successful restore operation
-	 */
-	if (!ret)
-		pm_runtime_enable(hba->dev);
-
-	return ret;
-}
-EXPORT_SYMBOL(ufshcd_system_restore);
-
-int ufshcd_system_thaw(struct ufs_hba *hba)
-{
-	int ret = 0;
-
-	ret = ufshcd_system_resume(hba);
-	if (!ret)
-		pm_runtime_enable(hba->dev);
-
-	return ret;
-}
-EXPORT_SYMBOL(ufshcd_system_thaw);
-#endif /* CONFIG_SCSI_UFSHCD_QTI */
 /**
  * ufshcd_shutdown - shutdown routine
  * @hba: per adapter instance

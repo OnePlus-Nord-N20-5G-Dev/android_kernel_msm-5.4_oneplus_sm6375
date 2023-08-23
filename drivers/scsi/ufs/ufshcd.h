@@ -3,7 +3,7 @@
  *
  * This code is based on drivers/scsi/ufs/ufshcd.h
  * Copyright (C) 2011-2013 Samsung India Software Operations
- * Copyright (c) 2013-2021, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2013-2020, The Linux Foundation. All rights reserved.
  *
  * Authors:
  *	Santosh Yaraganavi <santosh.sy@samsung.com>
@@ -110,17 +110,11 @@ enum ufs_pm_op {
 	UFS_RUNTIME_PM,
 	UFS_SYSTEM_PM,
 	UFS_SHUTDOWN_PM,
-#ifdef CONFIG_SCSI_UFSHCD_QTI
-	UFS_SYSTEM_RESTORE,
-#endif
 };
 
 #define ufshcd_is_runtime_pm(op) ((op) == UFS_RUNTIME_PM)
 #define ufshcd_is_system_pm(op) ((op) == UFS_SYSTEM_PM)
 #define ufshcd_is_shutdown_pm(op) ((op) == UFS_SHUTDOWN_PM)
-#ifdef CONFIG_SCSI_UFSHCD_QTI
-#define ufshcd_is_restore(op) ((op) == UFS_SYSTEM_RESTORE)
-#endif
 
 /* Host <-> Device UniPro Link state */
 enum uic_link_state {
@@ -601,6 +595,19 @@ struct ufshcd_clk_ctx {
 	ktime_t ts;
 	enum ufshcd_ctx ctx;
 };
+#ifdef CONFIG_OPLUS_UFS_DRIVER
+enum ufshcd_scsi_host_busy_ctxt {
+       SCALING_BUSY,
+       UFS_RESET_OR_EH_SCHEDULED,
+       LRB_IN_USE,
+       UFSHCD_HOLD,
+};
+
+struct ufshcd_blk_ctx {
+       ktime_t ts;
+       enum ufshcd_scsi_host_busy_ctxt busy_ctx;
+};
+#endif /*CONFIG_OPLUS_UFS_DRIVER*/
 
 #endif
 
@@ -663,6 +670,9 @@ struct ufs_stats {
 	u32 power_mode_change_cnt;
 	struct ufshcd_clk_ctx clk_hold;
 	struct ufshcd_clk_ctx clk_rel;
+#ifdef CONFIG_OPLUS_UFS_DRIVER
+	struct ufshcd_blk_ctx scsi_blk_reqs;
+#endif /*CONFIG_OPLUS_UFS_DRIVER*/
 #endif
 	/* uic specific errors */
 	struct ufs_err_reg_hist pa_err;
@@ -1022,8 +1032,6 @@ struct ufs_hba {
 	struct device		bsg_dev;
 	struct request_queue	*bsg_queue;
 
-	bool delay_ssu;
-
 #ifdef CONFIG_SCSI_UFS_CRYPTO
 	/* crypto */
 	union ufs_crypto_capabilities crypto_capabilities;
@@ -1036,12 +1044,10 @@ struct ufs_hba {
 	bool wb_buf_flush_enabled;
 	bool wb_enabled;
 	struct delayed_work rpm_dev_flush_recheck_work;
-	bool primary_boot_device_probed;
 	ANDROID_KABI_RESERVE(1);
 	ANDROID_KABI_RESERVE(2);
 	ANDROID_KABI_RESERVE(3);
 	ANDROID_KABI_RESERVE(4);
-
 #ifdef CONFIG_SCSI_UFSHCD_QTI
 	/* distinguish between resume and restore */
 	bool restore;
@@ -1173,9 +1179,6 @@ int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
 void ufshcd_parse_dev_ref_clk_freq(struct ufs_hba *hba, struct clk *refclk);
 void ufshcd_update_reg_hist(struct ufs_err_reg_hist *reg_hist,
 			    u32 reg);
-#if defined(CONFIG_SCSI_UFSHCD_QTI)
-void ufshcd_hba_stop(struct ufs_hba *hba, bool can_sleep);
-#endif
 
 static inline void check_upiu_size(void)
 {
@@ -1222,12 +1225,6 @@ extern int ufshcd_runtime_idle(struct ufs_hba *hba);
 extern int ufshcd_system_suspend(struct ufs_hba *hba);
 extern int ufshcd_system_resume(struct ufs_hba *hba);
 extern int ufshcd_shutdown(struct ufs_hba *hba);
-#ifdef CONFIG_SCSI_UFSHCD_QTI
-extern int ufshcd_system_thaw(struct ufs_hba *hba);
-extern int ufshcd_system_restore(struct ufs_hba *hba);
-extern int ufshcd_system_freeze(struct ufs_hba *hba);
-#endif
-
 extern int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
 			       u8 attr_set, u32 mib_val, u8 peer);
 extern int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
@@ -1484,14 +1481,6 @@ static inline void ufshcd_vops_dbg_register_dump(struct ufs_hba *hba)
 static inline void ufshcd_vops_device_reset(struct ufs_hba *hba)
 {
 	if (hba->vops && hba->vops->device_reset) {
-#if defined(CONFIG_SCSI_UFSHCD_QTI)
-		/*
-		 * If Host Tx keeps bursting during and after H/W reset,
-		 * some UFS devices may fail the next following link startup,
-		 * hence disable hba before reset the device.
-		 */
-		ufshcd_hba_stop(hba, true);
-#endif
 		hba->vops->device_reset(hba);
 		ufshcd_set_ufs_dev_active(hba);
 		if (ufshcd_is_wb_allowed(hba)) {
