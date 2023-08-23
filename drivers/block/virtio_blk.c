@@ -30,10 +30,6 @@
  * Will discard this macro once uapi chages are mainlined
  */
 #define VIRTIO_BLK_F_ICE	23	/* support ice virtualization */
-/* support ice virtualization with
- * iv (initialization vector)
- */
-#define VIRTIO_BLK_F_ICE_IV	22
 #endif
 
 static int major;
@@ -92,8 +88,6 @@ struct virtio_blk_ice_info {
 	u8  ice_slot;
 	u8  activate;
 	u16 reserved;
-	u32 reserved1;
-	u64 data_unit_num;
 } __packed;
 #endif
 
@@ -203,7 +197,7 @@ static int virtblk_add_req(struct virtqueue *vq, struct virtblk_req *vbr,
 	struct scatterlist hdr, status, *sgs[3];
 	unsigned int num_out = 0, num_in = 0;
 #ifdef CONFIG_QTI_CRYPTO_VIRTUALIZATION
-	size_t const hdr_size = virtio_has_feature(vq->vdev, VIRTIO_BLK_F_ICE_IV) ?
+	size_t const hdr_size = virtio_has_feature(vq->vdev, VIRTIO_BLK_F_ICE) ?
 				sizeof(vbr->out_hdr) + sizeof(vbr->ice_info) :
 				sizeof(vbr->out_hdr);
 	sg_init_one(&hdr, &vbr->out_hdr, hdr_size);
@@ -349,8 +343,6 @@ static void virtblk_get_ice_info(struct virtio_blk *vblk, struct request *req)
 		/* ice is activated - successful flow */
 		vbr->ice_info.ice_slot = bc->bc_keyslot;
 		vbr->ice_info.activate = true;
-		/* data unit number i.e. iv value */
-		vbr->ice_info.data_unit_num = bc->bc_dun[0];
 	}
 }
 #endif
@@ -405,7 +397,7 @@ static blk_status_t virtio_queue_rq(struct blk_mq_hw_ctx *hctx,
 		0 : cpu_to_virtio64(vblk->vdev, blk_rq_pos(req));
 	vbr->out_hdr.ioprio = cpu_to_virtio32(vblk->vdev, req_get_ioprio(req));
 #ifdef CONFIG_QTI_CRYPTO_VIRTUALIZATION
-	if (virtio_has_feature(vblk->vdev, VIRTIO_BLK_F_ICE_IV))
+	if (virtio_has_feature(vblk->vdev, VIRTIO_BLK_F_ICE))
 		virtblk_get_ice_info(vblk, req);
 #endif
 	blk_mq_start_request(req);
@@ -1072,7 +1064,7 @@ static int virtblk_probe(struct virtio_device *vdev)
 	virtblk_update_capacity(vblk, false);
 
 #ifdef CONFIG_QTI_CRYPTO_VIRTUALIZATION
-	if (virtio_has_feature(vblk->vdev, VIRTIO_BLK_F_ICE_IV)) {
+	if (virtio_has_feature(vblk->vdev, VIRTIO_BLK_F_ICE)) {
 		dev_notice(&vdev->dev, "%s\n", vblk->disk->disk_name);
 		/* Initilaize supported crypto capabilities*/
 		err = virtblk_init_crypto_qti_spec();
@@ -1108,7 +1100,7 @@ static void virtblk_remove(struct virtio_device *vdev)
 	/* Make sure no work handler is accessing the device. */
 	flush_work(&vblk->config_work);
 #ifdef CONFIG_QTI_CRYPTO_VIRTUALIZATION
-	if (virtio_has_feature(vblk->vdev, VIRTIO_BLK_F_ICE_IV))
+	if (virtio_has_feature(vblk->vdev, VIRTIO_BLK_F_ICE))
 		virtblk_crypto_qti_destroy_rq_keyslot_manager(vblk->disk->queue);
 #endif
 	del_gendisk(vblk->disk);
@@ -1189,7 +1181,7 @@ static unsigned int features[] = {
 	VIRTIO_BLK_F_FLUSH, VIRTIO_BLK_F_TOPOLOGY, VIRTIO_BLK_F_CONFIG_WCE,
 	VIRTIO_BLK_F_MQ, VIRTIO_BLK_F_DISCARD, VIRTIO_BLK_F_WRITE_ZEROES,
 #ifdef CONFIG_QTI_CRYPTO_VIRTUALIZATION
-	VIRTIO_BLK_F_ICE, VIRTIO_BLK_F_ICE_IV,
+	VIRTIO_BLK_F_ICE,
 #endif
 };
 
