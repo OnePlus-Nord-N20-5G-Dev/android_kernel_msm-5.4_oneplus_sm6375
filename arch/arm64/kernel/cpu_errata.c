@@ -719,7 +719,6 @@ static const struct arm64_cpu_capabilities arm64_repeat_tlbi_list[] = {
 #ifdef CONFIG_ARM64_ERRATUM_1286807
 	{
 		ERRATA_MIDR_RANGE(MIDR_CORTEX_A76, 0, 0, 3, 0),
-		ERRATA_MIDR_RANGE(MIDR_KRYO4G, 12, 14, 13, 14),
 	},
 #endif
 	{},
@@ -795,8 +794,6 @@ static const struct midr_range erratum_1418040_list[] = {
 static const struct midr_range erratum_845719_list[] = {
 	/* Cortex-A53 r0p[01234] */
 	MIDR_REV_RANGE(MIDR_CORTEX_A53, 0, 0, 4),
-	/* Kryo2xx Silver rAp4 */
-	MIDR_RANGE(MIDR_KRYO2XX_SILVER, 0xA, 0x4, 0xA, 0x4),
 	/* Brahma-B53 r0p[0] */
 	MIDR_REV(MIDR_BRAHMA_B53, 0, 0),
 	{},

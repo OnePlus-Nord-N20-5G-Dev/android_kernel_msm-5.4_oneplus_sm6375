@@ -24,6 +24,9 @@
 #include <linux/sched.h>
 #include <linux/smp.h>
 #include <linux/delay.h>
+#if IS_BUILTIN(CONFIG_QCOM_SOCINFO)
+#include <soc/qcom/socinfo.h>
+#endif  /* IS_BUILTIN(CONFIG_QCOM_SOCINFO) */
 
 /*
  * In case the boot CPU is hotpluggable, we record its initial state and
@@ -84,9 +87,6 @@ static const char *const hwcap_str[] = {
 	"svesm4",
 	"flagm2",
 	"frint",
-	"ecv",
-	"afp",
-	"rpres",
 	NULL
 };
 
@@ -181,6 +181,10 @@ static int c_show(struct seq_file *m, void *v)
 		seq_printf(m, "CPU part\t: 0x%03x\n", MIDR_PARTNUM(midr));
 		seq_printf(m, "CPU revision\t: %d\n\n", MIDR_REVISION(midr));
 	}
+
+#if IS_BUILTIN(CONFIG_QCOM_SOCINFO)
+	seq_printf(m, "Hardware\t: Qualcomm Technologies, Inc %s\n", socinfo_get_id_string());
+#endif  /* IS_BUILTIN(CONFIG_QCOM_SOCINFO) */
 
 	return 0;
 }
@@ -392,11 +396,7 @@ void cpuinfo_store_cpu(void)
 
 void __init cpuinfo_store_boot_cpu(void)
 {
-#ifdef CONFIG_FIX_BOOT_CPU_LOGICAL_MAPPING
-	struct cpuinfo_arm64 *info = &per_cpu(cpu_data, logical_bootcpu_id);
-#else
 	struct cpuinfo_arm64 *info = &per_cpu(cpu_data, 0);
-#endif
 	__cpuinfo_store_cpu(info);
 
 	boot_cpu_data = *info;

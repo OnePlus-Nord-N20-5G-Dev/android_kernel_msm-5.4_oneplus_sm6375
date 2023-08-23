@@ -113,9 +113,9 @@ static inline int simc_write(int fd, const void *buf, size_t count)
 
 static inline int simc_poll(int fd)
 {
-	long timeval[2] = { 0, 0 };
+	struct timeval tv = { .tv_sec = 0, .tv_usec = 0 };
 
-	return __simc(SYS_select_one, fd, XTISS_SELECT_ONE_READ, (int)&timeval);
+	return __simc(SYS_select_one, fd, XTISS_SELECT_ONE_READ, (int)&tv);
 }
 
 static inline int simc_lseek(int fd, uint32_t off, int whence)
