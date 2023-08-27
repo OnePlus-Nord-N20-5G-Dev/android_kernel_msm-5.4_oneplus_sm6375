@@ -206,7 +206,10 @@ oplus_chg-$(CONFIG_OPLUS_CHARGER_MTK6985S) += \
 		voocphy/oplus_voocphy.o \
 		charger_ic/oplus_battery_mtk6985S.o
 
-ccflags-y += -DOPLUS_CHG_REG_DUMP_ENABLE
+# Undo compiler optimizations to workaround buggy code
+ccflags-remove-y := -O2 -O3 $(CC_FLAGS_LTO)
+
+ccflags-y += -Os -DOPLUS_CHG_REG_DUMP_ENABLE
 
 KBUILD_LDS_MODULE_ATTACH = oplus_chg_module.lds
 
