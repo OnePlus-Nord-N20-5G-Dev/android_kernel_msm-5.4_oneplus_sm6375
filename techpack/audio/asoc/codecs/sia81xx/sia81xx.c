@@ -64,11 +64,9 @@
 #include "sia81xx_socket.h"
 #endif
 
-#ifdef OPLUS_FEATURE_MM_FEEDBACK
 #include <soc/oplus/system/oplus_mm_kevent_fb.h>
 #define OPLUS_AUDIO_EVENTID_SMARTPA_ERR    10041
 #define SMARTPA_ERR_FB_VERSION             "1.0.0"
-#endif /* OPLUS_FEATURE_MM_FEEDBACK */
 
 #define SIA81XX_NAME					"sia81xx"
 #define SIA81XX_I2C_NAME				SIA81XX_NAME
@@ -1374,7 +1372,6 @@ static ssize_t sia81xx_cmd_store(
 /********************************************************************
  * sia81xx codec driver
  ********************************************************************/
-#ifdef OPLUS_FEATURE_MM_FEEDBACK
 #define ERROR_INFO_MAX_LEN                 32
 #define CHECK_BITS                         2
 
@@ -1482,7 +1479,6 @@ static int sia81xx_get_check_feedback(struct snd_kcontrol *kcontrol,
 
 	return 0;
 }
-#endif /* OPLUS_FEATURE_MM_FEEDBACK */
 
 static int sia81xx_power_get(
 	struct snd_kcontrol *kcontrol,
@@ -1524,7 +1520,6 @@ static int sia81xx_power_set(
 	if(1 == ucontrol->value.integer.value[0]) {
 		sia81xx_resume(sia81xx);
 	} else {
-#ifdef OPLUS_FEATURE_MM_FEEDBACK
 /* 2022/12/23, Add for pa status err feedback. */
 		if ((sia81xx->chip_type == CHIP_TYPE_SIA8109) || \
 			(sia81xx->chip_type == CHIP_TYPE_SIA8159)) {
@@ -1533,7 +1528,6 @@ static int sia81xx_power_set(
 				g_chk_err = false;
 			}
 		}
-#endif
 		sia81xx_suspend(sia81xx);
 	}
 
@@ -1856,10 +1850,8 @@ static const struct snd_kcontrol_new sia81xx_controls[] = {
 			sia81xx_spk_mute_ctrl_get, sia81xx_spk_mute_ctrl_put),
 	#endif /* OPLUS_FEATURE_SPEAKER_MUTE */
 
-	#ifdef OPLUS_FEATURE_MM_FEEDBACK
 	SOC_ENUM_EXT("SIA_CHECK_FEEDBACK", sia81xx_check_feedback_enum,
 			sia81xx_get_check_feedback, sia81xx_set_check_feedback),
-	#endif /* OPLUS_FEATURE_MM_FEEDBACK */
 };
 
 #ifdef OPLUS_AUDIO_PA_BOOST_VOLTAGE
@@ -1879,10 +1871,8 @@ static const struct snd_kcontrol_new sia81xx_controls_new[] = {
 			sia81xx_spk_mute_ctrl_get, sia81xx_spk_mute_ctrl_put),
 	#endif /* OPLUS_FEATURE_SPEAKER_MUTE */
 
-	#ifdef OPLUS_FEATURE_MM_FEEDBACK
 	SOC_ENUM_EXT("SIA_CHECK_FEEDBACK", sia81xx_check_feedback_enum,
 			sia81xx_get_check_feedback, sia81xx_set_check_feedback),
-	#endif /* OPLUS_FEATURE_MM_FEEDBACK */
 };
 #endif /* OPLUS_AUDIO_PA_BOOST_VOLTAGE */
 
@@ -2731,19 +2721,15 @@ static int sia81xx_probe(struct platform_device *pdev)
  			SIA81XX_AUTO_PVDD_EN_SET(sia81xx->en_dyn_ud_pvdd));
 	}
 
-#if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
 	pr_info("[ info][%s] %s: event_id=%u, version:%s\r\n", LOG_FLAG, __func__, \
 			OPLUS_AUDIO_EVENTID_SMARTPA_ERR, SMARTPA_ERR_FB_VERSION);
-#endif
 	/* end - probe other sub module */
 
 out:
-#if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
 	if (ret != 0) {
 		mm_fb_audio_fatal_delay(OPLUS_AUDIO_EVENTID_SMARTPA_ERR, MM_FB_KEY_RATELIMIT_5MIN, \
 				FEEDBACK_DELAY_60S, "payload@@%s: out error %d", LOG_FLAG, ret);
 	}
-#endif
 
 	if(0 == disable_pin) {
 		devm_pinctrl_put(sia81xx_pinctrl);
@@ -2752,12 +2738,10 @@ out:
 	return ret;
 
 put_dev_out:
-#if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
 	if (ret != 0) {
 		mm_fb_audio_fatal_delay(OPLUS_AUDIO_EVENTID_SMARTPA_ERR, MM_FB_KEY_RATELIMIT_5MIN, \
 				FEEDBACK_DELAY_60S, "payload@@%s: put_dev_out error %d", LOG_FLAG, ret);
 	}
-#endif
 
 	if(0 == disable_pin) {
 		devm_pinctrl_put(sia81xx_pinctrl);
@@ -2870,10 +2854,8 @@ static int __init sia81xx_pa_init(void)
 
 	ret = platform_driver_register(&si_sia81xx_dev_driver);
 	if (ret) {
-#if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
 		mm_fb_audio_fatal_delay(OPLUS_AUDIO_EVENTID_SMARTPA_ERR, MM_FB_KEY_RATELIMIT_5MIN, \
 				FEEDBACK_DELAY_60S, "payload@@%s: si_sia81xx_dev error, ret = %d", LOG_FLAG, ret);
-#endif
 		pr_err("[  err][%s] %s: si_sia81xx_dev error, ret = %d !!! \r\n",
 			LOG_FLAG, __func__, ret);
 		return ret;
@@ -2881,10 +2863,8 @@ static int __init sia81xx_pa_init(void)
 
 	ret = i2c_add_driver(&si_sia81xx_i2c_driver);
 	if (ret) {
-#if IS_ENABLED(CONFIG_OPLUS_FEATURE_MM_FEEDBACK)
 		mm_fb_audio_fatal_delay(OPLUS_AUDIO_EVENTID_SMARTPA_ERR, MM_FB_KEY_RATELIMIT_5MIN, \
 				FEEDBACK_DELAY_60S, "payload@@%s: i2c_add_driver error, ret = %d", LOG_FLAG, ret);
-#endif
 		pr_err("[  err][%s] %s: i2c_add_driver error, ret = %d !!! \r\n",
 			LOG_FLAG, __func__, ret);
 		return ret;
