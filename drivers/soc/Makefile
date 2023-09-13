@@ -65,9 +65,6 @@ obj-$(CONFIG_OPLUS_HEALTHINFO)    +=  oplus/healthinfo/
 #Add for svelte logging
 obj-$(CONFIG_SVELTE) +=  oplus/svelte/
 #endif /* OPLUS_FEATURE_MEMLEAK_DETECT */
-#ifdef OPLUS_FEATURE_LOWMEM_DBG
-obj-$(CONFIG_OPLUS_FEATURE_LOWMEM_DBG) += oplus/lowmem_dbg/
-#endif /* OPLUS_FEATURE_LOWMEM_DBG */
 
 #ifdef OPLUS_FEATURE_IM
 #ted.lin@optimization add for im module
@@ -85,10 +82,6 @@ obj-$(CONFIG_OPLUS_FEATURE_CPUFREQ_BOUNCING) += oplus/cpufreq_bouncing/
 #ifdef OPLUS_FEATURE_TPD
 obj-$(CONFIG_OPLUS_FEATURE_TPD) += oplus/tpd/
 #endif
-
-#ifdef OPLUS_FEATURE_EXPLORER
-obj-$(CONFIG_EXPLORER_IPC) += oplus/explorer/
-#endif /* OPLUS_FEATURE_EXPLORER */
 
 #Add for NandSwap
 obj-$(CONFIG_NANDSWAP)		+= oplus/oplus_nandswap/
