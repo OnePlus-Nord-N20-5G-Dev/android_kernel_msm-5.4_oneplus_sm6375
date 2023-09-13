@@ -64,9 +64,7 @@
 #include "sia81xx_socket.h"
 #endif
 
-#ifdef OPLUS_FEATURE_MM_FEEDBACK
 #include <soc/oplus/system/oplus_mm_kevent_fb.h>
-#endif /* OPLUS_FEATURE_MM_FEEDBACK */
 
 #define SIA81XX_NAME					"sia81xx"
 #define SIA81XX_I2C_NAME				SIA81XX_NAME
@@ -1365,7 +1363,6 @@ static ssize_t sia81xx_cmd_store(
 /********************************************************************
  * sia81xx codec driver
  ********************************************************************/
- #ifdef OPLUS_FEATURE_MM_FEEDBACK
 /* Add for smartpa err feedback. */
 #define OPLUS_AUDIO_EVENTID_SMARTPA_ERR    10041
 #define ERROR_INFO_MAX_LEN                 32
@@ -1453,7 +1450,6 @@ static int sia81xx_get_check_feedback(struct snd_kcontrol *kcontrol,
 
 	return 0;
 }
-#endif /* OPLUS_FEATURE_MM_FEEDBACK */
 
 static int sia81xx_power_get(
 	struct snd_kcontrol *kcontrol,
@@ -1802,11 +1798,9 @@ static const struct snd_kcontrol_new sia81xx_controls[] = {
 			sia81xx_spk_mute_ctrl_get, sia81xx_spk_mute_ctrl_put),
 	#endif /* OPLUS_FEATURE_SPEAKER_MUTE */
 
-	#ifdef OPLUS_FEATURE_MM_FEEDBACK
 	/* Add for smartpa err feedback. */
 	SOC_ENUM_EXT("SIA_CHECK_FEEDBACK", sia81xx_check_feedback_enum,
 			sia81xx_get_check_feedback, sia81xx_set_check_feedback),
-	#endif /* OPLUS_FEATURE_MM_FEEDBACK */
 };
 
 #ifdef OPLUS_AUDIO_PA_BOOST_VOLTAGE
@@ -1826,11 +1820,9 @@ static const struct snd_kcontrol_new sia81xx_controls_new[] = {
 			sia81xx_spk_mute_ctrl_get, sia81xx_spk_mute_ctrl_put),
 	#endif /* OPLUS_FEATURE_SPEAKER_MUTE */
 
-	#ifdef OPLUS_FEATURE_MM_FEEDBACK
 	/* Add for smartpa err feedback. */
 	SOC_ENUM_EXT("SIA_CHECK_FEEDBACK", sia81xx_check_feedback_enum,
 			sia81xx_get_check_feedback, sia81xx_set_check_feedback),
-	#endif /* OPLUS_FEATURE_MM_FEEDBACK */
 };
 #endif /* OPLUS_AUDIO_PA_BOOST_VOLTAGE */
 
